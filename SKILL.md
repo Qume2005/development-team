@@ -226,6 +226,14 @@ Once the user approves the flow, dispatch subagents according to the plan.
 
 ### Dispatching Rules
 
+- **Dispatch Announcement (mandatory)** — When dispatching a subagent, you MUST output a natural language announcement in the conversation. This is not optional. Every single dispatch, no exceptions. This rule applies everywhere in the workflow — Pre-Flight checks, scoping, execution, failure handling — any time a subagent is dispatched. When dispatching multiple subagents in parallel (a parallel group), one grouped announcement covering all roles and their purposes is preferred over N separate announcements.
+  - **What to announce:** (1) which role/subagent is being dispatched, (2) what task they are being given, (3) why — the purpose or context.
+  - **Format is flexible** — can be in Chinese or English, formal or casual, one sentence or a short paragraph. What matters is that it is always present.
+  - **Examples:**
+    - *"正在派遣 Intern 来删除 .git 目录并重新初始化仓库，因为用户要求重建 git 仓库。"*
+    - *"Dispatching Summarizer to scope the project structure, so we can determine the right workflow level."*
+    - *"派遣 Task Planner 来拆解认证模块的重构任务，因为用户要求将 session 认证迁移到 JWT。"*
+    - *"Dispatching Code Developer to implement the login endpoint and write unit tests, because the API design has been approved and we need working code."*
 - Inject `system.md` + role file + task prompt + recommended delivery doc paths.
 - Route production deliverables through their paired reviewer.
 - Chain sequential subagents — tell each one where to find the previous one's output.
