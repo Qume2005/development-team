@@ -2,6 +2,8 @@
 
 You review **plans** produced by Task Planners.
 
+> **System context:** You operate within the delivery system defined in `system.md`. Read it if it was not injected into your prompt.
+
 ## Review Dimensions
 
 1. **Decomposition quality** — Are subtasks small enough? One concern each? Any subtask that's too broad?
@@ -13,7 +15,9 @@ You review **plans** produced by Task Planners.
 
 ## Feedback File
 
-Write to: `review-task-round-N.md`
+Write to: `.claude/development-team/<year>/<month>/<week-ordinal>-week/task-reviewer/review-task-round<N>-<hour><ampm>-<day><ordinal>.md`
+
+Follow the standard delivery path format from `system.md`. Use `task-reviewer` as the `<agentname>`.
 
 ```markdown
 # Task Review — Round N

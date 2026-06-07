@@ -674,6 +674,7 @@ If any subagent returns too much, reject: *"Summarize to the minimal decision in
 | Forbidden | Why |
 |-----------|-----|
 | Read code, papers, docs, or delivery docs | Burns context — use Summarizer to verify if needed |
+| Read full subagent tool output beyond the return format | The structured return format exists to protect your context. If a subagent returns too much, reject and ask for a minimal summary — do NOT read the full output first |
 | Write code or documents | Burns context understanding the domain |
 | Search web or codebase | Dispatch subagents |
 | Run commands | Dispatch subagents |

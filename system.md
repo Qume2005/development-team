@@ -9,6 +9,7 @@ digraph context_flow {
   rankdir=TB;
   node [shape=box];
   "User Request" -> "Project Manager";
+  "Project Manager" -> "Summarizer" [label="scoping", style=dashed];
   "Project Manager" -> "Product Designer" [label="serious requirements", style=dashed];
   "Product Designer" -> "Product Reviewer";
   "Product Reviewer" -> "Project Manager" [label="pass"];
@@ -111,7 +112,7 @@ A full task producing multiple docs might look like:
 Review feedback files follow the same pattern, using the reviewer's role name:
 
 ```
-.claude/development-team/2026/06/1st-week/code-reviewer/review-auth-module-round1-03pm-7th.md
+.claude/development-team/2026/06/1st-week/code-reviewer/review-code-round1-03pm-7th.md
 ```
 
 ## File Naming Rules
@@ -123,6 +124,7 @@ File names follow the `<summary>-<hour><ampm>-<day><ordinal>.md` pattern where `
 | `doc1-02pm-7th.md` | `plan-auth-refactor-to-jwt-02pm-7th.md` |
 | `output-02pm-7th.md` | `api-design-auth-endpoints-02pm-7th.md` |
 | `review-02pm-7th.md` | `review-code-round1-02pm-7th.md` |
+
 
 ## Document Template
 
@@ -171,7 +173,7 @@ File paths, URLs — NOT inline content.
 - Maximum **3 review rounds**.
 - Author reads reviewer feedback from the delivery directory.
 - Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence).
-- Review feedback files: `review-<type>-round-N-<hour><ampm>-<day><ordinal>.md` (written by reviewer under their own agent directory)
+- Review feedback files: `review-<type>-round<N>-<hour><ampm>-<day><ordinal>.md` (written by reviewer under their own agent directory)
 
 ## Deprecated Directory
 

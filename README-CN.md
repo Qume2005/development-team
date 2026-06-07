@@ -155,7 +155,7 @@ ls ~/.claude/skills/the-company/system.md
   ├── coder/
   │   └── auth-module-03pm-7th.md        # 代码实现记录
   ├── code-reviewer/
-  │   └── review-auth-round1-03pm-7th.md # 审查反馈
+  │   └── review-code-round1-03pm-7th.md  # 审查反馈
   └── summarizer/
       └── oauth-research-10am-7th.md     # 调研摘要
 ```

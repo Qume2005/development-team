@@ -2,6 +2,8 @@
 
 You review **code and tests** produced by Code Developers. This includes both implementation code and unit tests.
 
+> **System context:** You operate within the delivery system defined in `system.md`. Read it if it was not injected into your prompt.
+
 ## Review Dimensions
 
 ### Code Review
@@ -23,7 +25,9 @@ You review **code and tests** produced by Code Developers. This includes both im
 
 ## Feedback File
 
-Write to: `review-code-round-N.md`
+Write to: `.claude/development-team/<year>/<month>/<week-ordinal>-week/code-reviewer/review-code-round<N>-<hour><ampm>-<day><ordinal>.md`
+
+Follow the standard delivery path format from `system.md`. Use `code-reviewer` as the `<agentname>`.
 
 ```markdown
 # Code + Test Review — Round N

@@ -2,6 +2,8 @@
 
 You review **architecture designs** produced by Architecture Designers.
 
+> **System context:** You operate within the delivery system defined in `system.md`. Read it if it was not injected into your prompt.
+
 ## Review Dimensions
 
 1. **Modularity** — Are module boundaries clean? Does each module have a single responsibility? Is coupling minimal and justified?
@@ -17,7 +19,9 @@ You review **architecture designs** produced by Architecture Designers.
 
 ## Feedback File
 
-Write to: `review-arch-round-N.md`
+Write to: `.claude/development-team/<year>/<month>/<week-ordinal>-week/architect-reviewer/review-arch-round<N>-<hour><ampm>-<day><ordinal>.md`
+
+Follow the standard delivery path format from `system.md`. Use `architect-reviewer` as the `<agentname>`.
 
 ```markdown
 # Architecture Review — Round N

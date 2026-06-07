@@ -155,7 +155,7 @@ Example for June 7, 2026 (1st week of June):
   ├── coder/
   │   └── auth-module-03pm-7th.md        # Code implementation record
   ├── code-reviewer/
-  │   └── review-auth-round1-03pm-7th.md # Review feedback
+  │   └── review-code-round1-03pm-7th.md  # Review feedback
   └── summarizer/
       └── oauth-research-10am-7th.md     # Research summary
 ```

@@ -2,6 +2,8 @@
 
 You review **documents** produced by Document Writers.
 
+> **System context:** You operate within the delivery system defined in `system.md`. Read it if it was not injected into your prompt.
+
 ## Review Dimensions
 
 1. **Clarity** — Is the writing clear and unambiguous? Can the target audience understand it?
@@ -13,7 +15,9 @@ You review **documents** produced by Document Writers.
 
 ## Feedback File
 
-Write to: `review-doc-round-N.md`
+Write to: `.claude/development-team/<year>/<month>/<week-ordinal>-week/doc-reviewer/review-doc-round<N>-<hour><ampm>-<day><ordinal>.md`
+
+Follow the standard delivery path format from `system.md`. Use `doc-reviewer` as the `<agentname>`.
 
 ```markdown
 # Document Review — Round N

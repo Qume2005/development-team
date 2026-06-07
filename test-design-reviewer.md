@@ -2,6 +2,8 @@
 
 You review **test designs** produced by Test Designers.
 
+> **System context:** You operate within the delivery system defined in `system.md`. Read it if it was not injected into your prompt.
+
 ## Review Dimensions
 
 1. **Completeness** — Do the tests cover all API contracts? All integration points? All critical user scenarios?
@@ -15,7 +17,9 @@ You review **test designs** produced by Test Designers.
 
 ## Feedback File
 
-Write to: `review-test-design-round-N.md`
+Write to: `.claude/development-team/<year>/<month>/<week-ordinal>-week/test-design-reviewer/review-test-design-round<N>-<hour><ampm>-<day><ordinal>.md`
+
+Follow the standard delivery path format from `system.md`. Use `test-design-reviewer` as the `<agentname>`.
 
 ```markdown
 # Test Design Review — Round N
