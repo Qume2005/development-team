@@ -9,6 +9,12 @@ digraph context_flow {
   rankdir=TB;
   node [shape=box];
   "User Request" -> "Manager";
+  "Manager" -> "Product Designer" [label="serious requirements", style=dashed];
+  "Product Designer" -> "Product Reviewer";
+  "Product Reviewer" -> "Manager" [label="pass"];
+  "Manager" -> "Architecture Designer" [label="greenfield/refactoring"];
+  "Architecture Designer" -> "Architecture Reviewer";
+  "Architecture Reviewer" -> "Manager" [label="pass"];
   "Manager" -> "Task Planner";
   "Task Planner" -> "Task Reviewer";
   "Task Reviewer" -> "Manager" [label="pass"];
@@ -24,6 +30,8 @@ digraph context_flow {
   "Manager" -> "Test Designer" [label="system tests"];
   "Manager" -> "Code Developer" [label="run system tests"];
   "Manager" -> "User" [label="final result"];
+  "Architecture Designer" -> "Test Designer" [label="system test scope", style=dashed];
+  "Product Designer" -> "Architecture Designer" [label="product spec", style=dashed];
 }
 ```
 
@@ -49,6 +57,10 @@ Production subagents may dispatch a **Summarizer** when they need heavy context 
 
 ```
 .claude/the-company/auth-refactor-2026-06-07-143022/
+  ├── product-design-user-app.md
+  ├── review-product-round1.md
+  ├── arch-design-modular-structure.md
+  ├── review-arch-round1.md
   ├── plan-auth-refactor-to-jwt.md
   ├── review-task-round1.md
   ├── api-design-auth-endpoints.md
@@ -98,6 +110,8 @@ File paths, URLs — NOT inline content.
 | Role | Read delivery docs | Write delivery docs | Read review feedback | Dispatch Summarizer | Consume heavy context |
 |------|-------------------|--------------------|--------------------|--------------------|-----------------------|
 | Manager | ❌ | ❌ | ❌ | ✅ (user questions only) | ❌ |
+| Architecture Designer | ✅ Same dir | ✅ | ✅ | ✅ | As needed |
+| Product Designer | ✅ Same dir | ✅ | ✅ | ✅ | As needed |
 | Task Planner | ✅ All in `.claude/the-company/` | ✅ | ✅ | ✅ | As needed |
 | API Designer | ✅ Same dir | ✅ | ✅ | ✅ | As needed |
 | Test Designer | ✅ Same dir | ✅ | ✅ | ✅ | As needed |
@@ -105,7 +119,9 @@ File paths, URLs — NOT inline content.
 | Document Writer | ✅ Same dir | ✅ | ✅ | ✅ | As needed |
 | Intern | ✅ Same dir | ✅ | N/A | ❌ | Minimal — list/check only |
 | Summarizer | ✅ Same dir | ✅ | N/A | ❌ | ✅ This IS the job |
-| All Reviewers | ✅ Doc being reviewed | ✅ Feedback | N/A | ✅ | Only the deliverable |
+| Architecture Reviewer | ✅ Doc being reviewed | ✅ Feedback | N/A | ✅ | Only the deliverable |
+| Product Reviewer | ✅ Doc being reviewed | ✅ Feedback | N/A | ✅ | Only the deliverable |
+| All other Reviewers | ✅ Doc being reviewed | ✅ Feedback | N/A | ✅ | Only the deliverable |
 
 ## Review Protocol
 

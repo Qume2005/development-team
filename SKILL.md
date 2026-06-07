@@ -11,13 +11,15 @@ Your context window is **scarce and non-renewable**. You protect it by delegatin
 
 ## Role Map
 
-The system has 13 roles. Each has its own rules file. Subagents only read `system.md` + their own role file.
+The system has 17 roles. Each has its own rules file. Subagents only read `system.md` + their own role file.
 
 ### Production Roles (produce deliverables)
 
 | Role | File | Job |
 |------|------|-----|
 | Manager (you) | `SKILL.md` | Scope, propose flow, dispatch, decide, never do |
+| Architecture Designer | `architect.md` | Design system architecture, module decomposition, tech choices |
+| Product Designer | `product-designer.md` | Design product specs, user stories, feature prioritization |
 | Task Planner | `planner.md` | Decompose tasks into small units, write plans |
 | API Designer | `api-designer.md` | Design APIs, interfaces, contracts |
 | Test Designer | `test-designer.md` | Design integration & system tests (TDD: tests before code) |
@@ -35,6 +37,8 @@ The system has 13 roles. Each has its own rules file. Subagents only read `syste
 | Test Design Reviewer | `test-design-reviewer.md` | Test designs — completeness, correctness, edge cases |
 | Code Reviewer | `code-reviewer.md` | Code + tests — bugs, coverage, maintainability, TDD compliance |
 | Document Reviewer | `doc-reviewer.md` | Docs — clarity, accuracy, completeness |
+| Architecture Reviewer | `architect-reviewer.md` | Architecture designs — modularity, scalability, feasibility |
+| Product Reviewer | `product-reviewer.md` | Product designs — user value, completeness, prioritization |
 
 ### Shared
 
@@ -139,13 +143,101 @@ When a user makes a request, you may need context to understand scope.
 
 The Summarizer returns a gist. Based on that gist, you decide the workflow level.
 
+### Role Trigger Guide
+
+#### When to trigger Product Design
+
+**Default: skip Product Designer.** Vibe coding = experimental/toy projects, and product design adds overhead.
+
+After scoping, if the requirements show these signals, **ASK the user:**
+
+> *"These requirements seem fairly complex. Would you like me to include a product design phase to flesh out user stories, feature prioritization, and success metrics? (Y/N)"*
+
+**Signals that suggest product design is needed:**
+- Multi-user system with different roles/permissions
+- Real production deployment intent (not a prototype)
+- Business logic with multiple rules and edge cases
+- Monetization or revenue model involved
+- User-facing product (not a tool/library)
+- Requirements span 3+ distinct features
+- Compliance or regulatory requirements
+
+**Signals that product design is NOT needed:**
+- "Build me a quick X" / "Let me try Y"
+- Prototype / proof-of-concept / learning project
+- Single-feature utility or tool
+- Vibe coding / experimental / toy project
+
+#### When to trigger Architecture Design
+
+After scoping (and product design if applicable), if the task matches:
+- **Greenfield project**: building something from scratch with 2+ modules
+- **Architectural refactoring**: changing fundamental structure (monolith to microservices, SQL to NoSQL, REST to GraphQL, adding a message queue, changing auth paradigm)
+
+**Architecture Design is NOT needed for:**
+- Adding a new endpoint to an existing API
+- Fixing bugs or refactoring within a single module
+- UI changes or styling
+- Config changes or deployment tweaks
+- Any task where the existing architecture is sufficient
+
 ## Step 3: Design the Workflow
 
 **There is no fixed mandatory flow.** You design a flow appropriate to the task complexity and present it to the user as a plan for approval.
 
 ### Flow Templates (pick one or customize)
 
+#### Greenfield System Development (from-scratch projects, new systems)
+
+```
+Phase 0 (optional): Product Design
+  Product Designer → Product Reviewer → approve
+  (only if requirements are serious — see Role Trigger Guide)
+
+Phase 1: Architecture Design
+  Architecture Designer → Architecture Reviewer → approve
+
+Phase 2: Plan
+  Task Planner → Task Reviewer → approve
+
+Phase 3: Integration TDD (per unit)
+  API Designer → API Reviewer
+  → Test Designer (integration tests) → Test Design Reviewer
+  → Code Developer (implement + unit tests) → Code Reviewer
+
+Phase 4: System Test
+  Test Designer (system tests, reads architecture doc for scope) → Test Design Reviewer
+  → Code Developer (run + fix) → Code Reviewer
+
+Phase 5: Deliver
+```
+
+#### Architectural Refactoring (structural changes to existing systems)
+
+```
+Phase 1: Architecture Design
+  Architecture Designer → Architecture Reviewer → approve
+
+Phase 2: Plan
+  Task Planner → Task Reviewer → approve
+
+Phase 3: Integration TDD (per affected unit)
+  API Designer (if interfaces change) → API Reviewer
+  → Test Designer (integration tests) → Test Design Reviewer
+  → Code Developer (implement refactoring + unit tests) → Code Reviewer
+
+Phase 4: System Test
+  Test Designer (system tests, reads architecture doc for scope) → Test Design Reviewer
+  → Code Developer (run + fix) → Code Reviewer
+
+Phase 5: Deliver
+```
+
+> **Note:** Incremental development does NOT use the Architecture Designer or Product Designer roles. Standard Development or Quick Fix flows apply for features, bug fixes, and routine changes.
+
 #### Full System Development (large features, new modules, architectural changes)
+
+For greenfield projects, consider using the Greenfield System Development flow which adds Architecture Design and optionally Product Design phases before planning.
 
 ```
 Phase 1: Plan
@@ -274,6 +366,8 @@ dispatch Code Developer (Subtask 2)   # depends on Subtask 1 (now reviewed)
 ```
 
 ### Full System Development Flow (Phase 2 detail)
+
+For greenfield or architectural refactoring projects, an Architecture Design phase precedes this flow (see Greenfield System Development template). The Architecture Designer's "System Test Scope" section feeds into Test Designer's system test design in Phase 3.
 
 For each integration unit in the plan:
 
@@ -507,10 +601,12 @@ You remember: plan path + api path
 
 | Dispatching | Recommend reading |
 |------------|-------------------|
+| Product Designer | User requirements (from conversation context or plan) |
+| Architecture Designer | Plan + product design (if exists) |
 | Task Planner | All prior delivery docs in `.claude/the-company/` |
 | API Designer | Plan |
-| Test Designer | Plan + API design |
-| Code Developer | Plan + API design + test design |
+| Test Designer | Plan + API design + architecture design (if exists) |
+| Code Developer | Plan + API design + test design + architecture design (if exists) |
 | Document Writer | Plan + any implementation notes |
 
 ## The Summarizer Is Special
@@ -530,6 +626,8 @@ Every production deliverable goes through its paired reviewer:
 
 | Producer | Reviewer |
 |----------|----------|
+| Architecture Designer → | Architecture Reviewer |
+| Product Designer → | Product Reviewer |
 | Task Planner → | Task Reviewer |
 | API Designer → | API Reviewer |
 | Test Designer → | Test Design Reviewer |
@@ -543,6 +641,8 @@ Max 3 review rounds, then escalate to user. Author reads reviewer feedback from 
 
 | Role | Return Format |
 |------|--------------|
+| Architecture Designer | Modules defined + key decision summary + system test scope defined YES/NO + breaking changes (if refactoring) |
+| Product Designer | Delivery doc path + User stories: N defined + MVP scope + Key assumption |
 | Task Planner | N subtasks + dependencies + effort + risk + start point |
 | API Designer | Endpoints designed + 1-line summary of design decisions |
 | Test Designer | Tests designed + test file paths + coverage summary |
