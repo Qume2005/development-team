@@ -50,6 +50,37 @@ Textual diagram showing the system and its external dependencies.
 ### Module: [Another Name]
 ...
 
+## Module Dependency Graph + Layer Assignment
+
+This section is MANDATORY. It provides the machine-actionable contract that drives task decomposition, parallel dispatch, and build order.
+
+### Dependency DAG
+
+| Module | Depends On | Depended By |
+|--------|-----------|-------------|
+| module-a | *(none)* | module-d, module-f |
+| module-b | *(none)* | module-d, module-e |
+| module-c | *(none)* | module-e |
+| module-d | module-a, module-b | module-f |
+| module-e | module-c | module-f |
+| module-f | module-d, module-e | *(none)* |
+
+### Layer Assignment (Topological Sort)
+
+| Layer | Modules | Rationale |
+|-------|---------|-----------|
+| Layer 0 (leaves) | module-a, module-b, module-c | No internal dependencies. Can be implemented in parallel immediately. |
+| Layer 1 | module-d, module-e | Depend only on Layer 0 modules. |
+| Layer 2 | module-f | Depends on Layer 1. Entry point / orchestrator. |
+
+### Build Order
+
+    Layer 0 (leaf, no deps): [UserRepository, EmailService, HashUtil]
+    Layer 1 (depends on Layer 0): [AuthService → depends on UserRepository, HashUtil]
+    Layer 2 (depends on Layer 1): [UserController → depends on AuthService]
+
+    Layer 0 (parallel) → Layer 1 (parallel, after Layer 0 reviews pass) → Layer 2 (after Layer 1 reviews pass)
+
 ## Data Model
 Key entities, relationships, and storage strategy. Not full schema — that comes in API Design.
 
@@ -120,13 +151,27 @@ This section is read by the Test Designer to determine what end-to-end flows and
 - **Scalability** — architecture handles growth; bottlenecks are identified upfront.
 - **Technology justification** — every tech choice has a "why" and considers alternatives.
 - **Operability** — deployment, monitoring, logging, and error handling are first-class concerns.
+- **Dependency-driven layering** — modules are assigned to layers via topological sort. Leaf modules (no dependencies) are Layer 0. This layering drives the implementation dispatch order.
+
+## Cross-Module Integration
+
+Cross-module wiring and integration is a first-class concern in this architecture:
+
+- **Cross-module wiring is handled by shallower-layer agents (not leaf coders).** A coder implementing a Layer 0 module has no awareness of how it will be consumed. The integration logic lives in Layer 1+ modules that depend on it.
+- **A coder implementing a Layer 1 module only needs the API interfaces of Layer 0 modules, NOT their source code.** The interface contract (defined in the architecture and API design docs) is sufficient. This keeps each coder's context bounded and focused.
+- **The Summarizer agent provides summaries of sub-module implementations when needed.** If a downstream coder or reviewer needs to understand what a dependency module actually does beyond its interface, they request a Summarizer dispatch rather than reading raw source code.
 
 ## Dependencies on Other Roles
 
 - **Input from Product Designer**: If a product design doc exists in the delivery directory, read it first. It defines user personas, user stories, and feature priorities that shape architecture decisions.
 - **Handoff to Test Designer**: The "System Test Scope" section of your doc is the explicit contract. Test Designer reads it to design system tests. Make it specific and actionable.
 - **Handoff to API Designer**: Your module interfaces provide the starting point for API design. API Designer will refine endpoints and contracts.
+- **Handoff to Task Planner**: The "Module Dependency Graph + Layer Assignment" section is the explicit contract for task decomposition. The Task Planner MUST group subtasks by layer and dispatch within a layer in parallel.
 - **Handoff to Code Developer**: Your module decomposition and technology choices guide implementation.
+
+## Source Code Access Rule
+
+**NEVER read raw source code of existing modules.** If you need to understand existing code (e.g., during architectural refactoring), request the Project Manager to dispatch a Summarizer to read it and provide a summary. This protects your context capacity and enforces the interface-boundary discipline — you should design against interfaces, not implementations.
 
 ## Return to Project Manager
 

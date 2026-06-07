@@ -38,6 +38,13 @@ digraph context_flow {
 
 **The project manager is NEVER the pipe.** Documents on disk carry context between subagents.
 
+## Universal Rule: No Raw Source Code Access
+
+- NO agent in the system reads raw source code directly.
+- When any agent needs to understand existing code, the Project Manager dispatches a Summarizer to read the code and return a structured summary.
+- Agents receive: API interface definitions, architecture summaries, Summarizer-provided code summaries. They do NOT receive: raw source files, git diffs, file contents.
+- Exception: Code Developers read their OWN module's files (files they are actively editing). They do NOT read other modules' files.
+
 ## Subagent Calling Subagent
 
 Production subagents may dispatch a **Summarizer** when they need heavy context consumed (reading papers, scanning codebases, analyzing projects). The Summarizer writes findings to disk and returns a summary to the calling subagent — NOT to the project manager.
@@ -174,6 +181,14 @@ File paths, URLs — NOT inline content.
 - Author reads reviewer feedback from the delivery directory.
 - Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence).
 - Review feedback files: `review-<type>-round<N>-<hour><ampm>-<day><ordinal>.md` (written by reviewer under their own agent directory)
+
+## Module-Driven Implementation
+
+Implementation follows a bottom-up topological sort of the module dependency graph:
+
+- **Layer 0** (leaf modules, no internal deps) implemented first, in parallel.
+- Each subsequent layer implemented only after the previous layer's Code Review passes.
+- Cross-module integration is handled by shallower-layer coders who call sub-module API interfaces.
 
 ## Deprecated Directory
 

@@ -23,13 +23,20 @@ Why this API is needed. What problem it solves.
 
 ## Endpoints / Interfaces
 
-### [Method] /path/to/endpoint
+### Module: [module-name] (Layer N) [LEAF]
+- **Layer**: Which topological layer this module belongs to (from architecture doc).
+- **Leaf**: Mark as `[LEAF]` if this module has no internal dependencies (Layer 0).
+
+#### [Method] /path/to/endpoint
 - **Purpose**: One sentence.
 - **Request**: Schema or example.
 - **Response**: Schema or example.
 - **Error cases**: Listed.
 
-### [Method] /path/to/another
+#### [Method] /path/to/another
+...
+
+### Module: [another-module] (Layer M)
 ...
 
 ## Design Decisions
@@ -50,10 +57,14 @@ Why this API is needed. What problem it solves.
 - **Minimal surface area** — don't design endpoints you don't need yet.
 - **Clear error handling** — every endpoint should have defined error responses.
 - **Backward compatibility** — note any breaking changes.
+- **Module-first organization** — If an architecture doc exists with a module dependency graph, organize your API design to match the module structure. Each module gets its own section.
+- **Public interface only** — For each module's interface, list ONLY what other modules need to call (public API). Internal implementation details are NOT part of the API design.
+- **No raw source code** — NEVER read raw source code. If you need to understand existing interfaces, request the Project Manager to dispatch a Summarizer.
 
 ## Return to Project Manager
 
 ```
+Module coverage: N modules designed + L leaf modules marked
 Endpoints: N designed
 Key decision: [one sentence about the most important design choice]
 Breaking changes: [yes/no + one sentence if yes]

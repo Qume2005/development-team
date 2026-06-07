@@ -349,6 +349,16 @@ After the user approves the workflow and BEFORE dispatching any subagent, you MU
 - Absorb only verdicts (3-5 line summaries).
 - Decide: approve, reject, request revision. 1-2 sentences.
 
+### Scope Validation (HARD RULE — before every dispatch)
+
+Before dispatching ANY subagent, the PM must verify the scope of the task:
+
+- **Module tasks:** Each dispatch must cover at most **1 module**. If a subtask spans multiple modules, the PM MUST split it into separate dispatches before proceeding.
+- **Non-module tasks:** Each dispatch must cover at most **2-3 files**. If a subtask touches more files, the PM MUST split it.
+- **No exceptions.** This is a HARD rule, not a guideline. Overloaded dispatches produce lower-quality output, risk context exhaustion in the subagent, and make review harder.
+
+If the plan's subtasks violate this limit, the PM splits them and updates the task list before dispatching.
+
 ### Parallel Execution
 
 When the Task Planner's plan includes parallel groups, dispatch all subtasks in the same group **at the same time**. Do not wait for one to finish before starting the next in the same group.
@@ -384,6 +394,30 @@ dispatch Code Developer (Subtask 2)   # depends on Subtask 1 (now reviewed)
 ### Full System Development Flow (Phase 2 detail)
 
 For greenfield or architectural refactoring projects, an Architecture Design phase precedes this flow (see Greenfield System Development template). The Architecture Designer's "System Test Scope" section feeds into Test Designer's system test design in Phase 3.
+
+#### Module-Driven Dispatch Pattern
+
+If the approved plan includes **module layers** (from architecture design), use this layer-by-layer dispatch pattern instead of sequential unit-by-unit dispatch:
+
+```
+After plan approval:
+  1. PM reads the plan's layer grouping (Layer 0, Layer 1, Layer 2, ...)
+  2. PM dispatches ALL Layer 0 modules as parallel Code Developer dispatches
+     - Each dispatch covers exactly ONE module
+     - All Layer 0 modules are independent by definition
+  3. Wait for ALL Layer 0 Code Reviews to PASS
+  4. PM dispatches ALL Layer 1 modules as parallel Code Developer dispatches
+     - Layer 1 coders handle cross-module wiring for their sub-modules
+     - They read the completed Layer 0 delivery docs
+  5. Repeat until all layers are done
+  6. Proceed to System Test (Phase 3)
+```
+
+**If no layer grouping exists** in the plan, fall back to the normal sequential dispatch (one integration unit at a time).
+
+**Why this matters:** Layer-based dispatch maximizes parallelism within safe boundaries. Layer 0 modules have zero mutual dependencies, so they can all run simultaneously. Layer 1 modules depend only on Layer 0, which is fully reviewed before Layer 1 starts.
+
+#### Sequential Dispatch (no layer grouping)
 
 For each integration unit in the plan:
 
@@ -683,6 +717,14 @@ If any subagent returns too much, reject: *"Summarize to the minimal decision in
 | Design APIs | Dispatch API Designer |
 | Test anything | Dispatch Code Developer |
 | Relay context between subagents | Delivery docs on disk are the pipe |
+| Read raw source code (dispatch Summarizer to read and summarize) | Raw source code is dense and expensive — Summarizer distills it into actionable summaries |
+| Merge multiple modules into a single dispatch | Violates scope validation rule — each dispatch covers at most 1 module (or 2-3 files for non-module tasks) |
+
+
+
+### Universal Rule: No Raw Source Code Reading
+
+ALL agents in the system must not read raw source code directly. If any agent needs to understand existing code, the PM dispatches a Summarizer to read it and return a summary. This applies to every role — Architecture Designer, API Designer, Task Planner, Code Developer, Document Writer, etc.
 
 ## Cleanup: Deprecated Delivery Docs
 

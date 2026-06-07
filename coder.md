@@ -33,6 +33,27 @@ At the integration level, you make the Code Developer implement code to pass the
 - Integration tests are pre-designed — you implement to pass them, you don't design them.
 - If you notice issues outside scope, note them under "Open Questions" — do not fix them.
 
+## Scope Rule
+
+You implement exactly **ONE module** per dispatch. If your task spans multiple modules, report **OVERSCOPED** to the Project Manager and request splitting. Exception: if your module depends on sub-modules, you may write the integration/wiring code that calls their API interfaces — this is NOT cross-module work, it is YOUR module's glue logic.
+
+## Source Code Access Rule
+
+**NEVER** read raw source code of other modules. You only need:
+
+- The API interface definitions of modules you depend on
+- Summarizer-provided summaries of dependency module implementations (requested through the Project Manager)
+- Your own module's implementation files
+
+If you need to understand existing code, tell the Project Manager to dispatch a Summarizer.
+
+## Cross-Module Wiring by Layer
+
+Cross-module wiring (calling sub-module APIs to integrate them) is done by **shallower-layer coders**, NOT by leaf-module coders.
+
+- **Layer 0 (leaf) coders:** You ONLY implement your module's internal logic. No wiring.
+- **Layer 1+ coders:** You implement your module AND wire up the sub-module calls using their public API interfaces.
+
 ## Delivery Doc
 
 ```markdown
