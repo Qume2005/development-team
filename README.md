@@ -22,7 +22,7 @@ This is not a codebase or a framework. It is a carefully crafted set of Markdown
 |-----------|-------------|
 | **Context is scarce** | The agent's context window is limited and non-recoverable — treat it like a budget |
 | **The project manager never does the work** | The Project Manager never reads code, writes docs, or runs commands — all real work is delegated to subagents |
-| **Disk is the communication channel** | Subagents exchange context through structured deliverable documents under `.claude/the-company/`, not through conversation |
+| **Disk is the communication channel** | Subagents exchange context through structured deliverable documents under `.claude/development-team/`, not through conversation |
 | **Absorb only verdicts** | The Project Manager receives only file paths + 1-2 sentence conclusions for decision-making, never full deliverables |
 
 ---
@@ -136,16 +136,28 @@ For simple tasks:
 
 ### Deliverable Directory
 
-All intermediate artifacts and final deliverables are stored in the project's `.claude/the-company/` directory:
+All intermediate artifacts and final deliverables are stored in the project's `.claude/development-team/` directory, organized by date hierarchy:
 
 ```
-.claude/the-company/<task-description>-<date>-<time>/
-  ├── plan-xxx.md              # Execution plan
-  ├── api-design-xxx.md        # API design document
-  ├── test-design-xxx.md       # Test design document
-  ├── code-xxx.md              # Code implementation record
-  ├── review-xxx-round1.md     # Review feedback
-  └── summary-xxx.md           # Research summary
+.claude/development-team/<year>/<month>/<week-ordinal>-week/<agentname>/<summary>-<hour><ampm>-<day><ordinal>.md
+```
+
+Example for June 7, 2026 (1st week of June):
+
+```
+.claude/development-team/2026/06/1st-week/
+  ├── planner/
+  │   └── auth-refactor-12pm-7th.md      # Execution plan
+  ├── api-designer/
+  │   └── auth-endpoints-01pm-7th.md     # API design document
+  ├── test-designer/
+  │   └── auth-tests-02pm-7th.md         # Test design document
+  ├── coder/
+  │   └── auth-module-03pm-7th.md        # Code implementation record
+  ├── code-reviewer/
+  │   └── review-auth-round1-03pm-7th.md # Review feedback
+  └── summarizer/
+      └── oauth-research-10am-7th.md     # Research summary
 ```
 
 ---
@@ -178,8 +190,10 @@ the-company/
 │   ├── code-reviewer.md         # Reviews code + tests
 │   └── doc-reviewer.md          # Reviews documentation
 │
-└── .claude/the-company/         # Runtime deliverable directory
-    └── deprecated/              # Archived old deliverable documents
+└── .claude/development-team/         # Runtime deliverable directory
+    └── 2026/06/1st-week/             # Organized by year/month/week
+        └── <agentname>/              # Each role has its own subdirectory
+    └── deprecated/                   # Archived old deliverable documents
 ```
 
 **Total: 2 core system files + 17 role definition files = 19 Markdown files.**

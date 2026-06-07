@@ -70,7 +70,7 @@ When dispatched by the project manager for a user question, return:
 
 ```
 Gist: [1-2 sentences — the headline answer]
-Doc: .claude/the-company/.../filename.md (for user to read in detail)
+Doc: .claude/development-team/<year>/<month>/<week-ordinal>-week/summarizer/<summary>-<hour><ampm>-<day><ordinal>.md (for user to read in detail)
 ```
 
 The Project Manager absorbs the gist and tells the user the doc path. The user reads the details themselves.

@@ -38,7 +38,7 @@ Why this document exists.
 ## Return to Project Manager
 
 ```
-Path: .claude/the-company/.../filename.md
+Path: .claude/development-team/<year>/<month>/<week-ordinal>-week/doc-writer/<summary>-<hour><ampm>-<day><ordinal>.md
 Summary: [one-line description of what the document covers]
 ```
 

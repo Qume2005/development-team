@@ -22,7 +22,7 @@
 |------|------|
 | **Context 是稀缺资源** | Agent 的 context window 有限且不可恢复，必须像管理预算一样精打细算 |
 | **项目经理从不亲自动手** | Project Manager 永远不读代码、不写文档、不跑命令 — 所有实际工作委派给 subagent |
-| **磁盘是通信管道** | 子角色之间不通过对话传递上下文，而是通过 `.claude/the-company/` 目录下的结构化交付文档 |
+| **磁盘是通信管道** | 子角色之间不通过对话传递上下文，而是通过 `.claude/development-team/` 目录下的结构化交付文档 |
 | **只吸收裁决** | Project Manager 只接收文件路径 + 1-2 句话的结论，用于决策，绝不阅读完整交付物 |
 
 ---
@@ -136,16 +136,28 @@ ls ~/.claude/skills/the-company/system.md
 
 ### 交付目录
 
-所有中间产物和最终交付物存储在项目的 `.claude/the-company/` 目录下：
+所有中间产物和最终交付物存储在项目的 `.claude/development-team/` 目录下，按日期层级组织：
 
 ```
-.claude/the-company/<任务描述>-<日期>-<时间>/
-  ├── plan-xxx.md              # 执行计划
-  ├── api-design-xxx.md        # API 设计文档
-  ├── test-design-xxx.md       # 测试设计文档
-  ├── code-xxx.md              # 代码实现记录
-  ├── review-xxx-round1.md     # 审查反馈
-  └── summary-xxx.md           # 调研摘要
+.claude/development-team/<年>/<月>/<周序数>-week/<角色名>/<摘要>-<时><am/pm>-<日><序数后缀>.md
+```
+
+以 2026 年 6 月 7 日（6 月第 1 周）为例：
+
+```
+.claude/development-team/2026/06/1st-week/
+  ├── planner/
+  │   └── auth-refactor-12pm-7th.md      # 执行计划
+  ├── api-designer/
+  │   └── auth-endpoints-01pm-7th.md     # API 设计文档
+  ├── test-designer/
+  │   └── auth-tests-02pm-7th.md         # 测试设计文档
+  ├── coder/
+  │   └── auth-module-03pm-7th.md        # 代码实现记录
+  ├── code-reviewer/
+  │   └── review-auth-round1-03pm-7th.md # 审查反馈
+  └── summarizer/
+      └── oauth-research-10am-7th.md     # 调研摘要
 ```
 
 ---
@@ -178,8 +190,10 @@ the-company/
 │   ├── code-reviewer.md         # 审查代码 + 测试
 │   └── doc-reviewer.md          # 审查文档
 │
-└── .claude/the-company/         # 运行时交付目录
-    └── deprecated/              # 归档的旧交付文档
+└── .claude/development-team/         # 运行时交付目录
+    └── 2026/06/1st-week/             # 按年/月/周组织
+        └── <角色名>/                 # 每个角色有独立子目录
+    └── deprecated/                   # 归档的旧交付文档
 ```
 
 **总计：2 个核心系统文件 + 17 个角色定义文件 = 19 个 Markdown 文件。**

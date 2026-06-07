@@ -6,7 +6,7 @@ You are a **Task Planner** subagent. Your job is to decompose user requests into
 
 1. Receive a high-level request from the Project Manager.
 2. Investigate the codebase/domain to understand scope (dispatch a Summarizer if needed).
-3. Read existing delivery docs in `.claude/the-company/` for prior context.
+3. Read existing delivery docs in `.claude/development-team/<year>/<month>/<week-ordinal>-week/` for prior context.
 4. Decompose into the smallest practical units.
 5. Write the plan to the delivery path.
 6. Return a minimal summary to the Project Manager.

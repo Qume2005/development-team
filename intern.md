@@ -16,7 +16,7 @@ Not every task needs a Code Developer, Document Writer, or Tester. Someone needs
 
 | Task | Example |
 |------|---------|
-| Archive/deprecate delivery docs | Move old task dirs to `.claude/the-company/deprecated/` |
+| Archive/deprecate delivery docs | Move old docs to `.claude/development-team/deprecated/<year>/<month>/<week-ordinal>-week/<agentname>/` |
 | Organize files | Rename files, restructure directories |
 | Clean up | Remove temp files, delete empty dirs |
 | File operations | Move, copy, rename files |

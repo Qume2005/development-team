@@ -139,7 +139,7 @@ When a user makes a request, you may need context to understand scope.
 **Dispatch a Summarizer** with a scoping question:
 - "What does this project look like? How many modules? What tech stack?"
 - "How complex is this feature? What does it touch?"
-- "What existing work in `.claude/the-company/` relates to this request?"
+- "What existing work in `.claude/development-team/` relates to this request?"
 
 The Summarizer returns a gist. Based on that gist, you decide the workflow level.
 
@@ -605,11 +605,11 @@ When you dispatch a production subagent, you MUST tell it which existing deliver
 Each subagent's return summary includes a file path. You store these paths (just the paths, not the content) and pass them to the next subagent:
 
 ```
-Subagent A returns: "Plan at .claude/the-company/foo/plan-bar.md, 5 subtasks, ..."
-You remember: plan path = .claude/the-company/foo/plan-bar.md
+Subagent A returns: "Plan at .claude/development-team/2026/06/1st-week/planner/auth-refactor-12pm-7th.md, 5 subtasks, ..."
+You remember: plan path = .claude/development-team/2026/06/1st-week/planner/auth-refactor-12pm-7th.md
 
-Subagent B prompt: "...Read the plan at .claude/the-company/foo/plan-bar.md..."
-Subagent B returns: "API at .claude/the-company/foo/api-design-baz.md, 3 endpoints, ..."
+Subagent B prompt: "...Read the plan at .claude/development-team/2026/06/1st-week/planner/auth-refactor-12pm-7th.md..."
+Subagent B returns: "API at .claude/development-team/2026/06/1st-week/api-designer/auth-endpoints-01pm-7th.md, 3 endpoints, ..."
 You remember: plan path + api path
 ```
 
@@ -619,7 +619,7 @@ You remember: plan path + api path
 |------------|-------------------|
 | Product Designer | User requirements (from conversation context or plan) |
 | Architecture Designer | Plan + product design (if exists) |
-| Task Planner | All prior delivery docs in `.claude/the-company/` |
+| Task Planner | All prior delivery docs in `.claude/development-team/` |
 | API Designer | Plan |
 | Test Designer | Plan + API design + architecture design (if exists) |
 | Code Developer | Plan + API design + test design + architecture design (if exists) |
@@ -696,17 +696,17 @@ If any subagent returns too much, reject: *"Summarize to the minimal decision in
 **Do NOT move files yourself.** Dispatch an Intern:
 
 ```
-Task: Move the following delivery directories to .claude/the-company/deprecated/:
-- .claude/the-company/<old-profile>-<date>-<time>/
-Create the deprecated directory if it doesn't exist. Use `mv` commands.
+Task: Move the following delivery docs to .claude/development-team/deprecated/:
+- .claude/development-team/2026/06/1st-week/planner/old-plan-10am-5th.md
+Create the deprecated directory structure if it doesn't exist. Use `mv` commands.
 ```
 
 ### What to Keep vs Deprecate
 
 | Keep | Deprecate |
 |------|-----------|
-| Current active task directory | Previous versions of the same task |
-| Recently completed tasks (< current session) | Tasks from previous sessions that are superseded |
+| Current active task docs | Previous versions of the same task |
+| Recently completed docs (< current session) | Docs from previous sessions that are superseded |
 | Docs the user explicitly asked to keep | Everything else the user hasn't referenced |
 
 ## Handling User's Personal Demands

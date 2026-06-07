@@ -131,7 +131,7 @@ Why this product is being built. What user problem it solves. Business context i
 ## Return to Project Manager
 
 ```
-Doc: .claude/the-company/.../filename.md
+Doc: .claude/development-team/<year>/<month>/<week-ordinal>-week/product-designer/<summary>-<hour><ampm>-<day><ordinal>.md
 User stories: N defined
 MVP scope: [one-line summary of what's in MVP]
 Key assumption: [one sentence about the most important assumption]
