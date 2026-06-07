@@ -103,11 +103,11 @@ In every template, production deliverables go through their paired reviewer befo
 
 ```bash
 # 1. Clone the repository into the Claude Code skills directory
-git clone https://github.com/your-username/the-company.git ~/.claude/skills/the-company
+git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/development-team
 
 # 2. Verify installation — confirm these files exist
-ls ~/.claude/skills/the-company/SKILL.md
-ls ~/.claude/skills/the-company/system.md
+ls ~/.claude/skills/development-team/SKILL.md
+ls ~/.claude/skills/development-team/system.md
 ```
 
 Once installed, DevelopmentTeam skill is automatically activated in every Claude Code conversation. The Project Manager takes over, analyzes your request, and proposes a workflow.
@@ -165,7 +165,7 @@ Example for June 7, 2026 (1st week of June):
 ## Project Structure
 
 ```
-the-company/
+development-team/
 ├── SKILL.md                     # Entry point / Project Manager rules (Skill manifest)
 ├── system.md                    # Shared system overview (read by all roles)
 ├── .gitignore                   # Ignores .claude/, .idea/, .vscode/
@@ -208,7 +208,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contributing
 
-This is a personal project, currently maintained by a solo developer. If you have suggestions or find bugs, feel free to open an issue on [GitHub Issues](https://github.com/your-username/DevelopmentTeam/issues).
+This is a personal project, currently maintained by a solo developer. If you have suggestions or find bugs, feel free to open an issue on [GitHub Issues](https://github.com/Qume2005/development-team/issues).
 
 ## Acknowledgments
 

@@ -103,11 +103,11 @@
 
 ```bash
 # 1. 克隆仓库到 Claude Code skills 目录
-git clone https://github.com/your-username/the-company.git ~/.claude/skills/the-company
+git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/development-team
 
 # 2. 验证安装 — 确认以下文件存在
-ls ~/.claude/skills/the-company/SKILL.md
-ls ~/.claude/skills/the-company/system.md
+ls ~/.claude/skills/development-team/SKILL.md
+ls ~/.claude/skills/development-team/system.md
 ```
 
 安装完成后，Claude Code 的每次对话都会自动激活 DevelopmentTeam skill。Project Manager 会自动接管，分析你的请求并提议工作流。
@@ -165,7 +165,7 @@ ls ~/.claude/skills/the-company/system.md
 ## 项目结构
 
 ```
-the-company/
+development-team/
 ├── SKILL.md                     # 入口 / Project Manager 规则（Skill 清单）
 ├── system.md                    # 共享系统概述（所有角色读取）
 ├── .gitignore                   # 忽略 .claude/, .idea/, .vscode/
@@ -208,7 +208,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 贡献 / Contributing
 
-这是一个个人项目，目前由一位开发者独立维护。如果你有建议或发现 bug，欢迎通过 [GitHub Issues](https://github.com/your-username/DevelopmentTeam/issues) 反馈。
+这是一个个人项目，目前由一位开发者独立维护。如果你有建议或发现 bug，欢迎通过 [GitHub Issues](https://github.com/Qume2005/development-team/issues) 反馈。
 
 ## 致谢
 
