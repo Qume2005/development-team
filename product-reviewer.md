@@ -41,7 +41,7 @@ Description and recommended fix.
 Non-blocking improvements or alternative approaches to consider.
 ```
 
-## Return to Manager
+## Return to Project Manager
 
 ```
 Verdict: PASS / FAIL

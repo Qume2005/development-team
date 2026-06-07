@@ -8,38 +8,38 @@ This document defines the delivery system that all participants share.
 digraph context_flow {
   rankdir=TB;
   node [shape=box];
-  "User Request" -> "Manager";
-  "Manager" -> "Product Designer" [label="serious requirements", style=dashed];
+  "User Request" -> "Project Manager";
+  "Project Manager" -> "Product Designer" [label="serious requirements", style=dashed];
   "Product Designer" -> "Product Reviewer";
-  "Product Reviewer" -> "Manager" [label="pass"];
-  "Manager" -> "Architecture Designer" [label="greenfield/refactoring"];
+  "Product Reviewer" -> "Project Manager" [label="pass"];
+  "Project Manager" -> "Architecture Designer" [label="greenfield/refactoring"];
   "Architecture Designer" -> "Architecture Reviewer";
-  "Architecture Reviewer" -> "Manager" [label="pass"];
-  "Manager" -> "Task Planner";
+  "Architecture Reviewer" -> "Project Manager" [label="pass"];
+  "Project Manager" -> "Task Planner";
   "Task Planner" -> "Task Reviewer";
-  "Task Reviewer" -> "Manager" [label="pass"];
-  "Manager" -> "API Designer";
+  "Task Reviewer" -> "Project Manager" [label="pass"];
+  "Project Manager" -> "API Designer";
   "API Designer" -> "API Reviewer";
-  "API Reviewer" -> "Manager" [label="pass"];
-  "Manager" -> "Test Designer" [label="integration tests"];
+  "API Reviewer" -> "Project Manager" [label="pass"];
+  "Project Manager" -> "Test Designer" [label="integration tests"];
   "Test Designer" -> "Test Design Reviewer";
-  "Test Design Reviewer" -> "Manager" [label="pass"];
-  "Manager" -> "Code Developer";
+  "Test Design Reviewer" -> "Project Manager" [label="pass"];
+  "Project Manager" -> "Code Developer";
   "Code Developer" -> "Code Reviewer";
-  "Code Reviewer" -> "Manager" [label="pass"];
-  "Manager" -> "Test Designer" [label="system tests"];
-  "Manager" -> "Code Developer" [label="run system tests"];
-  "Manager" -> "User" [label="final result"];
+  "Code Reviewer" -> "Project Manager" [label="pass"];
+  "Project Manager" -> "Test Designer" [label="system tests"];
+  "Project Manager" -> "Code Developer" [label="run system tests"];
+  "Project Manager" -> "User" [label="final result"];
   "Architecture Designer" -> "Test Designer" [label="system test scope", style=dashed];
   "Product Designer" -> "Architecture Designer" [label="product spec", style=dashed];
 }
 ```
 
-**The manager is NEVER the pipe.** Documents on disk carry context between subagents.
+**The project manager is NEVER the pipe.** Documents on disk carry context between subagents.
 
 ## Subagent Calling Subagent
 
-Production subagents may dispatch a **Summarizer** when they need heavy context consumed (reading papers, scanning codebases, analyzing projects). The Summarizer writes findings to disk and returns a summary to the calling subagent — NOT to the manager.
+Production subagents may dispatch a **Summarizer** when they need heavy context consumed (reading papers, scanning codebases, analyzing projects). The Summarizer writes findings to disk and returns a summary to the calling subagent — NOT to the project manager.
 
 ## Delivery Directory
 
@@ -109,7 +109,7 @@ File paths, URLs — NOT inline content.
 
 | Role | Read delivery docs | Write delivery docs | Read review feedback | Dispatch Summarizer | Consume heavy context |
 |------|-------------------|--------------------|--------------------|--------------------|-----------------------|
-| Manager | ❌ | ❌ | ❌ | ✅ (user questions only) | ❌ |
+| Project Manager | ❌ | ❌ | ❌ | ✅ (user questions only) | ❌ |
 | Architecture Designer | ✅ Same dir | ✅ | ✅ | ✅ | As needed |
 | Product Designer | ✅ Same dir | ✅ | ✅ | ✅ | As needed |
 | Task Planner | ✅ All in `.claude/the-company/` | ✅ | ✅ | ✅ | As needed |
@@ -128,7 +128,7 @@ File paths, URLs — NOT inline content.
 - Every production deliverable goes through its paired reviewer.
 - Maximum **3 review rounds**.
 - Author reads reviewer feedback from the delivery directory.
-- Manager only sees the verdict (PASS/FAIL + critical issues + confidence).
+- Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence).
 - Review feedback files: `review-<type>-round-N.md`
 
 ## Deprecated Directory

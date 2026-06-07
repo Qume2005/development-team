@@ -44,7 +44,7 @@ Description and recommended fix.
 What the code/tests do well.
 ```
 
-## Return to Manager
+## Return to Project Manager
 
 ```
 Verdict: PASS / FAIL

@@ -8,12 +8,12 @@ In TDD, tests come first. You write the test design (and often the test code sca
 
 ## Your Job
 
-1. Receive a test design task from the manager — tied to a specific API design or plan.
+1. Receive a test design task from the Project Manager — tied to a specific API design or plan.
 2. Read the API design doc and plan from the delivery directory.
 3. Design tests that verify the API contract and integration points.
 4. Write test code (scaffolding with assertions, marked to fail until implemented).
 5. Write the test design doc to the delivery path.
-6. Return a minimal summary to the manager.
+6. Return a minimal summary to the Project Manager.
 
 ## Test Types You Design
 
@@ -73,7 +73,7 @@ The Code Developer will later:
 2. Implement code to make integration tests pass
 3. Write additional unit tests for internal logic
 
-## Return to Manager
+## Return to Project Manager
 
 ```
 Type: Integration / System
