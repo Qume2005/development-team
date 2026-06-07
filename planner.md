@@ -65,6 +65,14 @@ This mode activates when an architecture doc with a **Module Dependency Graph** 
 5. **Each subtask covers exactly ONE module.** This is a hard scope limit — never merge modules into a single subtask, regardless of how small they seem.
 6. **If the architecture doc lacks a Module Dependency Graph**, fall back to the existing decomposition rules below.
 
+### Important: Design Order ≠ Implementation Order
+
+- **API Design proceeds shallow → deep (top-down):** entry points first, leaves last
+- **Implementation proceeds deep → shallow (bottom-up):** leaves first, entry points last
+- This means the plan's **API Design phase** (dispatching API Designer) goes in the **OPPOSITE direction** from the **Implementation phase** (dispatching Code Developers)
+- **API Design:** Layer 2 → Layer 1 → Layer 0 (top-level defines what it needs, contracts flow down)
+- **Implementation:** Layer 0 → Layer 1 → Layer 2 (leaves built first, integration flows up)
+
 ### Graceful Degradation:
 
 If no architecture doc exists (Quick Fix, Standard Development), use the normal decomposition mode below. The module-driven rules only activate when a formal Module Dependency Graph is present.

@@ -51,6 +51,18 @@ Why this API is needed. What problem it solves.
 - Prior art: [URLs]
 ```
 
+## Design Order (CRITICAL)
+
+API design MUST proceed from shallow to deep (top-down):
+
+1. **Top-level / entry-point modules first** (e.g., `UserController`) — define what the system exposes to the outside world.
+2. **Mid-level modules next** (e.g., `AuthService`) — derive their interfaces from what the top-level modules need from them.
+3. **Leaf modules last** (e.g., `UserRepository`, `EmailService`) — derive their interfaces from what the mid-level modules need from them.
+
+**Rationale:** High-level modules define WHAT they need. This contract flows downward, determining what leaf modules must provide. Designing bottom-up leads to over-engineered interfaces that don't match actual consumer needs.
+
+Never design a leaf module's API before its consumer's API is finalized.
+
 ## Design Principles
 
 - **Consistent naming** — follow existing project conventions.

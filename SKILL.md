@@ -245,8 +245,13 @@ Phase 1: Plan
 
 Phase 2: Integration TDD (per unit)
   API Designer → API Reviewer
+      [API Design proceeds shallow → deep: dispatch API Designer for Layer N first,
+       then Layer N-1, etc. Higher layers define what they need; contracts flow down
+       to lower layers.]
   → Test Designer (integration tests) → Test Design Reviewer
   → Code Developer (implement + unit tests) → Code Reviewer
+      [Implementation proceeds deep → shallow: dispatch Code Developers for Layer 0
+       first, then Layer 1, etc. Leaves built first; integration flows up.]
 
 Phase 3: System Test
   Test Designer (system tests) → Test Design Reviewer
@@ -254,6 +259,8 @@ Phase 3: System Test
 
 Phase 4: Deliver
 ```
+
+> **Design Order ≠ Implementation Order.** API design goes top-down (shallow→deep) because high-level contracts define what lower levels must provide. Implementation goes bottom-up (deep→shallow) because you must build foundations before wiring them together.
 
 #### Standard Development (medium features, refactors, new endpoints)
 
@@ -399,23 +406,44 @@ For greenfield or architectural refactoring projects, an Architecture Design pha
 
 If the approved plan includes **module layers** (from architecture design), use this layer-by-layer dispatch pattern instead of sequential unit-by-unit dispatch:
 
+> **Design Order ≠ Implementation Order.** API design goes top-down (shallow→deep) because high-level contracts define what lower levels must provide. Implementation goes bottom-up (deep→shallow) because you must build foundations before wiring them together.
+
 ```
 After plan approval:
-  1. PM reads the plan's layer grouping (Layer 0, Layer 1, Layer 2, ...)
-  2. PM dispatches ALL Layer 0 modules as parallel Code Developer dispatches
-     - Each dispatch covers exactly ONE module
-     - All Layer 0 modules are independent by definition
-  3. Wait for ALL Layer 0 Code Reviews to PASS
-  4. PM dispatches ALL Layer 1 modules as parallel Code Developer dispatches
-     - Layer 1 coders handle cross-module wiring for their sub-modules
-     - They read the completed Layer 0 delivery docs
-  5. Repeat until all layers are done
-  6. Proceed to System Test (Phase 3)
+
+  --- API Design Phase (top-down: shallow → deep) ---
+  D0. PM reads the plan's layer grouping (Layer 0, Layer 1, Layer 2, ...)
+
+  D1. PM dispatches API Designer for ALL Layer N (highest) modules as parallel dispatches
+      - API Design proceeds shallow → deep: dispatch API Designer for Layer N first,
+        then Layer N-1, etc. Higher layers define what they need; contracts flow down
+        to lower layers.
+      - Each dispatch covers exactly ONE module
+      → API Reviewer → PASS for all → proceed to next layer's API design
+  D2. PM dispatches API Designer for Layer N-1 modules (parallel)
+      - These designers read the completed higher-layer API contracts
+      → API Reviewer → PASS for all → proceed
+  D3. Repeat until all layers have API designs reviewed
+      - Test Design can proceed in parallel after each layer's API review passes
+
+  --- Implementation Phase (bottom-up: deep → shallow) ---
+  I0. Implementation proceeds deep → shallow: dispatch Code Developers for Layer 0
+      first, then Layer 1, etc. Leaves built first; integration flows up.
+
+  I1. PM dispatches ALL Layer 0 modules as parallel Code Developer dispatches
+      - Each dispatch covers exactly ONE module
+      - All Layer 0 modules are independent by definition
+  I2. Wait for ALL Layer 0 Code Reviews to PASS
+  I3. PM dispatches ALL Layer 1 modules as parallel Code Developer dispatches
+      - Layer 1 coders handle cross-module wiring for their sub-modules
+      - They read the completed Layer 0 delivery docs
+  I4. Repeat until all layers are done
+  I5. Proceed to System Test (Phase 3)
 ```
 
 **If no layer grouping exists** in the plan, fall back to the normal sequential dispatch (one integration unit at a time).
 
-**Why this matters:** Layer-based dispatch maximizes parallelism within safe boundaries. Layer 0 modules have zero mutual dependencies, so they can all run simultaneously. Layer 1 modules depend only on Layer 0, which is fully reviewed before Layer 1 starts.
+**Why this matters:** Layer-based dispatch maximizes parallelism within safe boundaries. Layer 0 modules have zero mutual dependencies, so they can all run simultaneously. Layer 1 modules depend only on Layer 0, which is fully reviewed before Layer 1 starts. Design flows top-down so contracts are defined before implementors need them; implementation flows bottom-up so foundations are solid before integration layers are built.
 
 #### Sequential Dispatch (no layer grouping)
 
