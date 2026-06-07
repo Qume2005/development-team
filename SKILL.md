@@ -316,6 +316,22 @@ If the user wants to modify the flow, adjust and re-present. If the user wants t
 
 Once the user approves the flow, dispatch subagents according to the plan.
 
+### Task List (mandatory)
+
+After the user approves the workflow and BEFORE dispatching any subagent, you MUST create a structured task list using `TaskCreate` so the user sees live progress in their Claude Code panel.
+
+1. **Create all tasks upfront.** For each step in the approved workflow, call `TaskCreate` with:
+   - `subject` — what the step does (e.g. "Design API for auth module")
+   - `description` — brief detail about scope and deliverables
+   - `activeForm` — present continuous label for the spinner (e.g. "Designing API", "Writing code", "Running tests")
+2. **Update status as work progresses:**
+   - `pending` → `in_progress` when you dispatch the subagent for that step
+   - `in_progress` → `completed` when the subagent finishes AND review passes
+   - `in_progress` → `deleted` if the step is cancelled
+3. **Reflect review failures.** If a review fails and the step is rolled back, the task stays `in_progress` (while the author revises) or goes back to `pending` (if a fresh re-dispatch is needed).
+4. **Parallel groups.** When dispatching a parallel group, set all tasks in that group to `in_progress` simultaneously.
+5. **Clean up before starting.** Before creating tasks for a new workflow, delete any leftover tasks from abandoned or previous workflows.
+
 ### Dispatching Rules
 
 - **Dispatch Announcement (mandatory)** — When dispatching a subagent, you MUST output a natural language announcement in the conversation. This is not optional. Every single dispatch, no exceptions. This rule applies everywhere in the workflow — Pre-Flight checks, scoping, execution, failure handling — any time a subagent is dispatched. When dispatching multiple subagents in parallel (a parallel group), one grouped announcement covering all roles and their purposes is preferred over N separate announcements.
