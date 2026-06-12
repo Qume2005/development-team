@@ -2,7 +2,7 @@
 
 # DevelopmentTeam
 
-> 一个让 AI agent 化身 IT 团队项目经理的 Claude Code skill — 用 17 个专业角色协作完成软件工程任务，同时守护你宝贵的 context window。
+> 一个让 AI agent 化身 IT 团队项目经理的 Claude Code skill — 用 16 个专业角色协作完成软件工程任务，同时守护你宝贵的 context window。
 
 ---
 
@@ -12,7 +12,7 @@
 
 **DevelopmentTeam** 正是为了解决这个问题而诞生的。它的核心理念很简单：让 AI agent 扮演一位 IT 团队项目经理，**项目经理从不亲自动手** — 它只负责理解需求、设计工作流、派遣专业子角色（subagent）执行，然后根据子角色返回的简要裁决（1-2 句话摘要）做出决策。所有上下文通过磁盘上的结构化文档流转，项目经理永远不直接阅读交付物本身。
 
-这不是一个代码库，也不是一个框架。它是一组精心设计的 Markdown 规则文件（共 19 个），安装到 `~/.claude/skills/` 目录后，就能让 Claude Code 的每一次对话自动进入「项目经理模式」。无论你是要构建一个全新的全栈项目，还是修一个小 bug，DevelopmentTeam 都会自动匹配最合适的工作流模板，以 TDD、代码审查、质量门控的方式交付高质量的成果。
+这不是一个代码库，也不是一个框架。它是一组精心设计的 Markdown 规则文件（共 17 个），安装到 `~/.claude/skills/` 目录后，就能让 Claude Code 的每一次对话自动进入「项目经理模式」。无论你是要构建一个全新的全栈项目，还是修一个小 bug，DevelopmentTeam 都会自动匹配最合适的工作流模板，以 TDD、代码审查、质量门控的方式交付高质量的成果。
 
 ---
 
@@ -29,19 +29,19 @@
 
 ## 功能特性
 
-- **17 个专业角色** — 10 个生产角色 + 7 个审查角色，各司其职，权责分明
+- **16 个专业角色** — 9 个生产角色 + 7 个审查角色，各司其职，权责分明
 - **7 种工作流模板（+自定义）** — 从 Greenfield 全新项目到 Quick Fix 快速修复，按任务复杂度自动匹配
 - **TDD 优先** — Test Designer 先写测试，Code Developer 再实现，确保质量从源头抓起
 - **审查门控（Review Gate）** — 每个生产交付物必须通过配对审查角色的审核，最多 3 轮，不通过则升级至用户
 - **并行执行** — Task Planner 识别独立子任务，支持同组并行派发，审查通过后才启动下游依赖
 - **失败处理** — 覆盖 subagent 崩溃、输出不完整、审查循环、权限错误、Git 冲突等 8+ 种失败模式
-- **会话恢复** — 交付文档持久化在磁盘上，会话中断后派遣 Summarizer 读取状态，从断点恢复
+- **会话恢复** — 交付文档持久化在磁盘上，会话中断后派遣 Intern 读取状态，从断点恢复
 - **Pre-flight 安全检查** — 执行前评估 Git 状态、项目目录风险，修改项目外文件时提供三种安全选项
 - **强制 Task 追踪** — 使用 `TaskCreate` 创建可见进度列表，用户在面板中实时看到每一步的状态
 - **强制派遣公告** — 每次派发 subagent 必须输出自然语言公告，说明谁、做什么、为什么
 - **权限矩阵** — 每个角色对交付文档的读/写/审查权限精确定义，防止越权操作
 - **文档推荐矩阵** — 每个生产角色被明确告知应读取哪些前置交付文档，确保上下文流转正确
-- **纯 Markdown 实现** — 零依赖、零构建、零配置，19 个 `.md` 文件即全部
+- **纯 Markdown 实现** — 零依赖、零构建、零配置，17 个 `.md` 文件即全部
 
 ---
 
@@ -51,7 +51,7 @@
 
 | 角色 | 文件 | 职责 |
 |------|------|------|
-| Project Manager（项目经理） | `SKILL.md` | 理解需求、设计工作流、派遣子角色、做决策 — 但从不亲自动手 |
+| Project Manager（项目经理） | `pm.md` | 理解需求、设计工作流、派遣子角色、做决策 — 但从不亲自动手 |
 | Architecture Designer | `architect.md` | 设计系统架构、模块拆分、技术选型 |
 | Product Designer | `product-designer.md` | 设计产品规格、用户故事、功能优先级 |
 | Task Planner | `planner.md` | 将任务拆解为小单元，编写执行计划 |
@@ -59,8 +59,7 @@
 | Test Designer | `test-designer.md` | 设计集成测试与系统测试（TDD：测试先行） |
 | Code Developer | `coder.md` | 编写代码 + 单元测试，运行所有测试，确保通过 |
 | Document Writer | `doc-writer.md` | 编写文档、文章、规格说明 |
-| Intern（实习生） | `intern.md` | 杂务 — 清理、归档、文件操作、简单事务 |
-| Summarizer | `summarizer.md` | 重度上下文消费者 — 阅读论文、项目、代码库以提炼答案 |
+| Intern（实习生） | `intern.md` | 杂务 + PM 的阅读者 — 清理、归档、文件操作、为 PM 阅读和汇报 |
 
 ### 审查角色（Review Roles）
 
@@ -85,7 +84,7 @@
 | **Full System Development** | 大型功能、新模块 | 计划 → 集成 TDD → 系统测试 → 交付 |
 | **Standard Development** | 中型功能、重构、新接口 | 计划 → API 设计 → 编码 + 单元测试 → 交付 |
 | **Quick Fix** | 小 bug、拼写错误、配置修改 | 编码 → 代码审查 → 交付 |
-| **Investigation Only** | 调研、分析、提问 | Summarizer 调研 → 交付结论 |
+| **Investigation Only** | 调研、分析、提问 | Intern 阅读和调研 → 交付结论 |
 | **Documentation Only** | README、指南、文章 | Document Writer → 文档审查 → 交付 |
 
 每个模板中，生产角色的交付物都会经过配对审查角色的审核，审查通过后才进入下一步。Project Manager 会根据任务的实际情况选择合适的模板，也可以自定义流程。
@@ -107,7 +106,6 @@ git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/deve
 
 # 2. 验证安装 — 确认以下文件存在
 ls ~/.claude/skills/development-team/SKILL.md
-ls ~/.claude/skills/development-team/system.md
 ```
 
 安装完成后，Claude Code 的每次对话都会自动激活 DevelopmentTeam skill。Project Manager 会自动接管，分析你的请求并提议工作流。
@@ -120,7 +118,7 @@ ls ~/.claude/skills/development-team/system.md
 > 帮我搭建一个用户认证系统，支持 JWT 和 OAuth2
 
 # Project Manager 会自动：
-# 1. 派遣 Summarizer 评估项目范围
+# 1. 派遣 Intern 评估项目范围
 # 2. 提议一个 Full System Development 工作流
 # 3. 等待你确认后开始执行
 ```
@@ -156,8 +154,6 @@ ls ~/.claude/skills/development-team/system.md
   │   └── auth-module-03pm-7th.md        # 代码实现记录
   ├── code-reviewer/
   │   └── review-code-round1-03pm-7th.md  # 审查反馈
-  └── summarizer/
-      └── oauth-research-10am-7th.md     # 调研摘要
 ```
 
 ---
@@ -166,11 +162,11 @@ ls ~/.claude/skills/development-team/system.md
 
 ```
 development-team/
-├── SKILL.md                     # 入口 / Project Manager 规则（Skill 清单）
-├── system.md                    # 共享系统概述（所有角色读取）
+├── SKILL.md                     # 入口 / 共享系统概述（Skill 清单）
+├── pm.md                        # Project Manager 专属角色文件
 ├── .gitignore                   # 忽略 .claude/, .idea/, .vscode/
 │
-├── 📦 Production Roles (10):
+├── 📦 Production Roles (9):
 │   ├── architect.md             # Architecture Designer
 │   ├── product-designer.md      # Product Designer
 │   ├── planner.md               # Task Planner
@@ -178,8 +174,7 @@ development-team/
 │   ├── test-designer.md         # Test Designer
 │   ├── coder.md                 # Code Developer
 │   ├── doc-writer.md            # Document Writer
-│   ├── intern.md                # Intern（杂务）
-│   └── summarizer.md            # Summarizer（重度上下文消费者）
+│   └── intern.md                # Intern（杂务 + PM 的阅读者）
 │
 ├── 🔍 Review Roles (7):
 │   ├── architect-reviewer.md    # 审查架构设计
@@ -196,7 +191,7 @@ development-team/
     └── deprecated/                   # 归档的旧交付文档
 ```
 
-**总计：2 个核心系统文件 + 17 个角色定义文件 = 19 个 Markdown 文件。**
+**总计：1 个核心系统文件 + 16 个角色定义文件 = 17 个 Markdown 文件。**
 
 ---
 

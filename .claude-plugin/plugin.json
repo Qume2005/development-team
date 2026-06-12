@@ -1,0 +1,6 @@
+{
+  "name": "development-team",
+  "description": "IT team project manager agent with 16 specialized subagent roles. Delegates all work through structured documents to preserve context capacity.",
+  "version": "1.0.0",
+  "author": { "name": "Qume" }
+}

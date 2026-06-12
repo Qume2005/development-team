@@ -2,7 +2,7 @@
 
 # DevelopmentTeam
 
-> A Claude Code skill that turns your AI agent into an IT team project manager — dispatching 17 specialized roles to collaborate on software engineering tasks, while safeguarding your precious context window.
+> A Claude Code skill that turns your AI agent into an IT team project manager — dispatching 16 specialized roles to collaborate on software engineering tasks, while safeguarding your precious context window.
 
 ---
 
@@ -12,7 +12,7 @@ If you have used Claude Code for complex tasks, you have likely run into this pr
 
 **DevelopmentTeam** was built to solve exactly this problem. The core idea is simple: the AI agent plays the role of an IT team project manager, and **the project manager never does the work themselves** — they only understand requirements, design workflows, dispatch specialized subagents, and make decisions based on the brief verdicts (1-2 sentence summaries) those subagents return. All context flows through structured documents on disk; the project manager never reads the actual deliverables.
 
-This is not a codebase or a framework. It is a carefully crafted set of Markdown rule files (19 in total). Install them into `~/.claude/skills/`, and every Claude Code conversation automatically enters "project manager mode." Whether you are building a brand-new full-stack project or fixing a small bug, DevelopmentTeam automatically matches the right workflow template and delivers high-quality results through TDD, code reviews, and quality gates.
+This is not a codebase or a framework. It is a carefully crafted set of Markdown rule files (17 in total). Install them into `~/.claude/skills/`, and every Claude Code conversation automatically enters "project manager mode." Whether you are building a brand-new full-stack project or fixing a small bug, DevelopmentTeam automatically matches the right workflow template and delivers high-quality results through TDD, code reviews, and quality gates.
 
 ---
 
@@ -29,19 +29,19 @@ This is not a codebase or a framework. It is a carefully crafted set of Markdown
 
 ## Features
 
-- **17 specialized roles** — 10 production roles + 7 review roles, each with clear responsibilities and authority
+- **16 specialized roles** — 9 production roles + 7 review roles, each with clear responsibilities and authority
 - **7 workflow templates (+ custom)** — From Greenfield new projects to Quick Fixes, automatically matched by task complexity
 - **TDD first** — Test Designer writes tests before Code Developer implements, ensuring quality from the start
 - **Review gates** — Every production deliverable must pass its paired reviewer, up to 3 rounds; failures escalate to the user
 - **Parallel execution** — Task Planner identifies independent subtasks and dispatches them in parallel; downstream dependencies start only after review passes
 - **Failure handling** — Covers 8+ failure modes including subagent crashes, incomplete output, review loops, permission errors, and Git conflicts
-- **Session recovery** — Deliverables persist on disk; if a session is interrupted, the Summarizer reads the state and resumes from the breakpoint
+- **Session recovery** — Deliverables persist on disk; if a session is interrupted, the Intern reads the state and resumes from the breakpoint
 - **Pre-flight safety checks** — Evaluates Git status and project directory risks before execution; provides three safety options when modifying files outside the project
 - **Mandatory task tracking** — Uses `TaskCreate` to maintain a visible progress list; users see real-time status of every step in the panel
 - **Mandatory dispatch announcements** — Every subagent dispatch outputs a natural-language announcement: who, what, and why
 - **Permission matrix** — Read/write/review permissions for each role over deliverable documents are precisely defined to prevent unauthorized access
 - **Document recommendation matrix** — Each production role is explicitly told which upstream deliverables to read, ensuring correct context flow
-- **Pure Markdown** — Zero dependencies, zero build steps, zero configuration — 19 `.md` files are the entire product
+- **Pure Markdown** — Zero dependencies, zero build steps, zero configuration — 17 `.md` files are the entire product
 
 ---
 
@@ -51,7 +51,7 @@ This is not a codebase or a framework. It is a carefully crafted set of Markdown
 
 | Role | File | Responsibility |
 |------|------|----------------|
-| Project Manager | `SKILL.md` | Understands requirements, designs workflows, dispatches subagents, makes decisions — but never does the work |
+| Project Manager | `pm.md` | Understands requirements, designs workflows, dispatches subagents, makes decisions — but never does the work |
 | Architecture Designer | `architect.md` | Designs system architecture, module decomposition, technology selection |
 | Product Designer | `product-designer.md` | Designs product specifications, user stories, feature prioritization |
 | Task Planner | `planner.md` | Breaks tasks into small units and writes execution plans |
@@ -59,8 +59,7 @@ This is not a codebase or a framework. It is a carefully crafted set of Markdown
 | Test Designer | `test-designer.md` | Designs integration and system tests (TDD: tests first) |
 | Code Developer | `coder.md` | Writes code + unit tests, runs all tests, ensures they pass |
 | Document Writer | `doc-writer.md` | Writes documentation, articles, and specifications |
-| Intern | `intern.md` | Miscellaneous tasks — cleanup, archival, file operations, simple chores |
-| Summarizer | `summarizer.md` | Heavy context consumer — reads papers, projects, and codebases to distill answers |
+| Intern | `intern.md` | Miscellaneous tasks + PM's reader — cleanup, archival, file operations, reading & reporting for PM |
 
 ### Review Roles
 
@@ -85,7 +84,7 @@ This is not a codebase or a framework. It is a carefully crafted set of Markdown
 | **Full System Development** | Large features, new modules | Planning → Integration TDD → System testing → Delivery |
 | **Standard Development** | Medium features, refactoring, new endpoints | Planning → API design → Coding + unit tests → Delivery |
 | **Quick Fix** | Small bugs, typos, config changes | Coding → Code review → Delivery |
-| **Investigation Only** | Research, analysis, questions | Summarizer investigates → Delivers conclusions |
+| **Investigation Only** | Research, analysis, questions | Intern reads & investigates → Delivers conclusions |
 | **Documentation Only** | READMEs, guides, articles | Document Writer → Document review → Delivery |
 
 In every template, production deliverables go through their paired reviewer before the workflow advances. The Project Manager selects the appropriate template based on the task and can also customize the flow.
@@ -105,9 +104,8 @@ In every template, production deliverables go through their paired reviewer befo
 # 1. Clone the repository into the Claude Code skills directory
 git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/development-team
 
-# 2. Verify installation — confirm these files exist
+# 2. Verify installation — confirm this file exists
 ls ~/.claude/skills/development-team/SKILL.md
-ls ~/.claude/skills/development-team/system.md
 ```
 
 Once installed, DevelopmentTeam skill is automatically activated in every Claude Code conversation. The Project Manager takes over, analyzes your request, and proposes a workflow.
@@ -120,7 +118,7 @@ After launching Claude Code, just describe what you need:
 > Build me a user authentication system with JWT and OAuth2 support
 
 # The Project Manager will automatically:
-# 1. Dispatch the Summarizer to assess the project scope
+# 1. Dispatch an Intern to read and assess the project scope
 # 2. Propose a Full System Development workflow
 # 3. Wait for your confirmation before executing
 ```
@@ -156,8 +154,6 @@ Example for June 7, 2026 (1st week of June):
   │   └── auth-module-03pm-7th.md        # Code implementation record
   ├── code-reviewer/
   │   └── review-code-round1-03pm-7th.md  # Review feedback
-  └── summarizer/
-      └── oauth-research-10am-7th.md     # Research summary
 ```
 
 ---
@@ -166,11 +162,11 @@ Example for June 7, 2026 (1st week of June):
 
 ```
 development-team/
-├── SKILL.md                     # Entry point / Project Manager rules (Skill manifest)
-├── system.md                    # Shared system overview (read by all roles)
+├── SKILL.md                     # Entry point / shared system overview (Skill manifest)
+├── pm.md                        # Project Manager's dedicated role file
 ├── .gitignore                   # Ignores .claude/, .idea/, .vscode/
 │
-├── 📦 Production Roles (10):
+├── 📦 Production Roles (9):
 │   ├── architect.md             # Architecture Designer
 │   ├── product-designer.md      # Product Designer
 │   ├── planner.md               # Task Planner
@@ -178,8 +174,7 @@ development-team/
 │   ├── test-designer.md         # Test Designer
 │   ├── coder.md                 # Code Developer
 │   ├── doc-writer.md            # Document Writer
-│   ├── intern.md                # Intern (miscellaneous)
-│   └── summarizer.md            # Summarizer (heavy context consumer)
+│   └── intern.md                # Intern (miscellaneous + PM's reader)
 │
 ├── 🔍 Review Roles (7):
 │   ├── architect-reviewer.md    # Reviews architecture design
@@ -196,7 +191,7 @@ development-team/
     └── deprecated/                   # Archived old deliverable documents
 ```
 
-**Total: 2 core system files + 17 role definition files = 19 Markdown files.**
+**Total: 1 core system file + 16 role definition files = 17 Markdown files.**
 
 ---
 
