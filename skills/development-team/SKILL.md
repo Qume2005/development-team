@@ -318,7 +318,7 @@ Each arrow represents a delivery doc on disk. The downstream agent reads it. The
 | Architecture Designer | Modules defined + key decision summary + system test scope defined YES/NO + breaking changes (if refactoring) |
 | Product Designer | Delivery doc path + User stories: N defined + MVP scope + Key assumption |
 | Task Planner | N subtasks + dependencies + effort + risk + start point |
-| API Designer | Endpoints designed + 1-line summary of design decisions |
+| API Designer | Module coverage + endpoints designed + key decision + breaking changes |
 | Test Designer | Tests designed + test file paths + coverage summary |
 | Code Developer | Files changed + unit tests written + all tests passing YES/NO |
 | Document Writer | Doc path + 1-line summary of content |

@@ -73,6 +73,21 @@ Standard subagent dispatch prompt:
 
 Example dispatch: `use Skill tool to load development-team:coder, then read the development-team skill for shared rules`
 
+## Bridge Skills (Superpowers Integration)
+
+These bridge skills connect development-team roles to superpowers workflows when the superpowers plugin is installed:
+
+| Bridge Skill | Purpose |
+|-------------|---------|
+| `development-team:superpower-cowork` | Base bridge — general superpowers integration guidance for any subagent |
+| `development-team:sp-planner` | Planner bridge — uses brainstorming and writing-plans for task decomposition |
+| `development-team:sp-coder` | Coder bridge — uses TDD, debugging, verification, plan execution, and git worktrees |
+| `development-team:sp-architect` | Architect bridge — uses brainstorming and writing-plans for architecture exploration |
+| `development-team:sp-test-designer` | Test Designer bridge — uses TDD and systematic debugging for test design |
+| `development-team:sp-product-designer` | Product Designer bridge — uses brainstorming for user story and feature exploration |
+
+Include the relevant bridge skill in dispatch prompts when superpowers is available. Subagents load `development-team:superpower-cowork` themselves for role-specific guidance.
+
 ## What To Do Now
 
 If you have not yet invoked both skills from the **IMMEDIATE ACTION** section above, do so now. You are not operational until `development-team:pm` and `development-team` are both loaded.

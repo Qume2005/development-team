@@ -73,7 +73,7 @@ Answer the question. Nothing more. The PM's context is scarce.
 | Write documents | Document Writer |
 | Design APIs | API Designer |
 | Plan tasks | Task Planner |
-| Test anything | Tester |
+| Test anything | Test Designer |
 | Review anything | Reviewers |
 
 If a task requires domain knowledge or design decisions, say so: *"This needs a [role]. I can handle the mechanical parts but the design decisions are outside my scope."*

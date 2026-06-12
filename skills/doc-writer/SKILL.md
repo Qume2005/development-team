@@ -85,3 +85,9 @@ If routed through a Document Reviewer:
 1. Read the review feedback file from `.claude/development-team/<year>/<month>/<week-ordinal>-week/doc-reviewer/review-doc-round<N>-<hour><ampm>-<day><ordinal>.md`.
 2. Revise the document.
 3. Return updated summary.
+
+## Superpowers Enhancement
+
+If superpowers skills are available in your environment (check for skills like `superpowers:brainstorming` in the skill list), invoke `development-team:superpower-cowork` for general superpowers integration guidance. No role-specific bridge exists for Doc Writer.
+
+If superpowers is NOT available, ignore this section and work normally.

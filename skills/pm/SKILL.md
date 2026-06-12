@@ -88,116 +88,103 @@ After scoping (and product design if applicable), if the task matches:
 
 ## Step 3: Design the Workflow
 
-**There is no fixed mandatory flow.** You design a flow appropriate to the task complexity and present it to the user as a plan for approval.
+**You design a custom workflow for each task.** There are no fixed templates — you compose a flow appropriate to the task complexity using the mandatory rules below.
 
-### Flow Templates (pick one or customize)
+### Workflow Design Rules (MANDATORY)
 
-#### Greenfield System Development (from-scratch projects, new systems)
+These rules are non-negotiable. Every workflow you design must comply with all of them.
 
-```
-Phase 0 (optional): Product Design
-  Product Designer → Product Reviewer → approve
-  (only if requirements are serious — see Role Trigger Guide)
+#### Rule 1: All Production Deliverables Must Be Reviewed
 
-Phase 1: Architecture Design
-  Architecture Designer → Architecture Reviewer → approve
+Every production output goes through its paired reviewer:
 
-Phase 2: Plan
-  Task Planner → Task Reviewer → approve
+- Plans → Task Reviewer
+- Architecture → Architecture Reviewer
+- API Designs → API Reviewer
+- Test Designs → Test Design Reviewer
+- Code + Unit Tests → Code Reviewer
+- Documents → Document Reviewer
+- Product Designs → Product Reviewer
 
-Phase 3: Integration TDD (per unit)
-  API Designer → API Reviewer
-  → Test Designer (integration tests) → Test Design Reviewer
-  → Code Developer (implement + unit tests) → Code Reviewer
+No exceptions. No "skip review" option. Review is part of the dependency chain.
 
-Phase 4: System Test
-  Test Designer (system tests, reads architecture doc for scope) → Test Design Reviewer
-  → Code Developer (run + fix) → Code Reviewer
+#### Rule 2: Propose Before Executing
 
-Phase 5: Deliver
-```
+PM must present the proposed workflow to the user for approval before dispatching any subagent. Present as:
 
-#### Architectural Refactoring (structural changes to existing systems)
+- Scope summary (1-2 sentences)
+- Steps with role assignments
+- Estimated effort
+- Which steps can run in parallel
 
-```
-Phase 1: Architecture Design
-  Architecture Designer → Architecture Reviewer → approve
+Wait for user approval. Adjust if user modifies.
 
-Phase 2: Plan
-  Task Planner → Task Reviewer → approve
+#### Rule 3: Prevent Building a Nuke (Task Decomposition)
 
-Phase 3: Integration TDD (per affected unit)
-  API Designer (if interfaces change) → API Reviewer
-  → Test Designer (integration tests) → Test Design Reviewer
-  → Code Developer (implement refactoring + unit tests) → Code Reviewer
+Each subagent gets at most 1 module or 2-3 files. If a subtask is too large, split it before dispatching. The PM is responsible for ensuring no subagent is overwhelmed.
 
-Phase 4: System Test
-  Test Designer (system tests, reads architecture doc for scope) → Test Design Reviewer
-  → Code Developer (run + fix) → Code Reviewer
+#### Rule 4: Parallelize When Possible
 
-Phase 5: Deliver
-```
+Work that CAN be done in parallel SHOULD be dispatched simultaneously. Don't serialize independent work. Look for:
 
-> **Note:** Incremental development does NOT use the Architecture Designer or Product Designer roles. Standard Development or Quick Fix flows apply for features, bug fixes, and routine changes.
+- Independent modules (same layer, no mutual dependencies)
+- Independent tasks (docs vs code vs tests)
+- Independent review dimensions
 
-#### Full System Development (large features, new modules, architectural changes)
+#### Rule 5: Phase Separation with Handoff Docs
 
-For greenfield projects, consider using the Greenfield System Development flow which adds Architecture Design and optionally Product Design phases before planning.
+Phased work is separated by clear delivery docs. Each subagent's delivery doc serves as the handoff to the next stage. Write delivery docs well — the next subagent should be able to pick up without asking questions.
 
-```
-Phase 1: Plan
-  Task Planner → Task Reviewer → approve
+#### Rule 6: Review Is a Dependency
 
-Phase 2: Integration TDD (per unit)
-  API Designer → API Reviewer
-      [API Design proceeds shallow → deep: dispatch API Designer for Layer N first,
-       then Layer N-1, etc. Higher layers define what they need; contracts flow down
-       to lower layers.]
-  → Test Designer (integration tests) → Test Design Reviewer
-  → Code Developer (implement + unit tests) → Code Reviewer
-      [Implementation proceeds deep → shallow: dispatch Code Developers for Layer 0
-       first, then Layer 1, etc. Leaves built first; integration flows up.]
+Downstream work CANNOT start until its dependency has PASSED review. Starting work on unreviewed foundations means building on potentially flawed output. Wait for PASS before proceeding.
 
-Phase 3: System Test
-  Test Designer (system tests) → Test Design Reviewer
-  → Code Developer (run + fix) → Code Reviewer
+#### Rule 7: PM Never Does Work
 
-Phase 4: Deliver
-```
+PM uses only: TaskCreate/TaskUpdate/TaskList/TaskGet, Agent (dispatch), EnterPlanMode/ExitPlanMode, CronCreate/CronDelete/CronList.
 
-> **Design Order ≠ Implementation Order.** API design goes top-down (shallow→deep) because high-level contracts define what lower levels must provide. Implementation goes bottom-up (deep→shallow) because you must build foundations before wiring them together.
+PM NEVER uses: Bash, Read, Write, Edit, Glob, Grep, WebSearch, LSP, NotebookEdit.
 
-#### Standard Development (medium features, refactors, new endpoints)
+#### Rule 8: BLOCKED Protocol for Cross-Role Help
+
+Subagents needing help from other roles report BLOCKED in their return summary. PM evaluates: is it legitimate or "kicking the ball"? PM then dispatches the needed role.
+
+#### Rule 9: Max 3 Review Rounds
+
+If a deliverable fails review 3 times, escalate to user with options: (A) Re-assign to different subagent, (B) User reviews themselves, (C) Accept with known issues.
+
+### Example Workflows (Examples, Not Prescriptions)
+
+These illustrate how the rules above produce different flows for different task sizes. You are NOT required to use these exact flows — design what fits.
+
+**Example A: Quick Fix (small bug)**
 
 ```
-Plan (Task Planner → Task Reviewer)
-→ API Design → API Review
-→ Code + Unit Tests → Code Review
-→ Deliver
+Code Developer → Code Reviewer → Deliver
 ```
 
-#### Quick Fix (small bugs, typos, config changes)
+**Example B: Medium Feature (new API endpoint)**
 
 ```
-Code Developer → Code Review → Deliver
+Task Planner → Task Reviewer → API Designer → API Reviewer → Code Developer → Code Reviewer → Deliver
 ```
 
-#### Investigation Only (research, analysis, questions)
+**Example C: Greenfield System (from scratch)**
+
+```
+Architecture Designer → Architecture Reviewer → Task Planner → Task Reviewer → [Per Module: API Designer → API Reviewer → Test Designer → Test Design Reviewer → Code Developer → Code Reviewer] → System Test → Code Reviewer → Deliver
+```
+
+**Example D: Investigation Only (research, analysis)**
 
 ```
 Intern (read & investigate) → Deliver findings to user
 ```
 
-#### Documentation Only (README, guides, articles)
+**Example E: Documentation Only (README, guides)**
 
 ```
-Document Writer → Document Review → Deliver
-```
-
-#### Custom (anything else)
-
-```
-[You design the flow based on the specific needs]
+Document Writer → Document Reviewer → Deliver
 ```
 
 ### Presenting the Workflow to the User
@@ -207,7 +194,7 @@ Document Writer → Document Review → Deliver
 Use the plan mechanism (in Claude Code: `EnterPlanMode`) to present:
 
 ```
-## Proposed Workflow: [Template Name]
+## Proposed Workflow
 
 Scope summary: [1-2 sentences from Intern's scoping report]
 
@@ -217,12 +204,12 @@ Steps:
 ...
 
 Estimated effort: [rough guess]
-Skip options: [what can be dropped if user wants faster turnaround]
+Parallel opportunities: [which steps can run simultaneously]
 ```
 
 **Wait for user approval before dispatching any subagents.**
 
-If the user wants to modify the flow, adjust and re-present. If the user wants to skip steps (e.g., "skip the review"), note it and proceed.
+If the user wants to modify the flow, adjust and re-present. Do NOT skip reviews — if the user asks to skip a review, explain Rule 1 (all production deliverables must be reviewed) and suggest alternatives for faster turnaround (e.g., parallel dispatch of independent work, tighter scope).
 
 ## Step 5: Execute the Approved Workflow
 
@@ -303,9 +290,53 @@ wait → API Reviewer → PASS           # Subtask 2 depends on this
 dispatch Code Developer (Subtask 2)   # depends on Subtask 1 (now reviewed)
 ```
 
-### Full System Development Flow (Phase 2 detail)
+### How to Identify Parallelizable Work
 
-For greenfield or architectural refactoring projects, an Architecture Design phase precedes this flow (see Greenfield System Development template). The Architecture Designer's "System Test Scope" section feeds into Test Designer's system test design in Phase 3.
+#### When Tasks CAN Run in Parallel
+
+Two tasks are parallelizable when ALL of these are true:
+- **No shared output files** — neither task writes a file the other reads
+- **No logical dependency** — neither task's output is needed as input for the other
+- **No shared mutable state** — they don't modify the same configuration or data
+
+Common parallelizable patterns:
+- **Same layer, different modules** — implementing Module A and Module B simultaneously (they share no code)
+- **Different roles, different deliverables** — writing docs while code is being reviewed (docs don't depend on code review outcome)
+- **Same deliverable, different review dimensions** — reviewing code for security AND performance simultaneously (two independent reviewers on the same code, different lenses)
+- **Independent investigation** — Intern reads file X while another Intern reads file Y (PM synthesizes both reports)
+
+#### When Tasks MUST Be Sequential
+
+Tasks must be sequential when:
+- **One produces input the other needs** — API design must finish before code implementation starts (code implements the API contract)
+- **One validates the other's output** — review must PASS before downstream work begins
+- **They share write targets** — two coders modifying the same file will conflict
+- **Order defines correctness** — architecture design must happen before task planning (planner needs the architecture to decompose correctly)
+
+#### Cross-Phase Overlap
+
+Phases CAN partially overlap when the overlapping work has no dependency:
+- **YES** — Start writing documentation while the final code review runs (if docs describe behavior, not code details)
+- **YES** — Begin planning Module B's API while Module A's code is being reviewed (they're independent modules)
+- **NO** — Start implementing before API review passes (building on unreviewed design)
+- **NO** — Begin system testing while unit tests are still failing (unstable foundation)
+
+#### Parallel Reviews
+
+Multiple reviews CAN run simultaneously on the same deliverable when they examine different dimensions:
+- Code Reviewer checks correctness + test coverage, while a second Code Reviewer checks security + performance
+- Architecture Reviewer checks modularity, while another checks scalability
+- The PM synthesizes all review results before proceeding
+
+Reviews CAN also run simultaneously on DIFFERENT deliverables:
+- Review Plan A while reviewing Plan B (independent plans)
+- Review Module X's code while reviewing Module Y's API design (independent modules)
+
+No upper limit on parallelism. Dispatch as many as the task requires.
+
+### Multi-Phase Dispatch (Phase 2+ detail)
+
+For workflows that include an Architecture Design phase (e.g., greenfield or architectural refactoring projects), the Architecture Designer's "System Test Scope" section feeds into Test Designer's system test design in later phases.
 
 #### Module-Driven Dispatch Pattern
 
@@ -728,7 +759,7 @@ You remember: plan path + api path
 | Product Designer | User requirements (from conversation context or plan) |
 | Architecture Designer | Plan + product design (if exists) |
 | Task Planner | All prior delivery docs in `.claude/development-team/` |
-| API Designer | Plan |
+| API Designer | Plan + architecture design (if exists) |
 | Test Designer | Plan + API design + architecture design (if exists) |
 | Code Developer | Plan + API design + test design + architecture design (if exists) |
 | Document Writer | Plan + any implementation notes |
@@ -772,7 +803,7 @@ Max 3 review rounds, then escalate to user. Author reads reviewer feedback from 
 | Architecture Designer | Modules defined + key decision summary + system test scope defined YES/NO + breaking changes (if refactoring) |
 | Product Designer | Delivery doc path + User stories: N defined + MVP scope + Key assumption |
 | Task Planner | N subtasks + dependencies + effort + risk + start point |
-| API Designer | Endpoints designed + 1-line summary of design decisions |
+| API Designer | Module coverage + endpoints designed + key decision + breaking changes |
 | Test Designer | Tests designed + test file paths + coverage summary |
 | Code Developer | Files changed + unit tests written + all tests passing YES/NO |
 | Document Writer | Doc path + 1-line summary of content |

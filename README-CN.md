@@ -2,7 +2,7 @@
 
 # DevelopmentTeam
 
-> 一个让 AI agent 化身 IT 团队项目经理的 Claude Code skill — 用 16 个专业角色协作完成软件工程任务，同时守护你宝贵的 context window。
+> 一个让 AI agent 化身 IT 团队项目经理的 Claude Code skill — 用 16 个子角色 + 7 个 superpowers 桥接技能协作完成软件工程任务，同时守护你宝贵的 context window。
 
 ---
 
@@ -12,7 +12,7 @@
 
 **DevelopmentTeam** 正是为了解决这个问题而诞生的。它的核心理念很简单：让 AI agent 扮演一位 IT 团队项目经理，**项目经理从不亲自动手** — 它只负责理解需求、设计工作流、派遣专业子角色（subagent）执行，然后根据子角色返回的简要裁决（1-2 句话摘要）做出决策。所有上下文通过磁盘上的结构化文档流转，项目经理永远不直接阅读交付物本身。
 
-这不是一个代码库，也不是一个框架。它是一组精心设计的 Markdown 规则文件（共 17 个），安装到 `~/.claude/skills/` 目录后，就能让 Claude Code 的每一次对话自动进入「项目经理模式」。无论你是要构建一个全新的全栈项目，还是修一个小 bug，DevelopmentTeam 都会自动匹配最合适的工作流模板，以 TDD、代码审查、质量门控的方式交付高质量的成果。
+这不是一个代码库，也不是一个框架。它是一个精心设计的 Claude Code 插件 — 23 个 skill 目录（每个包含独立的 SKILL.md），加上 bootstrap 文件、session hooks 和 plugin manifest。安装到 `~/.claude/skills/` 目录后，就能让 Claude Code 的每一次对话自动进入「项目经理模式」。无论你是要构建一个全新的全栈项目，还是修一个小 bug，DevelopmentTeam 都会自动匹配最合适的工作流模板，以 TDD、代码审查、质量门控的方式交付高质量的成果。
 
 ---
 
@@ -29,7 +29,7 @@
 
 ## 功能特性
 
-- **16 个专业角色** — 9 个生产角色 + 7 个审查角色，各司其职，权责分明
+- **16 个子角色 + 7 个 superpowers 桥接技能** — 9 个生产角色 + 7 个审查角色 + 6 个 superpowers 桥接，各司其职，权责分明
 - **7 种工作流模板（+自定义）** — 从 Greenfield 全新项目到 Quick Fix 快速修复，按任务复杂度自动匹配
 - **TDD 优先** — Test Designer 先写测试，Code Developer 再实现，确保质量从源头抓起
 - **审查门控（Review Gate）** — 每个生产交付物必须通过配对审查角色的审核，最多 3 轮，不通过则升级至用户
@@ -41,7 +41,7 @@
 - **强制派遣公告** — 每次派发 subagent 必须输出自然语言公告，说明谁、做什么、为什么
 - **权限矩阵** — 每个角色对交付文档的读/写/审查权限精确定义，防止越权操作
 - **文档推荐矩阵** — 每个生产角色被明确告知应读取哪些前置交付文档，确保上下文流转正确
-- **纯 Markdown 实现** — 零依赖、零构建、零配置，17 个 `.md` 文件即全部
+- **纯 Markdown 实现** — 零依赖、零构建、零配置，23 个 skill 目录 + bootstrap.md + hooks/ + .claude-plugin/ 即全部
 
 ---
 
@@ -51,27 +51,27 @@
 
 | 角色 | 文件 | 职责 |
 |------|------|------|
-| Project Manager（项目经理） | `pm.md` | 理解需求、设计工作流、派遣子角色、做决策 — 但从不亲自动手 |
-| Architecture Designer | `architect.md` | 设计系统架构、模块拆分、技术选型 |
-| Product Designer | `product-designer.md` | 设计产品规格、用户故事、功能优先级 |
-| Task Planner | `planner.md` | 将任务拆解为小单元，编写执行计划 |
-| API Designer | `api-designer.md` | 设计 API、接口、契约 |
-| Test Designer | `test-designer.md` | 设计集成测试与系统测试（TDD：测试先行） |
-| Code Developer | `coder.md` | 编写代码 + 单元测试，运行所有测试，确保通过 |
-| Document Writer | `doc-writer.md` | 编写文档、文章、规格说明 |
-| Intern（实习生） | `intern.md` | 杂务 + PM 的阅读者 — 清理、归档、文件操作、为 PM 阅读和汇报 |
+| Project Manager（项目经理） | `skills/pm/SKILL.md` | 理解需求、设计工作流、派遣子角色、做决策 — 但从不亲自动手 |
+| Architecture Designer | `skills/architect/SKILL.md` | 设计系统架构、模块拆分、技术选型 |
+| Product Designer | `skills/product-designer/SKILL.md` | 设计产品规格、用户故事、功能优先级 |
+| Task Planner | `skills/planner/SKILL.md` | 将任务拆解为小单元，编写执行计划 |
+| API Designer | `skills/api-designer/SKILL.md` | 设计 API、接口、契约 |
+| Test Designer | `skills/test-designer/SKILL.md` | 设计集成测试与系统测试（TDD：测试先行） |
+| Code Developer | `skills/coder/SKILL.md` | 编写代码 + 单元测试，运行所有测试，确保通过 |
+| Document Writer | `skills/doc-writer/SKILL.md` | 编写文档、文章、规格说明 |
+| Intern（实习生） | `skills/intern/SKILL.md` | 杂务 + PM 的阅读者 — 清理、归档、文件操作、为 PM 阅读和汇报 |
 
 ### 审查角色（Review Roles）
 
 | 角色 | 文件 | 审查对象 |
 |------|------|----------|
-| Architecture Reviewer | `architect-reviewer.md` | 架构设计 — 模块化、可扩展性、可行性 |
-| Product Reviewer | `product-reviewer.md` | 产品设计 — 用户价值、完整性、优先级 |
-| Task Reviewer | `task-reviewer.md` | 执行计划 — 可行性、范围、拆解质量 |
-| API Reviewer | `api-reviewer.md` | API 设计 — 正确性、一致性、易用性 |
-| Test Design Reviewer | `test-design-reviewer.md` | 测试设计 — 完整性、正确性、边界情况 |
-| Code Reviewer | `code-reviewer.md` | 代码 + 测试 — Bug、覆盖率、可维护性、TDD 合规性 |
-| Document Reviewer | `doc-reviewer.md` | 文档 — 清晰度、准确性、完整性 |
+| Architecture Reviewer | `skills/architect-reviewer/SKILL.md` | 架构设计 — 模块化、可扩展性、可行性 |
+| Product Reviewer | `skills/product-reviewer/SKILL.md` | 产品设计 — 用户价值、完整性、优先级 |
+| Task Reviewer | `skills/task-reviewer/SKILL.md` | 执行计划 — 可行性、范围、拆解质量 |
+| API Reviewer | `skills/api-reviewer/SKILL.md` | API 设计 — 正确性、一致性、易用性 |
+| Test Design Reviewer | `skills/test-design-reviewer/SKILL.md` | 测试设计 — 完整性、正确性、边界情况 |
+| Code Reviewer | `skills/code-reviewer/SKILL.md` | 代码 + 测试 — Bug、覆盖率、可维护性、TDD 合规性 |
+| Document Reviewer | `skills/doc-reviewer/SKILL.md` | 文档 — 清晰度、准确性、完整性 |
 
 ---
 
@@ -162,36 +162,53 @@ ls ~/.claude/skills/development-team/SKILL.md
 
 ```
 development-team/
-├── SKILL.md                     # 入口 / 共享系统概述（Skill 清单）
-├── pm.md                        # Project Manager 专属角色文件
-├── .gitignore                   # 忽略 .claude/, .idea/, .vscode/
+├── .claude-plugin/
+│   └── plugin.json                        # 插件清单
+├── hooks/
+│   ├── hooks.json                         # SessionStart hook 注册
+│   ├── session-start                      # 引导注入脚本
+│   └── run-hook.cmd                       # 跨平台启动器
+├── skills/
+│   ├── development-team/                  # 主 skill — 共享规则 + 引导文件
+│   │   ├── SKILL.md
+│   │   └── bootstrap.md
+│   ├── pm/                                # PM 角色（独立 skill）
+│   │   └── SKILL.md
+│   │
+│   ├── 📦 生产角色（8 — 每个 skill）：
+│   ├── coder/                             # Code Developer
+│   ├── architect/                         # Architecture Designer
+│   ├── api-designer/                      # API Designer
+│   ├── test-designer/                     # Test Designer
+│   ├── doc-writer/                        # Document Writer
+│   ├── product-designer/                  # Product Designer
+│   ├── planner/                           # Task Planner
+│   ├── intern/                            # Intern
+│   │
+│   ├── 🔍 审查角色（7 — 每个 skill）：
+│   ├── task-reviewer/                     # Task Reviewer
+│   ├── api-reviewer/                      # API Reviewer
+│   ├── test-design-reviewer/              # Test Design Reviewer
+│   ├── code-reviewer/                     # Code Reviewer
+│   ├── doc-reviewer/                      # Document Reviewer
+│   ├── architect-reviewer/                # Architecture Reviewer
+│   ├── product-reviewer/                  # Product Reviewer
+│   │
+│   └── ⚡ Superpowers 桥接技能（7）：
+│       ├── superpower-cowork/             # 子角色利用 superpowers 的桥接
+│       ├── sp-planner/                    # Task Planner 桥接
+│       ├── sp-coder/                      # Code Developer 桥接
+│       ├── sp-architect/                  # Architecture Designer 桥接
+│       ├── sp-test-designer/              # Test Designer 桥接
+│       └── sp-product-designer/           # Product Designer 桥接
 │
-├── 📦 Production Roles (9):
-│   ├── architect.md             # Architecture Designer
-│   ├── product-designer.md      # Product Designer
-│   ├── planner.md               # Task Planner
-│   ├── api-designer.md          # API Designer
-│   ├── test-designer.md         # Test Designer
-│   ├── coder.md                 # Code Developer
-│   ├── doc-writer.md            # Document Writer
-│   └── intern.md                # Intern（杂务 + PM 的阅读者）
-│
-├── 🔍 Review Roles (7):
-│   ├── architect-reviewer.md    # 审查架构设计
-│   ├── product-reviewer.md      # 审查产品设计
-│   ├── task-reviewer.md         # 审查执行计划
-│   ├── api-reviewer.md          # 审查 API 设计
-│   ├── test-design-reviewer.md  # 审查测试设计
-│   ├── code-reviewer.md         # 审查代码 + 测试
-│   └── doc-reviewer.md          # 审查文档
-│
-└── .claude/development-team/         # 运行时交付目录
-    └── 2026/06/1st-week/             # 按年/月/周组织
-        └── <角色名>/                 # 每个角色有独立子目录
-    └── deprecated/                   # 归档的旧交付文档
+├── .gitignore
+└── .claude/development-team/              # 运行时交付目录
+    └── 2026/06/1st-week/                  # 按年/月/周组织
+        └── <角色名>/                       # 每个角色有独立子目录
 ```
 
-**总计：1 个核心系统文件 + 16 个角色定义文件 = 17 个 Markdown 文件。**
+**总计：23 个 skill 目录 + bootstrap.md + hooks/ + .claude-plugin/ = 整个插件。**
 
 ---
 
