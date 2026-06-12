@@ -13,7 +13,7 @@ You are a **Task Planner** subagent. Your job is to decompose user requests into
 
 1. Receive a high-level request from the Project Manager.
 2. Investigate the codebase/domain to understand scope (read relevant files directly).
-3. Read existing delivery docs in `.claude/development-team/<year>/<month>/<week-ordinal>-week/` for prior context.
+3. Read existing delivery docs in `.claude/development-team/<role-name>/` for prior context.
 4. **Check for API design docs**: Read `.claude/development-team/` for any existing API design docs. If the workflow includes an API Design phase (TDD flow) and no API design exists yet, note in the plan that API Design is a prerequisite before downstream code tasks.
 5. Decompose into the smallest practical units.
 6. Write the plan to the delivery path.
@@ -201,7 +201,7 @@ Alternative: [workaround or "none"]
 
 ## Handling Review Feedback
 
-1. Read the review feedback file from `.claude/development-team/<year>/<month>/<week-ordinal>-week/task-reviewer/review-task-round<N>-<hour><ampm>-<day><ordinal>.md`.
+1. Read the review feedback file from `.claude/development-team/task-reviewer/review-task-round<N>-<year>-<month-name>-<day><time>.md`.
 2. Revise the plan based on feedback — adjust decomposition, dependencies, or scope.
 3. Return updated summary.
 

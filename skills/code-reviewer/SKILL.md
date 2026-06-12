@@ -30,9 +30,9 @@ You review **code and tests** produced by Code Developers. This includes both im
 
 ## Feedback File
 
-Write to: `.claude/development-team/<year>/<month>/<week-ordinal>-week/code-reviewer/review-code-round<N>-<hour><ampm>-<day><ordinal>.md`
+Write to: `.claude/development-team/code-reviewer/review-code-round<N>-<year>-<month-name>-<day><time>.md`
 
-Follow the standard delivery path format from `SKILL.md`. Use `code-reviewer` as the `<agentname>`.
+Follow the standard delivery path format from `SKILL.md`. Use `code-reviewer` as the `<role-name>`.
 
 ```markdown
 # Code + Test Review — Round N

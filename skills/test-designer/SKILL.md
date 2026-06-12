@@ -121,7 +121,7 @@ Alternative: [workaround or "none"]
 
 ## Handling Review Feedback
 
-1. Read the review feedback file from `.claude/development-team/<year>/<month>/<week-ordinal>-week/test-design-reviewer/review-test-design-round<N>-<hour><ampm>-<day><ordinal>.md`.
+1. Read the review feedback file from `.claude/development-team/test-design-reviewer/review-test-design-round<N>-<year>-<month-name>-<day><time>.md`.
 2. Revise test design and test code.
 3. Return updated summary.
 

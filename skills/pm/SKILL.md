@@ -744,11 +744,11 @@ When you dispatch a production subagent, you MUST tell it which existing deliver
 Each subagent's return summary includes a file path. You store these paths (just the paths, not the content) and pass them to the next subagent:
 
 ```
-Subagent A returns: "Plan at .claude/development-team/2026/06/1st-week/planner/auth-refactor-12pm-7th.md, 5 subtasks, ..."
-You remember: plan path = .claude/development-team/2026/06/1st-week/planner/auth-refactor-12pm-7th.md
+Subagent A returns: "Plan at .claude/development-team/planner/auth-refactor-2026-june-7-12pm.md, 5 subtasks, ..."
+You remember: plan path = .claude/development-team/planner/auth-refactor-2026-june-7-12pm.md
 
-Subagent B prompt: "...Read the plan at .claude/development-team/2026/06/1st-week/planner/auth-refactor-12pm-7th.md..."
-Subagent B returns: "API at .claude/development-team/2026/06/1st-week/api-designer/auth-endpoints-01pm-7th.md, 3 endpoints, ..."
+Subagent B prompt: "...Read the plan at .claude/development-team/planner/auth-refactor-2026-june-7-12pm.md..."
+Subagent B returns: "API at .claude/development-team/api-designer/auth-endpoints-2026-june-7-1pm.md, 3 endpoints, ..."
 You remember: plan path + api path
 ```
 
@@ -847,7 +847,7 @@ See `SKILL.md` "Information Access Model (2-Tier)" for the full model. As PM, yo
 
 ```
 Task: Move the following delivery docs to .claude/development-team/deprecated/:
-- .claude/development-team/2026/06/1st-week/planner/old-plan-10am-5th.md
+- .claude/development-team/planner/old-plan-2026-june-5-10am.md
 Create the deprecated directory structure if it doesn't exist. Use `mv` commands.
 ```
 

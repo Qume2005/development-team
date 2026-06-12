@@ -52,7 +52,7 @@ Answer the question. Nothing more. The PM's context is scarce.
 
 | Task | Example |
 |------|---------|
-| Archive/deprecate delivery docs | Move old docs to `.claude/development-team/deprecated/<year>/<month>/<week-ordinal>-week/<agentname>/` |
+| Archive/deprecate delivery docs | Move old docs to `.claude/development-team/deprecated/<role-name>/` |
 | Organize files | Rename files, restructure directories |
 | Clean up | Remove temp files, delete empty dirs |
 | File operations | Move, copy, rename files |

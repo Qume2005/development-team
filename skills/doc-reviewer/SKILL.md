@@ -20,9 +20,9 @@ You review **documents** produced by Document Writers.
 
 ## Feedback File
 
-Write to: `.claude/development-team/<year>/<month>/<week-ordinal>-week/doc-reviewer/review-doc-round<N>-<hour><ampm>-<day><ordinal>.md`
+Write to: `.claude/development-team/doc-reviewer/review-doc-round<N>-<year>-<month-name>-<day><time>.md`
 
-Follow the standard delivery path format from `SKILL.md`. Use `doc-reviewer` as the `<agentname>`.
+Follow the standard delivery path format from `SKILL.md`. Use `doc-reviewer` as the `<role-name>`.
 
 ```markdown
 # Document Review — Round N

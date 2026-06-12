@@ -152,82 +152,69 @@ Alternative: none
 
 ### Path Format
 
-Each delivery doc lives in a time-based directory hierarchy. The path is:
+Each delivery doc lives under a flat directory per role. The path is:
 
 ```
-.claude/development-team/<year>/<month>/<week-ordinal>-week/<agentname>/<summary>-<hour><ampm>-<day><ordinal>.md
+.claude/development-team/<role-name>/<summary>-<year>-<month-name>-<day><time>.md
 ```
 
 ### Path Components
 
 | Component | Format | Example | How to determine |
 |-----------|--------|---------|------------------|
-| `<year>` | 4-digit year | `2026` | Current year |
-| `<month>` | 2-digit month | `06` | Current month (zero-padded) |
-| `<week-ordinal>-week` | Ordinal week of month | `1st-week`, `2nd-week`, `3rd-week`, `4th-week`, `5th-week` | **NOT ISO week number** — count which week of the current month (1st through 5th), append `-week` |
-| `<agentname>` | Role name in kebab-case | `coder`, `api-designer`, `architect` | Your role name |
+| `<role-name>` | Skill directory name (kebab-case) | `coder`, `api-designer`, `architect`, `code-reviewer` | Your role's skill directory name |
 | `<summary>` | Short kebab-case content description | `auth-module`, `plan-jwt-migration` | What this doc contains |
-| `<hour><ampm>` | 12-hour clock with am/pm suffix | `07am`, `02pm`, `11am` | Current hour in 12-hour format + `am` or `pm` |
-| `<day><ordinal>` | Day of month with English ordinal suffix | `1st`, `2nd`, `3rd`, `14th`, `21st`, `22nd`, `23rd` | Current day + `st`/`nd`/`rd`/`th` |
+| `<year>` | 4-digit year | `2026` | Current year |
+| `<month-name>` | Full English month name, lowercase | `january`, `february`, ..., `december` | Current month name |
+| `<day>` | Day of month, plain number | `1`, `2`, `15`, `28` | Current day — no zero-padding, no ordinal suffix |
+| `<time>` | 12-hour time with am/pm | `2am`, `11am`, `3pm`, `11pm` | Current time — no zero-padding on hour |
 
-### Ordinal Suffix Rules
-
-- **st**: 1, 21, 31
-- **nd**: 2, 22
-- **rd**: 3, 23
-- **th**: 4-20, 24-30
+No sub-directories for year/month/week. Flat structure under `.claude/development-team/<role-name>/`.
 
 ### How to Construct the Path
 
 1. Get the current date/time.
-2. Determine `<week-ordinal>-week`: which week of the month is it? (1st = days 1-7, 2nd = days 8-14, 3rd = days 15-21, 4th = days 22-28, 5th = days 29-31). This is the week number within the current month, **not** the ISO week number of the year. Append `-week` (e.g., `1st-week`).
-3. Use your role name as `<agentname>`.
-4. Pick a short `<summary>` describing the doc content.
-5. Determine `<hour><ampm>`: convert the current hour to 12-hour format and append `am` or `pm` (e.g., 14:00 becomes `02pm`, 9:00 becomes `09am`).
-6. Determine `<day><ordinal>`: take the current day of month and append the English ordinal suffix (e.g., 7 becomes `7th`, 14 becomes `14th`, 21 becomes `21st`).
-7. Assemble: `.claude/development-team/<year>/<month>/<week-ordinal>-week/<agentname>/<summary>-<hour><ampm>-<day><ordinal>.md`
+2. Use your role's skill directory name as `<role-name>`.
+3. Pick a short `<summary>` describing the doc content.
+4. Take the 4-digit `<year>`.
+5. Take the full lowercase month name as `<month-name>` (e.g., `june`, `december`).
+6. Take the day of month as `<day>` — plain number, no padding, no suffix (e.g., `7`, `14`, `21`).
+7. Determine `<time>` — 12-hour clock, no zero-padding, with `am`/`pm` (e.g., `2pm`, `11am`, `9am`).
+8. Assemble: `.claude/development-team/<role-name>/<summary>-<year>-<month-name>-<day><time>.md`
 
-### Example
+### Examples
 
-For June 7, 2026 at 2:00 PM, during the 1st week of June, an API Designer designing auth endpoints:
-
-```
-.claude/development-team/2026/06/1st-week/api-designer/auth-endpoints-02pm-7th.md
-```
-
-A full task producing multiple docs might look like:
+For June 12, 2026 at 11 PM:
 
 ```
-.claude/development-team/2026/06/1st-week/
-  ├── product-designer/
-  │   └── user-app-10am-7th.md
-  ├── architect/
-  │   └── modular-structure-11am-7th.md
-  ├── planner/
-  │   └── auth-refactor-to-jwt-12pm-7th.md
-  ├── api-designer/
-  │   └── auth-endpoints-01pm-7th.md
-  ├── test-designer/
-  │   └── auth-integration-tests-02pm-7th.md
-  ├── coder/
-  │   └── auth-module-impl-03pm-7th.md
+.claude/development-team/coder/auth-module-2026-june-12-11pm.md
 ```
 
-Review feedback files follow the same pattern, using the reviewer's role name:
+Review:
 
 ```
-.claude/development-team/2026/06/1st-week/code-reviewer/review-code-round1-03pm-7th.md
+.claude/development-team/code-reviewer/review-code-2026-june-12-3pm.md
 ```
+
+Plan:
+
+```
+.claude/development-team/planner/auth-refactor-2026-june-12-10am.md
+```
+
+Review feedback files follow the same pattern, using the reviewer's role name.
+
+Note: Old delivery docs in the previous format (e.g., `.claude/development-team/<year>/<month>/<week-ordinal>-week/...`) should be left in place. Only new docs use the new format.
 
 ## File Naming Rules
 
-File names follow the `<summary>-<hour><ampm>-<day><ordinal>.md` pattern where `<summary>` is a short kebab-case content description. No generic labels.
+File names follow the `<summary>-<year>-<month-name>-<day><time>.md` pattern where `<summary>` is a short kebab-case content description. No generic labels.
 
 | Bad | Good |
 |-----|------|
-| `doc1-02pm-7th.md` | `plan-auth-refactor-to-jwt-02pm-7th.md` |
-| `output-02pm-7th.md` | `api-design-auth-endpoints-02pm-7th.md` |
-| `review-02pm-7th.md` | `review-code-round1-02pm-7th.md` |
+| `doc1-2026-june-12-3pm.md` | `plan-auth-refactor-to-jwt-2026-june-12-3pm.md` |
+| `output-2026-june-12-3pm.md` | `api-design-auth-endpoints-2026-june-12-3pm.md` |
+| `review-2026-june-12-3pm.md` | `review-code-round1-2026-june-12-3pm.md` |
 
 ## Document Template
 
@@ -257,21 +244,21 @@ File paths, URLs — NOT inline content.
 | Role | Read delivery docs | Write delivery docs | Read review feedback | Read source code / configs / papers | Dispatch Other Roles |
 |------|-------------------|--------------------|--------------------|--------------------------------------|---------------------|
 | Project Manager | No | No | No | No (dispatch Intern to read) | Yes (all roles) |
-| Architecture Designer | Yes — Same date hierarchy | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
-| Product Designer | Yes — Same date hierarchy | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
+| Architecture Designer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
+| Product Designer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
 | Task Planner | Yes — All in `.claude/development-team/` | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
-| API Designer | Yes — Same date hierarchy | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
-| Test Designer | Yes — Same date hierarchy | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
-| Code Developer | Yes — Same date hierarchy | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
-| Document Writer | Yes — Same date hierarchy | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
-| Intern | Yes — Same date hierarchy | Yes | N/A | Yes — As directed by PM | No — Others: BLOCKED |
+| API Designer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
+| Test Designer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
+| Code Developer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
+| Document Writer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
+| Intern | Yes — Same role directory | Yes | N/A | Yes — As directed by PM | No — Others: BLOCKED |
 | Architecture Reviewer | Yes — Doc being reviewed | Yes — Feedback | N/A | Yes — Within review scope | No — Others: BLOCKED |
 | Product Reviewer | Yes — Doc being reviewed | Yes — Feedback | N/A | Yes — Within review scope | No — Others: BLOCKED |
 | All other Reviewers | Yes — Doc being reviewed | Yes — Feedback | N/A | Yes — Within review scope | No — Others: BLOCKED |
 
 ## Review Protocol
 
-Every production deliverable goes through its paired reviewer. Maximum **3 review rounds**. Author reads reviewer feedback from the delivery directory. Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence). Review feedback files: `review-<type>-round<N>-<hour><ampm>-<day><ordinal>.md` (written by reviewer under their own agent directory).
+Every production deliverable goes through its paired reviewer. Maximum **3 review rounds**. Author reads reviewer feedback from the delivery directory. Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence). Review feedback files follow the path format: `.claude/development-team/<reviewer-role-name>/review-<type>-round<N>-<year>-<month-name>-<day><time>.md` (written by reviewer under their own role directory).
 
 ### Review Routing
 
@@ -329,18 +316,15 @@ Each arrow represents a delivery doc on disk. The downstream agent reads it. The
 Superseded delivery docs are moved to:
 
 ```
-.claude/development-team/deprecated/<year>/<month>/<week-ordinal>-week/<agentname>/
+.claude/development-team/deprecated/<role-name>/
 ```
 
 Structure mirrors the active directory:
 
 ```
 .claude/development-team/deprecated/
-  └── 2026/
-      └── 06/
-          └── 1st-week/
-              └── planner/
-                  └── auth-refactor-v1-10am-5th.md
+  └── planner/
+      └── auth-refactor-v1-2026-june-5-10am.md
 ```
 
 - Subagents MAY read from `deprecated/` for historical context, but should prefer active docs.

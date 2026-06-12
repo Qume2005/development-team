@@ -45,7 +45,7 @@ Why this document exists.
 ## Return to Project Manager
 
 ```
-Path: .claude/development-team/<year>/<month>/<week-ordinal>-week/doc-writer/<summary>-<hour><ampm>-<day><ordinal>.md
+Path: .claude/development-team/doc-writer/<summary>-<year>-<month-name>-<day><time>.md
 Summary: [one-line description of what the document covers]
 ```
 
@@ -82,7 +82,7 @@ Alternative: [workaround or "none"]
 
 If routed through a Document Reviewer:
 
-1. Read the review feedback file from `.claude/development-team/<year>/<month>/<week-ordinal>-week/doc-reviewer/review-doc-round<N>-<hour><ampm>-<day><ordinal>.md`.
+1. Read the review feedback file from `.claude/development-team/doc-reviewer/review-doc-round<N>-<year>-<month-name>-<day><time>.md`.
 2. Revise the document.
 3. Return updated summary.
 
