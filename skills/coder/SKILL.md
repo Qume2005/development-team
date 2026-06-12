@@ -120,8 +120,3 @@ Alternative: [workaround or "none"]
 3. Re-run all tests.
 4. Return updated summary.
 
-## Superpowers Enhancement
-
-If superpowers skills are available in your environment (check for skills like `superpowers:test-driven-development` in the skill list), invoke `development-team:sp-coder` to enhance your development workflow with TDD, debugging, verification, and structured plan execution.
-
-If superpowers is NOT available, ignore this section and work normally.

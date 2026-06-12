@@ -28,5 +28,17 @@ Invoke `superpowers:verification-before-completion` — run tests, verify output
 ### Before Starting Feature Work Needing Isolation
 Invoke `superpowers:using-git-worktrees` — create an isolated workspace.
 
+### When You Receive Code Review Feedback
+Invoke `superpowers:receiving-code-review` — don't blindly implement suggestions, verify them first.
+
+### Before Claiming Implementation Is Ready for Merge
+Invoke `superpowers:requesting-code-review` — verify work meets requirements before requesting review.
+
+### When Implementation Is Complete, Tests Pass, Ready to Integrate
+Invoke `superpowers:finishing-a-development-branch` — guides merge, PR, or cleanup decisions.
+
+### When Creating or Editing Skill Files
+Invoke `superpowers:writing-skills` — follow structured skill creation/editing patterns.
+
 ### Fallback
 If superpowers invocation fails or is unavailable, code and test using your standard role instructions.

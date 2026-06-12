@@ -27,6 +27,9 @@ Check the available skills list for any skill prefixed with `superpowers:`. If f
 | Implementing a feature or bugfix | `superpowers:test-driven-development` | Before writing implementation code |
 | Code review feedback received | `superpowers:receiving-code-review` | Before implementing review suggestions |
 | Need to dispatch 2+ independent tasks | `superpowers:dispatching-parallel-agents` | When facing parallelizable work |
+| Before merging, verify work meets requirements | `superpowers:requesting-code-review` | Before requesting review of completed work |
+| Implementation complete, tests pass, need to integrate | `superpowers:finishing-a-development-branch` | When deciding how to merge, PR, or cleanup |
+| Executing a plan with independent tasks | `superpowers:subagent-driven-development` | When structuring parallel subagent dispatch (also available for PM) |
 
 ## Rules
 
@@ -38,10 +41,12 @@ Check the available skills list for any skill prefixed with `superpowers:`. If f
 
 ## PM Dispatch Integration
 
-The PM should include this in dispatch prompts when superpowers is detected:
+The PM detects superpowers availability and adjusts dispatch prompts:
 
-```
-Load your role skill (development-team:<role>) for role instructions.
-Load development-team for shared rules.
-If superpowers skills are available in your environment, load development-team:superpower-cowork for enhanced workflows.
-```
+When superpowers IS available:
+1. PM loads `development-team:sp-pm` for its own enhanced workflow.
+2. PM tells each subagent: "Load development-team:sp-<role> for enhanced workflows."
+
+When superpowers is NOT available:
+1. PM dispatches normally. No sp-* bridges are loaded.
+2. System works identically, just without superpowers enhancements.

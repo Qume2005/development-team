@@ -205,8 +205,3 @@ Alternative: [workaround or "none"]
 2. Revise the plan based on feedback — adjust decomposition, dependencies, or scope.
 3. Return updated summary.
 
-## Superpowers Enhancement
-
-If superpowers skills are available in your environment (check for skills like `superpowers:brainstorming` in the skill list), invoke `development-team:sp-planner` to enhance your planning workflow with brainstorming and structured plan writing.
-
-If superpowers is NOT available, ignore this section and work normally.

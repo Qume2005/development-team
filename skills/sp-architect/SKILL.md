@@ -27,5 +27,8 @@ Invoke `superpowers:writing-plans` for structured output:
 - System test scope definition
 - Risk assessment
 
+### When Creating or Editing Skill Files or Architecture Templates
+Invoke `superpowers:writing-skills` — follow structured skill creation/editing patterns for architecture docs that serve as reusable templates.
+
 ### Fallback
 If superpowers invocation fails or is unavailable, design architecture using your standard role instructions.

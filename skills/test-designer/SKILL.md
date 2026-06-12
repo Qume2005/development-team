@@ -125,8 +125,3 @@ Alternative: [workaround or "none"]
 2. Revise test design and test code.
 3. Return updated summary.
 
-## Superpowers Enhancement
-
-If superpowers skills are available in your environment (check for skills like `superpowers:test-driven-development` in the skill list), invoke `development-team:sp-test-designer` to enhance your test design workflow with TDD thinking and systematic debugging.
-
-If superpowers is NOT available, ignore this section and work normally.

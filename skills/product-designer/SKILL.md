@@ -179,8 +179,3 @@ Alternative: [workaround or "none"]
 2. Revise the product design.
 3. Return updated summary.
 
-## Superpowers Enhancement
-
-If superpowers skills are available in your environment (check for skills like `superpowers:brainstorming` in the skill list), invoke `development-team:sp-product-designer` to enhance your product design workflow with user story and feature exploration.
-
-If superpowers is NOT available, ignore this section and work normally.

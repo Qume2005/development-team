@@ -27,5 +27,8 @@ Invoke `superpowers:writing-plans` for structured plan creation:
 - Effort and risk estimates
 - Verification criteria
 
+### When Creating or Editing Skill Files or Plan-Like Documents
+Invoke `superpowers:writing-skills` — follow structured skill creation/editing patterns for plan documents that serve as reusable templates.
+
 ### Fallback
 If superpowers invocation fails or is unavailable, decompose and plan using your standard role instructions. No errors, no complaints.
