@@ -11,6 +11,16 @@ This skill enhances the Code Developer with superpowers. **Requires superpowers 
 
 Look at the available skills list. If you see skills like `superpowers:test-driven-development`, superpowers is installed. If not, skip this skill entirely.
 
+## ⚡ IMMEDIATE ACTION ON LOAD
+
+If you just loaded this skill as part of your dispatch prompt, invoke this superpowers skill RIGHT NOW via the Skill tool — do not wait until you start coding:
+
+**Step 1:** Invoke `superpowers:test-driven-development` via Skill tool. TDD is your core discipline — you write tests BEFORE implementation. Loading it now ensures the TDD framework is active from the start.
+
+**Step 2:** You are now prepared. Follow the TDD skill's process: write failing test → minimal implementation → pass → refactor → repeat.
+
+**Note:** Other superpowers skills (systematic-debugging, verification-before-completion, executing-plans, using-git-worktrees) are situational — invoke them only when those situations arise, not at setup time.
+
 ## Enhanced Workflows
 
 ### Before Writing Implementation Code

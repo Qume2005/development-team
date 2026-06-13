@@ -11,6 +11,16 @@ This skill enhances the Architecture Designer with superpowers. **Requires super
 
 Look at the available skills list. If you see skills like `superpowers:brainstorming`, superpowers is installed. If not, skip this skill entirely.
 
+## ⚡ IMMEDIATE ACTION ON LOAD
+
+If you just loaded this skill as part of your dispatch prompt, invoke these superpowers skills RIGHT NOW via the Skill tool — do not wait until you need them:
+
+**Step 1:** Invoke `superpowers:brainstorming` via Skill tool. You will use brainstorming to explore architectural approaches, trade-offs, and module decomposition before producing a design.
+
+**Step 2:** Invoke `superpowers:writing-plans` via Skill tool. You will use this to structure your architecture document with proper sections and decisions.
+
+**Step 3:** You are now prepared. Follow the brainstorming skill's process to explore the design space, then use writing-plans to produce the final architecture document.
+
 ## Enhanced Workflows
 
 ### Before Designing Architecture

@@ -11,6 +11,16 @@ This skill enhances the Test Designer with superpowers. **Requires superpowers p
 
 Look at the available skills list. If you see skills like `superpowers:test-driven-development`, superpowers is installed. If not, skip this skill entirely.
 
+## ⚡ IMMEDIATE ACTION ON LOAD
+
+If you just loaded this skill as part of your dispatch prompt, invoke this superpowers skill RIGHT NOW via the Skill tool — do not wait until you start writing tests:
+
+**Step 1:** Invoke `superpowers:test-driven-development` via Skill tool. TDD is your core discipline — you design tests that drive the implementation. Loading it now ensures the TDD framework is active from the start.
+
+**Step 2:** You are now prepared. Follow the TDD skill's process to design comprehensive tests before implementation begins.
+
+**Note:** `superpowers:systematic-debugging` is situational — invoke it only when test failures need systematic investigation, not at setup time.
+
 ## Enhanced Workflows
 
 ### Before Designing Tests

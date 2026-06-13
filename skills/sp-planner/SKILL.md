@@ -11,6 +11,16 @@ This skill enhances the Task Planner with superpowers. **Requires superpowers pl
 
 Look at the available skills list. If you see skills like `superpowers:brainstorming` or `superpowers:writing-plans`, superpowers is installed. If not, skip this skill entirely.
 
+## ⚡ IMMEDIATE ACTION ON LOAD
+
+If you just loaded this skill as part of your dispatch prompt, invoke these superpowers skills RIGHT NOW via the Skill tool — do not wait until you need them:
+
+**Step 1:** Invoke `superpowers:brainstorming` via Skill tool. You will use brainstorming to explore task requirements and design approaches before writing any plan.
+
+**Step 2:** Invoke `superpowers:writing-plans` via Skill tool. You will use this to structure your plan output with proper decomposition.
+
+**Step 3:** You are now prepared. Follow the brainstorming skill's process first, then use writing-plans to produce the final plan document.
+
 ## Enhanced Workflows
 
 ### Before Decomposing a Complex Task
