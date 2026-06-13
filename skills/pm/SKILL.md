@@ -289,7 +289,39 @@ Look at the available skills list in your context. If you see skills with the `s
 
 **This is a HARD RULE, not a suggestion.** If you skip this check or fail to invoke the required superpowers skill, you are violating PM protocol — equivalent to skipping Scope Validation.
 
+**Step 3: Use the dispatch template**
+Copy the template below verbatim into your dispatch prompt. Do not paraphrase it. Do not skip steps. The subagent needs ALL three load instructions to function correctly with superpowers.
+
 **Why this exists:** A real session (June 2026) showed the PM loading the sp-pm bridge but never actually invoking superpowers skills. The bridge was treated as a checkbox ("load sp-pm ✓") rather than a structural requirement that changes dispatch behavior. This check makes it impossible to forget.
+
+### Dispatch Prompt Template (HARD RULE)
+
+Every dispatch prompt MUST follow this template. No exceptions. Not for "simple" tasks, not for Intern, not for any role.
+
+**When superpowers IS available:**
+```
+Load development-team:<role-name> for your role instructions.
+Load development-team for shared system rules.
+If superpowers skills are available, load development-team:sp-<role-name> for enhanced workflows.
+
+<task description>
+```
+
+**When superpowers is NOT available:**
+```
+Load development-team:<role-name> for your role instructions.
+Load development-team for shared system rules.
+
+<task description>
+```
+
+**Why this is a HARD RULE:**
+- Without the sp-bridge instruction, subagents don't load their enhanced workflows
+- Without enhanced workflows, TDD is not enforced, brainstorming is skipped, verification is bypassed
+- The PM announced "Superpowers bridge active" but then dispatches subagents without the instruction — this makes the bridge announcement a lie
+- A real session (June 2026) showed the PM loading sp-pm and announcing activation, but then dispatching an Intern without the sp-bridge instruction, resulting in zero superpowers usage
+
+**This rule has the same severity as "never do work yourself."**
 
 ### Parallel Execution
 
