@@ -24,11 +24,33 @@
         ]
       },
       {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" pre-agent-use",
+            "async": false
+          }
+        ]
+      },
+      {
         "matcher": "Read|Bash|Write|Edit|Glob|Grep|WebSearch|LSP|NotebookEdit",
         "hooks": [
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" pre-tool-use",
+            "async": false
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" post-agent-use",
             "async": false
           }
         ]

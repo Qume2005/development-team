@@ -1,18 +1,33 @@
 #!/usr/bin/env bash
-# PreToolUse hook for work tools — blocks until PM skills are loaded
+# PreToolUse hook for work tools — enforces PM tool restrictions
 set -uo pipefail
 
-# User-specific marker paths (fixes multi-user security bypass)
-MARKER_FILE="${XDG_RUNTIME_DIR:-/tmp}/.dev-team-pm-loaded-${UID:-$(id -u 2>/dev/null || echo 0)}"
-SESSION_MARKER="${XDG_RUNTIME_DIR:-/tmp}/.dev-team-session-${UID:-$(id -u 2>/dev/null || echo 0)}"
+SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${SUFFIX}"
+PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${SUFFIX}"
+SESSION="${MARKER_DIR}/.dev-team-session-${SUFFIX}"
+ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
 
-# Marker must exist AND be newer than session start (catches stale markers from crashed sessions)
-if [ -f "$MARKER_FILE" ]; then
-    if [ ! -f "$SESSION_MARKER" ] || [ "$MARKER_FILE" -nt "$SESSION_MARKER" ]; then
+# Priority 1: If a subagent is currently active, allow all tools
+active_count=$(ls "$ACTIVE_DIR" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$active_count" -gt 0 ]; then
+    exit 0
+fi
+
+# Priority 2: If PM restriction is active and valid, block work tools
+if [ -f "$PM_RESTRICTED" ]; then
+    if [ ! -f "$SESSION" ] || [ "$PM_RESTRICTED" -nt "$SESSION" ]; then
+        printf '{"decision":"block","reason":"PM tool restriction active. Read/Bash/Write/Edit are blocked for PM role. Dispatch a subagent (Intern, Coder, etc.) via the Agent tool instead."}\n'
         exit 0
     fi
 fi
 
-# No valid marker — block with instructions
-printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry. Do NOT use Read/Bash/Write/Edit until both skills are loaded."}\n'
+# Priority 3: If PM not loaded at all, block with bootstrap instructions
+if [ ! -f "$PM_LOADED" ]; then
+    printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry."}\n'
+    exit 0
+fi
+
+# PM loaded but no restriction active — allow (fail-open)
 exit 0

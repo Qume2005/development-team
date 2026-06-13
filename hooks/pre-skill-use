@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# PreToolUse hook for Skill tool — creates marker when PM skills are loaded
+# PreToolUse hook for Skill tool — creates markers when PM skills are loaded
 set -uo pipefail
 
-# User-specific marker path (fixes multi-user security bypass)
-MARKER_FILE="${XDG_RUNTIME_DIR:-/tmp}/.dev-team-pm-loaded-${UID:-$(id -u 2>/dev/null || echo 0)}"
+SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${SUFFIX}"
+PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${SUFFIX}"
 
 # Read tool call details from stdin (JSON with tool input)
 INPUT=$(cat 2>/dev/null || true)
@@ -15,15 +17,19 @@ if command -v jq &>/dev/null; then
     skill=$(echo "$INPUT" | jq -r '.tool_input.skill // .skill // empty' 2>/dev/null)
 fi
 if [ -z "$skill" ]; then
-    # Fallback: grep for skill field, extract value (exact field match)
     skill=$(echo "$INPUT" | grep -oE '"skill"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null | head -1 | sed 's/.*:.*"\([^"]*\)"$/\1/')
 fi
 
-# Create marker only on exact match with development-team:pm
+# Create markers when development-team:pm is loaded
+# PM voluntarily activates restriction by loading its skill
 if [ "$skill" = "development-team:pm" ]; then
-    if ! touch "$MARKER_FILE" 2>/dev/null; then
-        echo "development-team hook: failed to create marker $MARKER_FILE" >&2
+    if ! touch "$PM_LOADED" 2>/dev/null; then
+        echo "development-team hook: failed to create marker $PM_LOADED" >&2
+    fi
+    if ! touch "$PM_RESTRICTED" 2>/dev/null; then
+        echo "development-team hook: failed to create restriction marker $PM_RESTRICTED" >&2
     fi
 fi
 
+# Always allow Skill tool calls
 exit 0

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# PreToolUse hook for Agent tool — increments active subagent count
+set -uo pipefail
+
+SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
+
+# Create a unique marker file per dispatch (directory = counter)
+mkdir -p "$ACTIVE_DIR" 2>/dev/null || true
+touch "${ACTIVE_DIR}/$(date +%s%N 2>/dev/null || date +%s)" 2>/dev/null || true
+
+# Always allow Agent tool calls
+exit 0

@@ -7,6 +7,8 @@ set -euo pipefail
 _MARKER_SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
 _MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
 rm -f "${_MARKER_DIR}/.dev-team-pm-loaded-${_MARKER_SUFFIX}" 2>/dev/null || true
+rm -f "${_MARKER_DIR}/.dev-team-pm-restricted-${_MARKER_SUFFIX}" 2>/dev/null || true
+rm -rf "${_MARKER_DIR}/.dev-team-active-${_MARKER_SUFFIX}" 2>/dev/null || true
 touch "${_MARKER_DIR}/.dev-team-session-${_MARKER_SUFFIX}" 2>/dev/null || true
 
 # Determine plugin root directory
