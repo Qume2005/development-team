@@ -167,7 +167,7 @@ Each delivery doc lives under a flat directory per role. The path is:
 | `<year>` | 4-digit year | `2026` | Current year |
 | `<month-name>` | Full English month name, lowercase | `january`, `february`, ..., `december` | Current month name |
 | `<day>` | Day of month, plain number | `1`, `2`, `15`, `28` | Current day — no zero-padding, no ordinal suffix |
-| `<time>` | 12-hour time with am/pm | `2am`, `11am`, `3pm`, `11pm` | Current time — no zero-padding on hour |
+| `<time>` | Hour in 24-hour format (0-23) | `0`, `9`, `13`, `23` | Current hour — use 24-hour clock, no am/pm, no zero-padding. 0=midnight, 13=1PM, 23=11PM |
 
 No sub-directories for year/month/week. Flat structure under `.claude/development-team/<role-name>/`.
 
@@ -179,7 +179,7 @@ No sub-directories for year/month/week. Flat structure under `.claude/developmen
 4. Take the 4-digit `<year>`.
 5. Take the full lowercase month name as `<month-name>` (e.g., `june`, `december`).
 6. Take the day of month as `<day>` — plain number, no padding, no suffix (e.g., `7`, `14`, `21`).
-7. Determine `<time>` — 12-hour clock, no zero-padding, with `am`/`pm` (e.g., `2pm`, `11am`, `9am`).
+7. Determine `<time>` — 24-hour clock hour (0-23), no zero-padding, no am/pm suffix. Examples: 0 (midnight), 9 (9AM), 13 (1PM), 23 (11PM).
 8. Assemble: `.claude/development-team/<role-name>/<summary>-<year>-<month-name>-<day><time>.md`
 
 ### Examples
@@ -187,19 +187,19 @@ No sub-directories for year/month/week. Flat structure under `.claude/developmen
 For June 12, 2026 at 11 PM:
 
 ```
-.claude/development-team/coder/auth-module-2026-june-12-11pm.md
+.claude/development-team/coder/auth-module-2026-june-12-23.md
 ```
 
 Review:
 
 ```
-.claude/development-team/code-reviewer/review-code-2026-june-12-3pm.md
+.claude/development-team/code-reviewer/review-code-2026-june-12-15.md
 ```
 
 Plan:
 
 ```
-.claude/development-team/planner/auth-refactor-2026-june-12-10am.md
+.claude/development-team/planner/auth-refactor-2026-june-12-10.md
 ```
 
 Review feedback files follow the same pattern, using the reviewer's role name.
@@ -212,9 +212,9 @@ File names follow the `<summary>-<year>-<month-name>-<day><time>.md` pattern whe
 
 | Bad | Good |
 |-----|------|
-| `doc1-2026-june-12-3pm.md` | `plan-auth-refactor-to-jwt-2026-june-12-3pm.md` |
-| `output-2026-june-12-3pm.md` | `api-design-auth-endpoints-2026-june-12-3pm.md` |
-| `review-2026-june-12-3pm.md` | `review-code-round1-2026-june-12-3pm.md` |
+| `doc1-2026-june-12-15.md` | `plan-auth-refactor-to-jwt-2026-june-12-15.md` |
+| `output-2026-june-12-15.md` | `api-design-auth-endpoints-2026-june-12-15.md` |
+| `review-2026-june-12-15.md` | `review-code-round1-2026-june-12-15.md` |
 
 ## Document Template
 
@@ -325,7 +325,7 @@ Structure mirrors the active directory:
 ```
 .claude/development-team/deprecated/
   └── planner/
-      └── auth-refactor-v1-2026-june-5-10am.md
+      └── auth-refactor-v1-2026-june-5-10.md
 ```
 
 - Subagents MAY read from `deprecated/` for historical context, but should prefer active docs.

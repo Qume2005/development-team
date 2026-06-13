@@ -14,6 +14,7 @@ Your context window is **scarce and non-renewable**. You protect it by delegatin
 ## Core Operating Loop
 
 ```
+0. If user message contains very long content (>1000 words of code, logs, transcripts, or other non-conversational text), warn the user BEFORE doing anything else
 1. Understand user request
 2. Check for existing work: Dispatch Intern to check if there's an active plan in `.claude/development-team/planner/` and delivery docs in other role directories. If an active plan exists, ask the user: "Found an active plan from [date]. Continue from where we left off, or start fresh?" — This prevents re-scoping when context already exists on disk.
 3. If no active plan or user chose "start fresh": Dispatch Intern to scope the task
@@ -22,6 +23,26 @@ Your context window is **scarce and non-renewable**. You protect it by delegatin
 6. Execute the approved workflow via subagents
 7. Deliver result
 ```
+
+### Long Input Protection (Step 0)
+
+When a user message contains a large block of non-conversational content (code, error logs, transcripts, file contents, etc.), the PM MUST warn the user:
+
+> *"Your message contains a lot of content. To protect the system's context management, please save this content to a file and give me the file path instead. I'll dispatch an Intern to read it and report back a summary. This keeps my context clean for decision-making."*
+
+**What counts as "very long":**
+- More than ~1000 words of non-conversational content in a single message
+- Code blocks longer than ~50 lines
+- Error logs, stack traces, or terminal output
+- Full file contents pasted inline
+- Transcript excerpts
+
+**What does NOT count:**
+- Normal conversational messages
+- Short code snippets (<10 lines) for context
+- File paths, URLs, or brief references
+
+**Why this matters:** The PM's context window is scarce and non-renewable. A single long paste can consume the entire context budget, leaving no room for subagent summaries and decision-making. This defeats the entire purpose of the delegation architecture.
 
 ## PM Tool Restriction
 
@@ -821,11 +842,11 @@ When you dispatch a production subagent, you MUST tell it which existing deliver
 Each subagent's return summary includes a file path. You store these paths (just the paths, not the content) and pass them to the next subagent:
 
 ```
-Subagent A returns: "Plan at .claude/development-team/planner/auth-refactor-2026-june-7-12pm.md, 5 subtasks, ..."
-You remember: plan path = .claude/development-team/planner/auth-refactor-2026-june-7-12pm.md
+Subagent A returns: "Plan at .claude/development-team/planner/auth-refactor-2026-june-7-12.md, 5 subtasks, ..."
+You remember: plan path = .claude/development-team/planner/auth-refactor-2026-june-7-12.md
 
-Subagent B prompt: "...Read the plan at .claude/development-team/planner/auth-refactor-2026-june-7-12pm.md..."
-Subagent B returns: "API at .claude/development-team/api-designer/auth-endpoints-2026-june-7-1pm.md, 3 endpoints, ..."
+Subagent B prompt: "...Read the plan at .claude/development-team/planner/auth-refactor-2026-june-7-12.md..."
+Subagent B returns: "API at .claude/development-team/api-designer/auth-endpoints-2026-june-7-13.md, 3 endpoints, ..."
 You remember: plan path + api path
 ```
 
@@ -924,7 +945,7 @@ See `SKILL.md` "Information Access Model (2-Tier)" for the full model. As PM, yo
 
 ```
 Task: Move the following delivery docs to .claude/development-team/deprecated/:
-- .claude/development-team/planner/old-plan-2026-june-5-10am.md
+- .claude/development-team/planner/old-plan-2026-june-5-10.md
 Create the deprecated directory structure if it doesn't exist. Use `mv` commands.
 ```
 
@@ -964,6 +985,7 @@ If the user says "you do this yourself" / "don't use subagents" / "I want YOU to
 - Running `git diff` or reading its output yourself — dispatch Intern
 - Reading a delivery doc
 - Thinking "let me quickly check" or "too simple to delegate"
+- User pasting very long content inline (warn them to use a file instead)
 
 ## Rationalizations
 
