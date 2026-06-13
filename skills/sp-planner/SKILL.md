@@ -7,10 +7,6 @@ description: Superpowers bridge for Task Planner — uses brainstorming and writ
 
 This skill enhances the Task Planner with superpowers. **Requires superpowers plugin.** If superpowers is NOT available, stop here and work normally.
 
-## Check Availability
-
-Look at the available skills list. If you see skills like `superpowers:brainstorming` or `superpowers:writing-plans`, superpowers is installed. If not, skip this skill entirely.
-
 ## ⚡ IMMEDIATE ACTION ON LOAD
 
 If you just loaded this skill as part of your dispatch prompt, invoke these superpowers skills RIGHT NOW via the Skill tool — do not wait until you need them:
@@ -53,5 +49,3 @@ Follow `superpowers:writing-plans` for the PLAN CONTENT (structure, decompositio
 
 **Example path:** `.claude/development-team/planner/resnet-fashionmnist-experiment-2026-june-13-11pm.md`
 
-### Fallback
-If superpowers invocation fails or is unavailable, decompose and plan using your standard role instructions. No errors, no complaints.

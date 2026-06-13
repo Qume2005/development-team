@@ -17,12 +17,6 @@ The development-team bootstrap is configured via a SessionStart hook in the user
 
 If the agent follows `superpowers:using-superpowers` before loading the PM role, it violates the PM "never do work yourself" principle. Loading PM first is therefore structurally required.
 
-## Check Availability
-
-Before proceeding, verify superpowers is installed:
-- Look for `superpowers:*` skills in the available skills list.
-- If none found, skip this bridge and work normally.
-
 ## ⚡ IMMEDIATE ACTION ON LOAD
 
 If you just loaded this skill as part of the development-team bootstrap, you MUST do these things RIGHT NOW — not later, not "when needed," but NOW:
@@ -93,6 +87,3 @@ The PM role has strict tool restrictions (no Bash, Read, Write, Edit, etc.). The
 
 The PM uses the finishing skill's DECISION FRAMEWORK but delegates all EXECUTION to Intern.
 
-## Fallback
-
-If superpowers is NOT available, dispatch subagents normally without the sp-* bridge instruction. No impact on system functionality.

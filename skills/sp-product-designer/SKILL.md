@@ -7,10 +7,6 @@ description: Superpowers bridge for Product Designer — uses brainstorming for 
 
 This skill enhances the Product Designer with superpowers. **Requires superpowers plugin.** If superpowers is NOT available, stop here and work normally.
 
-## Check Availability
-
-Look at the available skills list. If you see skills like `superpowers:brainstorming`, superpowers is installed. If not, skip this skill entirely.
-
 ## ⚡ IMMEDIATE ACTION ON LOAD
 
 If you just loaded this skill as part of your dispatch prompt, invoke this superpowers skill RIGHT NOW via the Skill tool — do not wait until you need it:
@@ -28,5 +24,3 @@ Invoke `superpowers:brainstorming` to explore:
 - Competitor analysis and differentiation
 - MVP scope vs full vision
 
-### Fallback
-If superpowers invocation fails or is unavailable, design product specs using your standard role instructions.

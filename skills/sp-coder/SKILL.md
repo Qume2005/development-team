@@ -7,10 +7,6 @@ description: Superpowers bridge for Code Developer — uses TDD, debugging, veri
 
 This skill enhances the Code Developer with superpowers. **Requires superpowers plugin.** If superpowers is NOT available, stop here and work normally.
 
-## Check Availability
-
-Look at the available skills list. If you see skills like `superpowers:test-driven-development`, superpowers is installed. If not, skip this skill entirely.
-
 ## ⚡ IMMEDIATE ACTION ON LOAD
 
 If you just loaded this skill as part of your dispatch prompt, invoke this superpowers skill RIGHT NOW via the Skill tool — do not wait until you start coding:
@@ -50,10 +46,9 @@ Invoke `superpowers:finishing-a-development-branch` — guides merge, PR, or cle
 ### When Creating or Editing Skill Files
 Invoke `superpowers:writing-skills` — follow structured skill creation/editing patterns.
 
-### Fallback
-If superpowers invocation fails or is unavailable, code and test using your standard role instructions.
-
 ## Review Routing — PM's Responsibility
+
+*(This reinforces the general dispatch restriction in superpower-cowork.)*
 
 `superpowers:requesting-code-review` suggests dispatching a code reviewer when your work is complete. In development-team, **review dispatch is the PM's job, not yours.**
 
@@ -73,18 +68,3 @@ If `requesting-code-review` suggests you "dispatch a reviewer" or "get feedback,
 - Review feedback is saved to the correct delivery directory
 - PM tracks the review status and manages the dependency chain
 
-## Verification Output — Return Format Only
-
-When using `superpowers:verification-before-completion`:
-1. Follow ALL verification steps (run tests, check outputs, verify behavior)
-2. Fix any issues found during verification
-3. Return ONLY the standard development-team return format:
-   ```
-   Files changed: [list]
-   Unit tests: N written
-   All tests passing: YES / NO
-   Superpowers used: [e.g., "sp-coder: TDD, verification"]
-   Notes: [one sentence if anything unusual]
-   ```
-
-Do NOT include raw test output, command results, or verification details in your return summary. The PM absorbs verdicts (3-5 lines), not full reports.

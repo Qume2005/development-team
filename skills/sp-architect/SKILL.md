@@ -7,10 +7,6 @@ description: Superpowers bridge for Architecture Designer — uses brainstorming
 
 This skill enhances the Architecture Designer with superpowers. **Requires superpowers plugin.** If superpowers is NOT available, stop here and work normally.
 
-## Check Availability
-
-Look at the available skills list. If you see skills like `superpowers:brainstorming`, superpowers is installed. If not, skip this skill entirely.
-
 ## ⚡ IMMEDIATE ACTION ON LOAD
 
 If you just loaded this skill as part of your dispatch prompt, invoke these superpowers skills RIGHT NOW via the Skill tool — do not wait until you need them:
@@ -40,5 +36,3 @@ Invoke `superpowers:writing-plans` for structured output:
 ### When Creating or Editing Skill Files or Architecture Templates
 Invoke `superpowers:writing-skills` — follow structured skill creation/editing patterns for architecture docs that serve as reusable templates.
 
-### Fallback
-If superpowers invocation fails or is unavailable, design architecture using your standard role instructions.
