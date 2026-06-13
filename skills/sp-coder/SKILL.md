@@ -42,3 +42,39 @@ Invoke `superpowers:writing-skills` — follow structured skill creation/editing
 
 ### Fallback
 If superpowers invocation fails or is unavailable, code and test using your standard role instructions.
+
+## Review Routing — PM's Responsibility
+
+`superpowers:requesting-code-review` suggests dispatching a code reviewer when your work is complete. In development-team, **review dispatch is the PM's job, not yours.**
+
+**What you do:**
+1. Complete your implementation + unit tests
+2. Run verification per `superpowers:verification-before-completion`
+3. Return your standard summary to the PM (Files changed + tests + passing + Superpowers used)
+4. The PM will dispatch Code Reviewer if needed
+
+**What you do NOT do:**
+- Do NOT dispatch a Code Reviewer yourself
+- Do NOT invoke `superpowers:requesting-code-review` to create a review
+- Do NOT dispatch any generic reviewer subagent
+
+If `requesting-code-review` suggests you "dispatch a reviewer" or "get feedback," remember: in development-team, you report completion to the PM, and the PM handles the review. This ensures:
+- TDD Compliance Gate is checked (Code Reviewer's responsibility)
+- Review feedback is saved to the correct delivery directory
+- PM tracks the review status and manages the dependency chain
+
+## Verification Output — Return Format Only
+
+When using `superpowers:verification-before-completion`:
+1. Follow ALL verification steps (run tests, check outputs, verify behavior)
+2. Fix any issues found during verification
+3. Return ONLY the standard development-team return format:
+   ```
+   Files changed: [list]
+   Unit tests: N written
+   All tests passing: YES / NO
+   Superpowers used: [e.g., "sp-coder: TDD, verification"]
+   Notes: [one sentence if anything unusual]
+   ```
+
+Do NOT include raw test output, command results, or verification details in your return summary. The PM absorbs verdicts (3-5 lines), not full reports.

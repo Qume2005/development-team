@@ -39,6 +39,44 @@ Check the available skills list for any skill prefixed with `superpowers:`. If f
 4. **Don't touch the PM.** The PM never uses superpowers skills directly.
 5. **Fallback gracefully.** If superpowers is NOT available, work normally. No error, no complaint.
 
+## SUBAGENT-STOP Enforcement
+
+`superpowers:using-superpowers` contains a `<SUBAGENT-STOP>` directive that tells subagents to skip the skill. As a development-team subagent, you MUST respect this directive:
+
+- Do NOT load `superpowers:using-superpowers` — it is for the top-level agent only
+- Do NOT invoke skill discovery or skill checking — your role and tasks are assigned by the PM
+- Load ONLY the skills the PM specified in your dispatch prompt (your role skill + shared rules + your sp-* bridge)
+
+If you find yourself wondering "should I check if any other skills apply?" — the answer is NO. Follow your assigned role and bridge skills only.
+
+## Parallel Dispatch Restriction
+
+`superpowers:dispatching-parallel-agents` allows dispatching multiple agents for independent tasks. As a development-team subagent, you have restrictions:
+
+- **You CAN** use parallel dispatch for work within YOUR task scope (e.g., reading multiple files simultaneously)
+- **You CANNOT** dispatch other development-team roles. If you need work from another role, report BLOCKED to the PM
+- **You CANNOT** dispatch generic reviewer subagents. Reviews are the PM's responsibility via named paired reviewers
+
+If `dispatching-parallel-agents` suggests dispatching "a reviewer" or "another agent to handle X", you MUST report BLOCKED instead. The PM decides when and how to involve other roles.
+
+## Verification Output Format
+
+`superpowers:verification-before-completion` may produce verbose output (test results, file listings, command outputs). In development-team, subagents return 3-5 line summaries to the PM.
+
+**When using verification-before-completion:**
+1. Follow the skill's verification STEPS (run tests, check outputs, verify behavior)
+2. BUT return ONLY the development-team standard return format to the PM:
+   ```
+   Files changed: [list]
+   Unit tests: N written
+   All tests passing: YES / NO
+   Superpowers used: [e.g., "sp-coder: TDD, verification"]
+   Notes: [one sentence if anything unusual]
+   ```
+3. Do NOT dump raw test output, command results, or file contents into your return summary
+
+If the verification reveals issues, note them in the "Notes" line. The PM will decide next steps.
+
 ## PM Dispatch Integration
 
 The PM detects superpowers availability and adjusts dispatch prompts:

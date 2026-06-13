@@ -30,5 +30,18 @@ Invoke `superpowers:writing-plans` for structured plan creation:
 ### When Creating or Editing Skill Files or Plan-Like Documents
 Invoke `superpowers:writing-skills` — follow structured skill creation/editing patterns for plan documents that serve as reusable templates.
 
+## Delivery Path Override
+
+When using `superpowers:writing-plans` for plan creation, you MUST override the default save path:
+
+**Superpowers default path:** `docs/superpowers/plans/YYYY-MM-DD-<name>.md`
+**Development-team required path:** `.claude/development-team/planner/<summary>-<year>-<month-name>-<day><time>.md`
+
+Follow `superpowers:writing-plans` for the PLAN CONTENT (structure, decomposition, etc.) but ALWAYS save to the development-team delivery directory path. The plan must be findable by the PM and downstream subagents.
+
+**Why:** The PM tracks delivery docs by path. If a plan is saved outside `.claude/development-team/`, the PM cannot find it, the handoff chain breaks, and downstream subagents (API Designer, Code Developer) cannot locate their input.
+
+**Example path:** `.claude/development-team/planner/resnet-fashionmnist-experiment-2026-june-13-11pm.md`
+
 ### Fallback
 If superpowers invocation fails or is unavailable, decompose and plan using your standard role instructions. No errors, no complaints.
