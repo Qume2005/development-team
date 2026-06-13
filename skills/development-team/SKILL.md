@@ -155,7 +155,7 @@ Alternative: none
 Each delivery doc lives under a flat directory per role. The path is:
 
 ```
-.claude/development-team/<role-name>/<summary>-<year>-<month-name>-<day><time>.md
+.claude/development-team/<role-name>/<summary>-<month-name>-<day><ordinal>-<year>.md
 ```
 
 ### Path Components
@@ -164,57 +164,62 @@ Each delivery doc lives under a flat directory per role. The path is:
 |-----------|--------|---------|------------------|
 | `<role-name>` | Skill directory name (kebab-case) | `coder`, `api-designer`, `architect`, `code-reviewer` | Your role's skill directory name |
 | `<summary>` | Short kebab-case content description | `auth-module`, `plan-jwt-migration` | What this doc contains |
-| `<year>` | 4-digit year | `2026` | Current year |
 | `<month-name>` | Full English month name, lowercase | `january`, `february`, ..., `december` | Current month name |
-| `<day>` | Day of month, plain number | `1`, `2`, `15`, `28` | Current day — no zero-padding, no ordinal suffix |
-| `<time>` | Hour in 24-hour format (0-23) | `0`, `9`, `13`, `23` | Current hour — use 24-hour clock, no am/pm, no zero-padding. 0=midnight, 13=1PM, 23=11PM |
+| `<day>` | Day of month, plain number (no padding, no suffix) | `1`, `7`, `14`, `23` | Current day — no zero-padding, no ordinal suffix |
+| `<ordinal>` | English ordinal suffix attached DIRECTLY to `<day>` (no hyphen between day and suffix) | `1st`, `2nd`, `3rd`, `4th`, `21st`, `23rd` | Ordinal rule: 1st, 2nd, 3rd; 4th–20th; 21st, 22nd, 23rd; 24th–30th; 31st. EXCEPTION: 11, 12, 13 always take `th` (11th, 12th, 13th) — never 11st/12nd/13rd |
+| `<year>` | 4-digit year | `2026` | Current year |
 
 No sub-directories for year/month/week. Flat structure under `.claude/development-team/<role-name>/`.
 
 ### How to Construct the Path
 
-1. Get the current date/time.
-2. Use your role's skill directory name as `<role-name>`.
-3. Pick a short `<summary>` describing the doc content.
-4. Take the 4-digit `<year>`.
-5. Take the full lowercase month name as `<month-name>` (e.g., `june`, `december`).
-6. Take the day of month as `<day>` — plain number, no padding, no suffix (e.g., `7`, `14`, `21`).
-7. Determine `<time>` — 24-hour clock hour (0-23), no zero-padding, no am/pm suffix. Examples: 0 (midnight), 9 (9AM), 13 (1PM), 23 (11PM).
-8. Assemble: `.claude/development-team/<role-name>/<summary>-<year>-<month-name>-<day><time>.md`
+1. Use your role's skill directory name as `<role-name>`.
+2. Pick a short `<summary>` describing the doc content.
+3. Take the full lowercase month name as `<month-name>` (e.g., `june`, `december`).
+4. Take the day of month as `<day>` — plain number, no zero-padding, no suffix (e.g., `7`, `14`, `21`).
+5. Determine `<ordinal>` — the English ordinal suffix attached DIRECTLY to `<day>` with no hyphen: 1st, 2nd, 3rd; 4th–20th; 21st, 22nd, 23rd; 24th–30th; 31st. EXCEPTION: 11, 12, 13 always take `th` (11th, 12th, 13th) — never 11st/12nd/13rd. So day 1 → `1st`, day 12 → `12th`, day 21 → `21st`, day 23 → `23rd`.
+6. Take the 4-digit `<year>`.
+7. Assemble: `.claude/development-team/<role-name>/<summary>-<month-name>-<day><ordinal>-<year>.md`
 
 ### Examples
 
-For June 12, 2026 at 11 PM:
+Code doc (June 14, 2026):
 
 ```
-.claude/development-team/coder/auth-module-2026-june-12-23.md
+.claude/development-team/coder/auth-module-june-14th-2026.md
 ```
 
-Review:
+Review (June 1, 2026):
 
 ```
-.claude/development-team/code-reviewer/review-code-2026-june-12-15.md
+.claude/development-team/code-reviewer/review-code-june-1st-2026.md
 ```
 
-Plan:
+Plan (June 23, 2026):
 
 ```
-.claude/development-team/planner/auth-refactor-2026-june-12-10.md
+.claude/development-team/planner/auth-refactor-june-23rd-2026.md
+```
+
+Teen day (December 12, 2026 — note `12th`, never `12nd`):
+
+```
+.claude/development-team/doc-writer/readme-rewrite-december-12th-2026.md
 ```
 
 Review feedback files follow the same pattern, using the reviewer's role name.
 
-Note: Old delivery docs in the previous format (e.g., `.claude/development-team/<year>/<month>/<week-ordinal>-week/...`) should be left in place. Only new docs use the new format.
+Note: Old delivery docs in either of the two previous formats should be left in place — the year/month/week format (e.g., `.claude/development-team/<year>/<month>/<week-ordinal>-week/...`) AND the superseded `<summary>-<year>-<month-name>-<day><time>.md` format (e.g., `auth-module-2026-june-12-23.md`). Only NEW docs use the current format.
 
 ## File Naming Rules
 
-File names follow the `<summary>-<year>-<month-name>-<day><time>.md` pattern where `<summary>` is a short kebab-case content description. No generic labels.
+File names follow the `<summary>-<month-name>-<day><ordinal>-<year>.md` pattern where `<summary>` is a short kebab-case content description. No generic labels.
 
 | Bad | Good |
 |-----|------|
-| `doc1-2026-june-12-15.md` | `plan-auth-refactor-to-jwt-2026-june-12-15.md` |
-| `output-2026-june-12-15.md` | `api-design-auth-endpoints-2026-june-12-15.md` |
-| `review-2026-june-12-15.md` | `review-code-round1-2026-june-12-15.md` |
+| `doc1-june-12th-2026.md` | `plan-auth-refactor-to-jwt-june-12th-2026.md` |
+| `output-june-12th-2026.md` | `api-design-auth-endpoints-june-12th-2026.md` |
+| `review-june-12th-2026.md` | `review-code-round1-june-12th-2026.md` |
 
 ## Document Template
 
@@ -258,7 +263,7 @@ File paths, URLs — NOT inline content.
 
 ## Review Protocol
 
-Every production deliverable goes through its paired reviewer. Maximum **3 review rounds**. Author reads reviewer feedback from the delivery directory. Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence). Review feedback files follow the path format: `.claude/development-team/<reviewer-role-name>/review-<type>-round<N>-<year>-<month-name>-<day><time>.md` (written by reviewer under their own role directory).
+Every production deliverable goes through its paired reviewer. Maximum **3 review rounds**. Author reads reviewer feedback from the delivery directory. Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence). Review feedback files follow the path format: `.claude/development-team/<reviewer-role-name>/review-<type>-round<N>-<month-name>-<day><ordinal>-<year>.md` (written by reviewer under their own role directory).
 
 ### Review Routing
 
@@ -325,7 +330,7 @@ Structure mirrors the active directory:
 ```
 .claude/development-team/deprecated/
   └── planner/
-      └── auth-refactor-v1-2026-june-5-10.md
+      └── auth-refactor-v1-june-5th-2026.md
 ```
 
 - Subagents MAY read from `deprecated/` for historical context, but should prefer active docs.

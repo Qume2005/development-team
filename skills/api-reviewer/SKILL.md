@@ -21,7 +21,7 @@ You review **API designs** produced by API Designers.
 
 ## Feedback File
 
-Write to: `.claude/development-team/api-reviewer/review-api-round<N>-<year>-<month-name>-<day><time>.md`
+Write to: `.claude/development-team/api-reviewer/review-api-round<N>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow the standard delivery path format from `SKILL.md`. Use `api-reviewer` as the `<role-name>`.
 

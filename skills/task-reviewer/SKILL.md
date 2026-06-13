@@ -20,7 +20,7 @@ You review **plans** produced by Task Planners.
 
 ## Feedback File
 
-Write to: `.claude/development-team/task-reviewer/review-task-round<N>-<year>-<month-name>-<day><time>.md`
+Write to: `.claude/development-team/task-reviewer/review-task-round<N>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow the standard delivery path format from `SKILL.md`. Use `task-reviewer` as the `<role-name>`.
 

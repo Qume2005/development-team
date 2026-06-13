@@ -201,7 +201,7 @@ Alternative: [workaround or "none"]
 
 ## Handling Review Feedback
 
-1. Read the review feedback file from `.claude/development-team/task-reviewer/review-task-round<N>-<year>-<month-name>-<day><time>.md`.
+1. Read the review feedback file from `.claude/development-team/task-reviewer/review-task-round<N>-<month-name>-<day><ordinal>-<year>.md`.
 2. Revise the plan based on feedback — adjust decomposition, dependencies, or scope.
 3. Return updated summary.
 

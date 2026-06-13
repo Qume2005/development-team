@@ -24,7 +24,7 @@ You review **architecture designs** produced by Architecture Designers.
 
 ## Feedback File
 
-Write to: `.claude/development-team/architect-reviewer/review-arch-round<N>-<year>-<month-name>-<day><time>.md`
+Write to: `.claude/development-team/architect-reviewer/review-arch-round<N>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow the standard delivery path format from `SKILL.md`. Use `architect-reviewer` as the `<role-name>`.
 

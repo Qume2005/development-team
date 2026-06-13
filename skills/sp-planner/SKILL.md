@@ -41,11 +41,11 @@ Invoke `superpowers:writing-skills` — follow structured skill creation/editing
 When using `superpowers:writing-plans` for plan creation, you MUST override the default save path:
 
 **Superpowers default path:** `docs/superpowers/plans/YYYY-MM-DD-<name>.md`
-**Development-team required path:** `.claude/development-team/planner/<summary>-<year>-<month-name>-<day><time>.md`
+**Development-team required path:** `.claude/development-team/planner/<summary>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow `superpowers:writing-plans` for the PLAN CONTENT (structure, decomposition, etc.) but ALWAYS save to the development-team delivery directory path. The plan must be findable by the PM and downstream subagents.
 
 **Why:** The PM tracks delivery docs by path. If a plan is saved outside `.claude/development-team/`, the PM cannot find it, the handoff chain breaks, and downstream subagents (API Designer, Code Developer) cannot locate their input.
 
-**Example path:** `.claude/development-team/planner/resnet-fashionmnist-experiment-2026-june-13-11pm.md`
+**Example path:** `.claude/development-team/planner/resnet-fashionmnist-experiment-june-13th-2026.md`
 

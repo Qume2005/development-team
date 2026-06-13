@@ -22,7 +22,7 @@ You review **test designs** produced by Test Designers.
 
 ## Feedback File
 
-Write to: `.claude/development-team/test-design-reviewer/review-test-design-round<N>-<year>-<month-name>-<day><time>.md`
+Write to: `.claude/development-team/test-design-reviewer/review-test-design-round<N>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow the standard delivery path format from `SKILL.md`. Use `test-design-reviewer` as the `<role-name>`.
 

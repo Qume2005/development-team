@@ -138,7 +138,7 @@ Why this product is being built. What user problem it solves. Business context i
 ## Return to Project Manager
 
 ```
-Doc: .claude/development-team/product-designer/<summary>-<year>-<month-name>-<day><time>.md
+Doc: .claude/development-team/product-designer/<summary>-<month-name>-<day><ordinal>-<year>.md
 User stories: N defined
 MVP scope: [one-line summary of what's in MVP]
 Key assumption: [one sentence about the most important assumption]
@@ -175,7 +175,7 @@ Alternative: [workaround or "none"]
 
 ## Handling Review Feedback
 
-1. Read the review feedback file from `.claude/development-team/product-reviewer/review-product-round<N>-<year>-<month-name>-<day><time>.md`.
+1. Read the review feedback file from `.claude/development-team/product-reviewer/review-product-round<N>-<month-name>-<day><ordinal>-<year>.md`.
 2. Revise the product design.
 3. Return updated summary.
 

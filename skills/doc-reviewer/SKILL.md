@@ -20,7 +20,7 @@ You review **documents** produced by Document Writers.
 
 ## Feedback File
 
-Write to: `.claude/development-team/doc-reviewer/review-doc-round<N>-<year>-<month-name>-<day><time>.md`
+Write to: `.claude/development-team/doc-reviewer/review-doc-round<N>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow the standard delivery path format from `SKILL.md`. Use `doc-reviewer` as the `<role-name>`.
 

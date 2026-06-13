@@ -115,7 +115,7 @@ Alternative: [workaround or "none"]
 
 ## Handling Review Feedback
 
-1. Read the review feedback file from `.claude/development-team/code-reviewer/review-code-round<N>-<year>-<month-name>-<day><time>.md`.
+1. Read the review feedback file from `.claude/development-team/code-reviewer/review-code-round<N>-<month-name>-<day><ordinal>-<year>.md`.
 2. Revise code AND tests based on feedback.
 3. Re-run all tests.
 4. Return updated summary.

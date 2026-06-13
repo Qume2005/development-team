@@ -22,7 +22,7 @@ You review **product designs** produced by Product Designers.
 
 ## Feedback File
 
-Write to: `.claude/development-team/product-reviewer/review-product-round<N>-<year>-<month-name>-<day><time>.md`
+Write to: `.claude/development-team/product-reviewer/review-product-round<N>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow the standard delivery path format from `SKILL.md`. Use `product-reviewer` as the `<role-name>`.
 

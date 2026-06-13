@@ -46,7 +46,7 @@ You review **code and tests** produced by Code Developers. This includes both im
 
 ## Feedback File
 
-Write to: `.claude/development-team/code-reviewer/review-code-round<N>-<year>-<month-name>-<day><time>.md`
+Write to: `.claude/development-team/code-reviewer/review-code-round<N>-<month-name>-<day><ordinal>-<year>.md`
 
 Follow the standard delivery path format from `SKILL.md`. Use `code-reviewer` as the `<role-name>`.
 
