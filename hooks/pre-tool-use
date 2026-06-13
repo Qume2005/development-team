@@ -2,13 +2,17 @@
 # PreToolUse hook for work tools — blocks until PM skills are loaded
 set -uo pipefail
 
-MARKER_FILE="/tmp/.dev-team-pm-loaded"
+# User-specific marker paths (fixes multi-user security bypass)
+MARKER_FILE="${XDG_RUNTIME_DIR:-/tmp}/.dev-team-pm-loaded-${UID:-$(id -u 2>/dev/null || echo 0)}"
+SESSION_MARKER="${XDG_RUNTIME_DIR:-/tmp}/.dev-team-session-${UID:-$(id -u 2>/dev/null || echo 0)}"
 
-# If marker exists, allow the tool call
+# Marker must exist AND be newer than session start (catches stale markers from crashed sessions)
 if [ -f "$MARKER_FILE" ]; then
-    exit 0
+    if [ ! -f "$SESSION_MARKER" ] || [ "$MARKER_FILE" -nt "$SESSION_MARKER" ]; then
+        exit 0
+    fi
 fi
 
-# No marker — block with instructions
+# No valid marker — block with instructions
 printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry. Do NOT use Read/Bash/Write/Edit until both skills are loaded."}\n'
 exit 0

@@ -2,16 +2,28 @@
 # PreToolUse hook for Skill tool — creates marker when PM skills are loaded
 set -uo pipefail
 
-MARKER_FILE="/tmp/.dev-team-pm-loaded"
+# User-specific marker path (fixes multi-user security bypass)
+MARKER_FILE="${XDG_RUNTIME_DIR:-/tmp}/.dev-team-pm-loaded-${UID:-$(id -u 2>/dev/null || echo 0)}"
 
 # Read tool call details from stdin (JSON with tool input)
 INPUT=$(cat 2>/dev/null || true)
+[ -z "$INPUT" ] && exit 0
 
-# Create marker when development-team:pm is loaded
-# Defensive parsing: grep for the skill name in any JSON format
-if [ -n "$INPUT" ] && echo "$INPUT" | grep -q '"development-team:pm"' 2>/dev/null; then
-    touch "$MARKER_FILE" 2>/dev/null || true
+# Extract skill name — try jq first (exact parsing), fallback to grep
+skill=""
+if command -v jq &>/dev/null; then
+    skill=$(echo "$INPUT" | jq -r '.tool_input.skill // .skill // empty' 2>/dev/null)
+fi
+if [ -z "$skill" ]; then
+    # Fallback: grep for skill field, extract value (exact field match)
+    skill=$(echo "$INPUT" | grep -oE '"skill"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null | head -1 | sed 's/.*:.*"\([^"]*\)"$/\1/')
 fi
 
-# Always allow Skill tool calls — never block them
+# Create marker only on exact match with development-team:pm
+if [ "$skill" = "development-team:pm" ]; then
+    if ! touch "$MARKER_FILE" 2>/dev/null; then
+        echo "development-team hook: failed to create marker $MARKER_FILE" >&2
+    fi
+fi
+
 exit 0

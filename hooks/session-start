@@ -3,8 +3,11 @@
 
 set -euo pipefail
 
-# Delete PM-loaded marker to force re-loading on new session/clear/compact
-rm -f /tmp/.dev-team-pm-loaded 2>/dev/null || true
+# Delete PM-loaded marker and write session timestamp (user-specific paths)
+_MARKER_SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+_MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+rm -f "${_MARKER_DIR}/.dev-team-pm-loaded-${_MARKER_SUFFIX}" 2>/dev/null || true
+touch "${_MARKER_DIR}/.dev-team-session-${_MARKER_SUFFIX}" 2>/dev/null || true
 
 # Determine plugin root directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
