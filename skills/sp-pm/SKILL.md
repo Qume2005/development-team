@@ -7,30 +7,30 @@ description: Superpowers bridge for Project Manager — uses subagent-driven-dev
 
 This skill is the ONLY superpowers bridge the PM loads. **Requires superpowers plugin.** If superpowers is NOT available, stop here and work normally.
 
-## Check Availability
+## ⚡ IMMEDIATE ACTION ON LOAD
 
-Look at the available skills list. If you see `superpowers:subagent-driven-development`, superpowers is installed. If not, skip this skill entirely.
+If you just loaded this skill as part of the development-team bootstrap, you MUST do these things RIGHT NOW — not later, not "when needed," but NOW:
 
-## Enhanced Workflows
+**Step 1: Announce activation**
+Output this exact announcement to the user:
+> "⚡ Superpowers bridge active. Subagent-driven-development will be used for parallel dispatch. All production subagents will load their sp-* bridges."
 
-### When Executing an Implementation Plan with Independent Tasks
-**You MUST invoke `superpowers:subagent-driven-development` via the Skill tool before dispatching any parallel group.** This is not optional — it structures parallel subagent dispatch to ensure proper isolation, progress tracking, and error handling.
+**Step 2: Prepare for parallel dispatch**
+Remember these rules for the rest of this session:
+- When dispatching ANY parallel group → Invoke `superpowers:subagent-driven-development` via Skill tool FIRST, then dispatch
+- When dispatching ANY production subagent → Include "Load development-team:sp-<role> for enhanced workflows" in the dispatch prompt
+- When receiving ANY subagent return → Check for "Superpowers used" field
 
-Failure to invoke this skill when dispatching parallel work is a protocol violation equivalent to skipping Scope Validation.
+**Step 3: You are now prepared.** Continue with normal PM workflow (scope, propose, dispatch). The superpowers integration will activate automatically when you dispatch your first parallel group or production subagent.
 
-This is the ONLY superpowers skill the PM uses. All other superpowers skills (brainstorming, TDD, debugging, etc.) are for subagents via their own sp-* bridge skills.
+## What Changed vs. Without Superpowers
 
-## Dispatching Subagents with Superpowers
-
-**MANDATORY:** When dispatching subagents and superpowers is available, you MUST include this in EVERY dispatch prompt (no exceptions):
-
-```
-Load your role skill (development-team:<role>) for role instructions.
-Load development-team for shared rules.
-If superpowers skills are available, load development-team:sp-<role> for enhanced workflows.
-```
-
-If you dispatch a subagent without including the sp-<role> instruction when superpowers is available, you are violating PM protocol.
+| Scenario | Without Bridge | With Bridge |
+|----------|---------------|-------------|
+| Parallel dispatch | Dispatch agents directly | Invoke `subagent-driven-development` first, then dispatch |
+| Subagent dispatch | "Load development-team:<role>" | Add "Load development-team:sp-<role> for enhanced workflows" |
+| Return summary check | Files changed + tests passing | Also check "Superpowers used" field |
+| TDD enforcement | Code Reviewer checks | Code Reviewer checks + TDD Gate blocks |
 
 ## Fallback
 

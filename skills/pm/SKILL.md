@@ -263,6 +263,18 @@ If the plan's subtasks violate this limit, the PM splits them and updates the ta
 
 This check runs AFTER Scope Validation and BEFORE dispatching any subagent.
 
+#### Post-Bootstrap Bridge Activation (after loading sp-pm)
+
+If you just loaded `development-team:sp-pm` as part of the bootstrap sequence, you MUST announce the bridge status to the user before proceeding with any work:
+
+> "⚡ Superpowers bridge active. Will use subagent-driven-development for parallel dispatch. All production subagents will load their sp-* bridges."
+
+This announcement serves two purposes:
+1. **Visibility** — The user can see that superpowers integration is active
+2. **Self-commitment** — By announcing it, you commit to actually using it (reduces the chance of forgetting)
+
+After the announcement, continue with normal PM workflow. The pre-dispatch check below applies when you start dispatching subagents.
+
 **Step 1: Detect superpowers**
 Look at the available skills list in your context. If you see skills with the `superpowers:` prefix, superpowers is installed. If not, skip this entire check.
 
