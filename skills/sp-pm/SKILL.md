@@ -27,23 +27,20 @@ Before proceeding, verify superpowers is installed:
 
 If you just loaded this skill as part of the development-team bootstrap, you MUST do these things RIGHT NOW — not later, not "when needed," but NOW:
 
-**Step 1: Announce activation**
-Output this exact announcement to the user:
-> "⚡ Superpowers bridge active. Subagent-driven-development will be used for parallel dispatch. All production subagents will load their sp-* bridges."
+**Step 1: Invoke the superpowers skill**
+Use the Skill tool to invoke `superpowers:subagent-driven-development`. This loads the parallel dispatch framework that you'll use whenever you dispatch multiple subagents simultaneously. Do this NOW, even if you don't have a parallel dispatch yet — the framework needs to be loaded and ready.
 
-**Step 2: Prepare for parallel dispatch**
-Remember these rules for the rest of this session:
-- When dispatching ANY parallel group → Invoke `superpowers:subagent-driven-development` via Skill tool FIRST, then dispatch
-- When dispatching ANY production subagent → Include "Load development-team:sp-<role> for enhanced workflows" in the dispatch prompt
-- When receiving ANY subagent return → Check for "Superpowers used" field
+**Step 2: Announce activation**
+Output this announcement to the user:
+> "⚡ Superpowers bridge active. `subagent-driven-development` loaded. All production subagents will load their sp-* bridges."
 
-**Step 3: You are now prepared.** Continue with normal PM workflow (scope, propose, dispatch). The superpowers integration will activate automatically when you dispatch your first parallel group or production subagent.
+**Step 3: You are now prepared.** Continue with normal PM workflow (scope, propose, dispatch). When you reach a parallel dispatch, the framework is already loaded and ready to use.
 
 ## What Changed vs. Without Superpowers
 
 | Scenario | Without Bridge | With Bridge |
 |----------|---------------|-------------|
-| Parallel dispatch | Dispatch agents directly | Invoke `subagent-driven-development` first, then dispatch |
+| Parallel dispatch | Dispatch agents directly | `subagent-driven-development` already loaded at bootstrap — use its framework for parallel dispatch |
 | Subagent dispatch | "Load development-team:<role>" | Add "Load development-team:sp-<role> for enhanced workflows" |
 | Return summary check | Files changed + tests passing | Also check "Superpowers used" field |
 | TDD enforcement | Code Reviewer checks | Code Reviewer checks + TDD Gate blocks |
