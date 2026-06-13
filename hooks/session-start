@@ -3,6 +3,9 @@
 
 set -euo pipefail
 
+# Delete PM-loaded marker to force re-loading on new session/clear/compact
+rm -f /tmp/.dev-team-pm-loaded 2>/dev/null || true
+
 # Determine plugin root directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"

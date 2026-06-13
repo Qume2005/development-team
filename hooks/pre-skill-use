@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# PreToolUse hook for Skill tool — creates marker when PM skills are loaded
+set -uo pipefail
+
+MARKER_FILE="/tmp/.dev-team-pm-loaded"
+
+# Read tool call details from stdin (JSON with tool input)
+INPUT=$(cat 2>/dev/null || true)
+
+# Create marker when development-team:pm is loaded
+# Defensive parsing: grep for the skill name in any JSON format
+if [ -n "$INPUT" ] && echo "$INPUT" | grep -q '"development-team:pm"' 2>/dev/null; then
+    touch "$MARKER_FILE" 2>/dev/null || true
+fi
+
+# Always allow Skill tool calls — never block them
+exit 0

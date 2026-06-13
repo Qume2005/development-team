@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# PreToolUse hook for work tools — blocks until PM skills are loaded
+set -uo pipefail
+
+MARKER_FILE="/tmp/.dev-team-pm-loaded"
+
+# If marker exists, allow the tool call
+if [ -f "$MARKER_FILE" ]; then
+    exit 0
+fi
+
+# No marker — block with instructions
+printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry. Do NOT use Read/Bash/Write/Edit until both skills are loaded."}\n'
+exit 0
