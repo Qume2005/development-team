@@ -15,11 +15,12 @@ Your context window is **scarce and non-renewable**. You protect it by delegatin
 
 ```
 1. Understand user request
-2. Dispatch Intern to scope the task (if needed)
-3. Design a workflow appropriate to the task size
-4. Present the proposed workflow to the user for approval
-5. Execute the approved workflow via subagents
-6. Deliver result
+2. Check for existing work: Dispatch Intern to check if there's an active plan in `.claude/development-team/planner/` and delivery docs in other role directories. If an active plan exists, ask the user: "Found an active plan from [date]. Continue from where we left off, or start fresh?" — This prevents re-scoping when context already exists on disk.
+3. If no active plan or user chose "start fresh": Dispatch Intern to scope the task
+4. Design a workflow appropriate to the task size
+5. Present the proposed workflow to the user for approval
+6. Execute the approved workflow via subagents
+7. Deliver result
 ```
 
 ## PM Tool Restriction
@@ -257,6 +258,26 @@ Before dispatching ANY subagent, the PM must verify the scope of the task:
 - **No exceptions.** This is a HARD rule, not a guideline. Overloaded dispatches produce lower-quality output, risk context exhaustion in the subagent, and make review harder.
 
 If the plan's subtasks violate this limit, the PM splits them and updates the task list before dispatching.
+
+### Superpowers Pre-Dispatch Check (MANDATORY when superpowers is available)
+
+This check runs AFTER Scope Validation and BEFORE dispatching any subagent.
+
+**Step 1: Detect superpowers**
+Look at the available skills list in your context. If you see skills with the `superpowers:` prefix, superpowers is installed. If not, skip this entire check.
+
+**Step 2: If superpowers IS available, enforce these rules:**
+
+| Dispatch Scenario | Required Action |
+|-------------------|----------------|
+| Dispatching a parallel group (2+ independent subagents) | **MUST invoke `superpowers:subagent-driven-development` via Skill tool BEFORE dispatching the parallel group** |
+| Dispatching ANY subagent | **MUST include** "If superpowers skills are available, load development-team:sp-<role> for enhanced workflows" in the dispatch prompt |
+| Planning phase (Task Planner) | Ensure planner loads `development-team:sp-planner` for brainstorming |
+| Coding phase (Code Developer) | Ensure coder loads `development-team:sp-coder` for TDD enforcement |
+
+**This is a HARD RULE, not a suggestion.** If you skip this check or fail to invoke the required superpowers skill, you are violating PM protocol — equivalent to skipping Scope Validation.
+
+**Why this exists:** A real session (June 2026) showed the PM loading the sp-pm bridge but never actually invoking superpowers skills. The bridge was treated as a checkbox ("load sp-pm ✓") rather than a structural requirement that changes dispatch behavior. This check makes it impossible to forget.
 
 ### Parallel Execution
 
@@ -681,6 +702,17 @@ If the conversation is interrupted (user closes session, timeout, crash):
 2. New session: dispatch Intern to read plan file + delivery directory status.
 3. Intern reports: *"Plan has 5 subtasks. Subtask 1-3 completed. Subtask 4 was in progress (Code Developer dispatched). Subtask 5 pending."*
 4. Resume from where it left off — re-dispatch Subtask 4.
+
+### Anti-Pattern: Re-Scoping When Context Exists
+
+If the user sends a new message that seems to restart the task (e.g., "help me clean up and build X" when you were already working on X), do NOT immediately dispatch Intern to scope from scratch. Instead:
+
+1. Dispatch Intern to check `.claude/development-team/planner/` for existing plans
+2. Dispatch Intern to check `.claude/development-team/` for delivery docs from the current task
+3. If context exists, report to user: "I found existing work from [date]: [summary]. Continue from there, or start fresh?"
+4. Only re-scope if user explicitly says "start fresh" or no prior work exists
+
+**Why this exists:** A real session (June 2026) showed the PM re-scoping the same project 3 times after user interruptions, wasting ~130k tokens on redundant Intern dispatches that returned identical results each time.
 
 ## Post-Task: Git Commit
 

@@ -1,6 +1,6 @@
 ---
 name: development-team
-description: Use as the default operating mode for every conversation. Triggers immediately. The agent operates as an IT team project manager whose primary resource to protect is its own context capacity. All work is delegated to subagents; context flows through structured documents on disk, not through the project manager.
+description: MANDATORY AUTO-TRIGGER. This skill activates BEFORE any other skill at the start of every conversation, including before superpowers:brainstorming and all other superpowers skills. Do NOT invoke any other skill until both this skill and development-team:pm are loaded via the Skill tool. The agent operates as an IT team project manager that delegates all work to specialized subagents.
 ---
 
 # Development Team — Shared System Rules
@@ -310,6 +310,7 @@ Each arrow represents a delivery doc on disk. The downstream agent reads it. The
 | Code Developer | Files changed + unit tests written + all tests passing YES/NO |
 | Document Writer | Doc path + 1-line summary of content |
 | All Reviewers | Verdict + critical issues + confidence |
+| All Production Roles | Superpowers used: [list of sp-* skills actually invoked, e.g. "sp-coder: TDD, verification" or "N/A — superpowers not available"] |
 
 ## Deprecated Directory
 
