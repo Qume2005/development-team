@@ -1,14 +1,35 @@
-# development-team: Claude Code 的 IT 项目经理插件
+# development-team: 给 Claude Code 配一支完整的 AI 开发团队
+
+> **16 个专业角色 + 严格审核流程——一支协同作业的 AI 开发团队，分工明确、逐道把关。**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-orange)](https://docs.anthropic.com/en/docs/claude-code)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Qume2005/development-team/pulls)
 
-> **把所有工作委托给专业子代理的 IT 团队项目管理系统**
+## ⚡ 快速开始
 
-如果你用 Claude Code 做过复杂任务，大概率遇到过这个问题：随着对话变长，上下文窗口被代码片段、diff、日志逐渐填满，判断力和记忆随之衰退。做到一半，可能已经忘了最初的需求。**上下文是不可再生的稀缺资源**——一旦消耗，无法恢复。
+**一行命令装好，然后把需求甩给团队——剩下的事，团队来。**
 
-development-team 正是为解决这个问题而设计的。核心理念：AI 代理扮演 IT 项目经理，而**项目经理从不亲自干活**——只理解需求、设计工作流、调度专业子代理、根据子代理返回的简短结论做决策。所有上下文通过磁盘上的结构化文档流转；项目经理从不读取实际交付物。
+```bash
+git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/development-team
+chmod +x ~/.claude/skills/development-team/hooks/*
+```
+
+🧹 需要卸载？直接跳到 [快速卸载](#快速卸载)。
+
+装完启动 Claude Code，直接说一句你要什么（比如「帮我做一个带 JWT 的登录系统」）。团队会自己接手：理解需求 → 设计方案 → 拆任务 → 编码 → 审核 → 交付。你只管提需求、看结果。
+
+---
+
+## 这是一支怎样的团队
+
+一次安装，然后把整个任务交给团队。
+
+你只要说清目标，剩下的全由一支 16 人的 AI 开发团队端到端完成：理清范围 → 设计架构 → 拆解任务 → 设计接口 → 编写测试 → 敲定代码 → 逐道审核 → 交付成果。整条流水线自动跑通，每一份产出都要经过配对审核员的把关。
+
+development-team 把这套协作模式搬进 Claude Code：9 个生产角色各司其职地产出，7 个审核角色逐道把关，项目经理（PM）在其中只做协调——理解需求、设计工作流、调度子代理、做决策，**不亲自干活**。所有工作通过磁盘上的交付文档在角色之间流转，每一份产出都必须通过配对审核（最多 3 轮），Hook 强制执行规则，整套机制与 Superpowers 插件兼容。
+
+简单说，它给你的是一支分工清楚、流程严格、上下文纪律靠结构保证的团队——你负责提需求，团队负责把它做出来。
 
 ---
 
@@ -16,18 +37,21 @@ development-team 正是为解决这个问题而设计的。核心理念：AI 代
 
 | 特性 | 说明 |
 |------|------|
-| **16 个专业角色** | 1 个 PM + 9 个生产角色 + 7 个审核角色，各司其职 |
-| **结构化工作流** | 产品设计 -> 架构 -> 计划 -> API -> 测试 -> 代码 -> 审核，自动匹配 |
-| **PreToolUse Hook 强制执行** | 引导阶段 + 运行阶段双重保障，PM 无法绕过工具限制 |
-| **Superpowers 插件兼容** | sp-* bridge 自动桥接 TDD、brainstorming 等增强技能 |
-| **上下文保护** | PM 永不读文件，只吸收 3-5 行摘要；子代理按模块范围工作 |
-| **交付物审查制度** | 所有产出必须通过配对审核员，最多 3 轮；失败上报用户 |
-| **并行调度** | 独立子任务同时派发，下游依赖在上游审核通过后启动 |
-| **零依赖** | 纯 Markdown，零构建步骤，零配置——23 个技能目录 + hooks + manifest 即完整产品 |
+| **一支 16 人的团队** | 9 个生产角色（架构师 / 产品设计师 / 任务规划 / API 设计师 / 测试设计师 / 编码 / 文档 / 实习生 / PM）+ 7 个审核角色，平权协作 |
+| **逐道审核流程** | 每一份产出都经过配对审核员，最多 3 轮；失败则回滚并上报用户 |
+| **磁盘文档驱动协作** | 角色之间通过磁盘上的结构化交付文档流转上下文，无需对话传递 |
+| **Hook 强制执行** | PreToolUse Hook 双层保障（L1 引导 / L2 运行），PM 的工具限制无法被绕过 |
+| **Superpowers 插件兼容** | sp-* bridge 自动桥接 TDD、brainstorming、verification 等增强技能 |
+| **上下文保护** | PM 永不读文件，只吸收 3-5 行摘要；各生产角色按模块范围（1 模块 / 2-3 文件）专注工作 |
+| **结构化工作流** | 产品设计 -> 架构 -> 计划 -> API -> 测试 -> 代码 -> 审核，按任务大小自动匹配 |
+| **并行调度** | 独立子任务同时派发，下游依赖在上游审核通过后才启动 |
+| **零依赖** | 纯 Markdown，零构建步骤，零配置——技能目录 + hooks + manifest 即完整产品 |
 
 ---
 
 ## 工作原理
+
+团队以磁盘文档为协作管道。每一阶段的产出文档，就是下一阶段的输入：
 
 ```
 用户提需求
@@ -35,10 +59,10 @@ development-team 正是为解决这个问题而设计的。核心理念：AI 代
     v
 +------------------+     +-------------------+
 |  Project Manager |<--->|  Intern (读文件)   |
-|  理解 / 设计 / 决策  |     +-------------------+
+|  协调 / 决策 / 调度  |     +-------------------+
 +------------------+              |
     |                             |
-    | 逐级委托（磁盘文档传递上下文）
+    | 团队协作（磁盘文档传递上下文）
     v
 +------------------+     +-------------------+
 | Product Designer |---->| Product Reviewer  |---> 通过?
@@ -72,17 +96,18 @@ development-team 正是为解决这个问题而设计的。核心理念：AI 代
   交付给用户
 ```
 
-**核心原则：PM 永远不是管道。** 子代理之间通过磁盘上的结构化文档协作，而非对话。
+**团队协作的核心原则：PM 永远不是管道。** 各生产角色读自己需要的源码与上游文档、产出交付物、交由配对审核员把关；角色之间靠磁盘上的结构化文档协作，无需对话。PM 只追踪文档路径、吸收审核结论（通过/失败 + 关键问题），据此决定下一步调度。
 
 ---
 
 ## 角色一览
 
+这是一支 16 人的团队。生产角色负责产出，审核角色负责把关，二者**平权呈现**——团队的价值来自这 16 个角色协作 + 严格审核流程。
+
 ### 生产角色（产出交付物）
 
 | 角色 | 技能 | 职责 |
 |------|------|------|
-| Project Manager | `development-team:pm` | 理解需求、设计工作流、调度子代理、做决策——但绝不亲自干活 |
 | Product Designer | `development-team:product-designer` | 设计产品规格、用户故事、功能优先级 |
 | Architecture Designer | `development-team:architect` | 设计系统架构、模块拆分、技术选型 |
 | Task Planner | `development-team:planner` | 将任务分解为可执行单元、编写计划 |
@@ -91,8 +116,11 @@ development-team 正是为解决这个问题而设计的。核心理念：AI 代
 | Code Developer | `development-team:coder` | 编写代码 + 单元测试，运行所有测试，确保通过 |
 | Document Writer | `development-team:doc-writer` | 编写文档、文章、规格说明 |
 | Intern | `development-team:intern` | 杂务 + PM 的阅读代理——清理、归档、文件操作、为 PM 读取并摘要 |
+| Project Manager | `development-team:pm` | 团队里的协调角色：理解需求、设计工作流、调度子代理、做决策——**不亲自写代码 / 读文件 / 跑命令** |
 
 ### 审核角色（质量把关）
+
+每一份生产产出都流向其配对审核员。审核是依赖链的一环——下游工作必须等上游审核通过才能启动。
 
 | 角色 | 技能 | 审核对象 |
 |------|------|---------|
@@ -104,11 +132,15 @@ development-team 正是为解决这个问题而设计的。核心理念：AI 代
 | Code Reviewer | `development-team:code-reviewer` | 代码 + 测试——缺陷、覆盖率、可维护性、TDD 合规 |
 | Document Reviewer | `development-team:doc-reviewer` | 文档——清晰度、准确性、完整性 |
 
+> **关于 PM：** PM 是这 16 个角色里唯一的协调角色。它不写代码、不读文件、不跑命令——这是事实，也是它准确的工作边界。团队的价值在于其余角色各司其职地产出，以及 7 个审核员逐道把关；PM 的工作是让这套协作高效运转、守住上下文纪律。
+
 ---
 
 ## 安装
 
-### 方式一：手动安装（推荐）
+两种方式任选其一。**推荐用方式一——它就是上面「快速开始」里那条一行命令的安装路径，克隆即用。**
+
+### 方式一：git clone（推荐 · 一行命令装好）
 
 ```bash
 # 克隆到 Claude Code 技能目录
@@ -118,67 +150,89 @@ git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/deve
 chmod +x ~/.claude/skills/development-team/hooks/*
 ```
 
+两行命令跑完即装好，无需额外配置。
+
 ### 方式二：社区市场（发布后可用）
 
 ```bash
 /plugin install development-team@claude-community
 ```
 
-安装后，每次启动 Claude Code 对话都会自动进入项目经理模式。
+> **注意：** 此命令在市场正式发布后才可用，当前请使用方式一。
+
+安装后，每次启动 Claude Code 对话都会自动唤醒这支团队。
+
+---
+
+## 快速卸载
+
+不想用了？两步干净移除（本地 `git clone` 安装不受 `/plugin uninstall` 管理，需手动清理）：
+
+```bash
+rm -rf ~/.claude/skills/development-team
+```
+
+然后（可选但推荐）清理注册表：编辑 `~/.claude/plugins/installed_plugins.json`，删掉整个 `"development-team@local": [ ... ]` 块，注意保持 JSON 合法（别留下多余逗号）。`settings.json` 无需改动。
+
+改完重启 Claude Code（或执行 `/clear`），团队就不会在下一次会话自动唤醒——彻底停用。
 
 ---
 
 ## 使用
 
-启动 Claude Code 后，直接描述你的需求：
+**装好之后，你只做一件事：用一句话描述你要什么，然后放手。**
+
+团队会自动按任务大小匹配工作流，从理解需求一路跑到交付，全程带配对审核——你不需要拆任务、不需要盯流程、不需要逐个催角色。
+
+**大任务 → 完整工作流（全员出动，逐道审核）：**
 
 ```
 > 帮我构建一个带 JWT 和 OAuth2 的用户认证系统
 
-# 项目经理会自动：
-# 1. 派 Intern 读取并评估项目范围
-# 2. 提议 Full System Development 工作流
-# 3. 等待你的确认后执行
+# 团队会自动：
+# 1. PM 派 Intern 读取并评估项目范围
+# 2. PM 提议 Full System Development 工作流（含产品/架构/计划/API/测试/编码各角色 + 审核）
+# 3. 等待你确认后，各角色并行/串行执行，逐道审核
 ```
 
-简单任务同样适用：
+**小任务 → Quick Fix（按需裁剪，快进快出）：**
 
 ```
 > 修复登录页面的一个拼写错误
 
-# 项目经理选择 Quick Fix 工作流：
+# PM 选择 Quick Fix 工作流：
 # Code Developer -> Code Reviewer -> 交付
 ```
 
-所有中间产物和最终交付物存储在项目的 `.claude/development-team/` 目录下，按角色扁平组织。
+无论任务大小，每一份产出都必须通过配对审核员的把关（最多 3 轮），失败则回滚上报。所有中间产物和最终交付物存储在项目的 `.claude/development-team/` 目录下，按角色扁平组织。
 
 ---
 
 ## 与 Superpowers 插件兼容
 
-development-team 通过 **sp-* bridge 技能**与 [superpowers](https://github.com/nicekid1/superpowers) 插件无缝集成：
+development-team 通过 **sp-* bridge 技能**与 [superpowers](https://github.com/nicekid1/superpowers) 插件无缝集成，让团队里的每个角色都能用上 TDD、brainstorming、verification 等增强工作流：
 
 | Bridge 技能 | 增强对象 | 桥接的 Superpowers 技能 |
 |-------------|---------|------------------------|
-| `sp-pm` | Project Manager | `subagent-driven-development` |
 | `sp-planner` | Task Planner | `brainstorming`, `writing-plans` |
 | `sp-architect` | Architecture Designer | `brainstorming`, `writing-plans` |
 | `sp-product-designer` | Product Designer | `brainstorming` |
 | `sp-coder` | Code Developer | `TDD`, `debugging`, `verification`, `executing-plans`, `git-worktrees` |
 | `sp-test-designer` | Test Designer | `TDD`, `systematic-debugging` |
+| `sp-pm` | Project Manager | `subagent-driven-development` |
 | `superpower-cowork` | 所有子代理 | 检测 superpowers 可用性，按场景引导调用 |
 
 **工作原理：**
 - PM 在引导阶段检测 superpowers 是否安装
-- 如果已安装，PM 加载 `sp-pm`，并在派发子代理时告知其加载对应的 `sp-*` bridge
-- 如果未安装，系统正常工作，无任何报错或降级提示
+- 如果已安装，PM 加载 `sp-pm`，并在派发各生产角色时告知其加载对应的 `sp-*` bridge
+- 如果未安装，团队照常工作，无任何报错或降级提示
 - PM 自身不直接调用任何 superpowers 技能（除 `subagent-driven-development`），所有增强通过子代理 bridge 执行
 
 ---
 
 ## Hook 强制执行机制
 
-development-team 使用 Claude Code 的 PreToolUse Hook 实现两层结构执行，确保 PM 无法绕过工具限制：
+团队纪律靠 Hook 强制执行，而非靠自觉。development-team 使用 Claude Code 的 PreToolUse Hook 实现两层结构，确保 PM 无法绕过工具限制：
 
 ### L1: 引导阶段
 
@@ -223,7 +277,7 @@ PreToolUse hook 检查优先级:
     3. PM_LOADED 存在但无限制 -> 允许（故障开放）
 ```
 
-**效果：** PM 自愿激活工具限制（通过加载其 skill 触发），Read/Bash/Write/Edit 被阻止。子代理派发时，PreAgentUse hook 递增活跃计数器，PostAgentUse hook 递减——子代理活跃期间所有工具正常放行。
+**效果：** PM 自愿激活工具限制（通过加载其 skill 触发），Read/Bash/Write/Edit 被阻止。子代理派发时，PreAgentUse hook 递增活跃计数器，PostAgentUse hook 递减——子代理活跃期间所有工具正常放行。生产角色因此能自由读写，PM 的上下文纪律则在结构上得到保证。
 
 ---
 
@@ -245,7 +299,7 @@ development-team/
 │   ├── development-team/        # 主技能——共享规则 + bootstrap
 │   │   ├── SKILL.md
 │   │   └── bootstrap.md
-│   ├── pm/                      # 项目经理
+│   ├── pm/                      # 项目经理（协调角色）
 │   ├── product-designer/        # 产品设计师
 │   ├── architect/               # 架构设计师
 │   ├── planner/                 # 任务规划师
@@ -273,7 +327,7 @@ development-team/
 └── README.md                    # 本文件
 ```
 
-**总计：23 个技能目录 + bootstrap.md + hooks/ + .claude-plugin/ = 完整插件。**
+**总计：24 个技能目录（16 个角色 + 主技能 + superpower-cowork + 6 个 sp-* bridge）+ bootstrap.md + hooks/ + .claude-plugin/ = 完整插件。**
 
 ---
 
@@ -297,7 +351,7 @@ chmod +x ~/.claude/skills/development-team/hooks/*
 
 ## 致谢
 
-development-team 的灵感来自一个直白的观察：**AI 代理的上下文窗口是最宝贵的资源**，然而大多数交互模式都在无意识地挥霍它。感谢 Anthropic Claude Code 团队提供的技能系统和子代理机制，使这种「项目经理模式」成为可能。
+development-team 的灵感来自一个直白的观察：**一支好的开发团队靠的是分工协作与严格的质量把关**，每个环节都有专人产出、有专人审核。感谢 Anthropic Claude Code 团队提供的技能系统和子代理机制，让一支分工明确、带审核流程的 AI 开发团队成为可能。
 
 ---
 
