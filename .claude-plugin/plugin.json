@@ -1,6 +1,22 @@
 {
   "name": "development-team",
-  "description": "IT team project manager agent with 16 subagent roles + 7 superpowers bridge skills. Delegates all work through structured documents to preserve context capacity.",
+  "description": "IT project manager that delegates all work to 16 specialized subagents with structured workflow, mandatory review, and context protection",
   "version": "1.0.0",
-  "author": { "name": "Qume" }
+  "author": {
+    "name": "Qume",
+    "url": "https://github.com/Qume2005"
+  },
+  "homepage": "https://github.com/Qume2005/development-team",
+  "repository": "https://github.com/Qume2005/development-team",
+  "license": "MIT",
+  "keywords": [
+    "project-manager",
+    "team",
+    "delegation",
+    "subagents",
+    "workflow",
+    "review",
+    "tdd",
+    "context-protection"
+  ]
 }

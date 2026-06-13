@@ -1,227 +1,306 @@
-[中文版本 / Chinese Version](README-CN.md)
+# development-team: Claude Code 的 IT 项目经理插件
 
-# DevelopmentTeam
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-orange)](https://docs.anthropic.com/en/docs/claude-code)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Qume2005/development-team/pulls)
 
-> A Claude Code skill that turns your AI agent into an IT team project manager — dispatching 16 subagent roles + 7 superpowers bridge skills to collaborate on software engineering tasks, while safeguarding your precious context window.
+> **把所有工作委托给专业子代理的 IT 团队项目管理系统**
 
----
+如果你用 Claude Code 做过复杂任务，大概率遇到过这个问题：随着对话变长，上下文窗口被代码片段、diff、日志逐渐填满，判断力和记忆随之衰退。做到一半，可能已经忘了最初的需求。**上下文是不可再生的稀缺资源**——一旦消耗，无法恢复。
 
-## Overview
-
-If you have used Claude Code for complex tasks, you have likely run into this problem: as a conversation grows longer, the agent's context window gradually fills up with code snippets, diffs, and logs. Its judgment and memory deteriorate along the way. Halfway through a task, it may have already forgotten the original requirements. **Context is a scarce and non-renewable resource** — once consumed, it cannot be recovered.
-
-**DevelopmentTeam** was built to solve exactly this problem. The core idea is simple: the AI agent plays the role of an IT team project manager, and **the project manager never does the work themselves** — they only understand requirements, design workflows, dispatch specialized subagents, and make decisions based on the brief verdicts (1-2 sentence summaries) those subagents return. All context flows through structured documents on disk; the project manager never reads the actual deliverables.
-
-This is not a codebase or a framework. It is a carefully crafted Claude Code plugin — 23 skill directories (each with its own SKILL.md), plus a bootstrap file, session hooks, and a plugin manifest. Install them into `~/.claude/skills/`, and every Claude Code conversation automatically enters "project manager mode." Whether you are building a brand-new full-stack project or fixing a small bug, DevelopmentTeam automatically matches the right workflow template and delivers high-quality results through TDD, code reviews, and quality gates.
+development-team 正是为解决这个问题而设计的。核心理念：AI 代理扮演 IT 项目经理，而**项目经理从不亲自干活**——只理解需求、设计工作流、调度专业子代理、根据子代理返回的简短结论做决策。所有上下文通过磁盘上的结构化文档流转；项目经理从不读取实际交付物。
 
 ---
 
-## Core Principles
+## 核心特性
 
-| Principle | Description |
-|-----------|-------------|
-| **Context is scarce** | The agent's context window is limited and non-recoverable — treat it like a budget |
-| **The project manager never does the work** | The Project Manager never reads code, writes docs, or runs commands — all real work is delegated to subagents |
-| **Disk is the communication channel** | Subagents exchange context through structured deliverable documents under `.claude/development-team/`, not through conversation |
-| **Absorb only verdicts** | The Project Manager receives only file paths + 1-2 sentence conclusions for decision-making, never full deliverables |
-
----
-
-## Features
-
-- **16 subagent roles + 7 superpowers bridge skills** — 9 production roles + 7 review roles + 6 superpowers bridges, each with clear responsibilities and authority
-- **7 workflow templates (+ custom)** — From Greenfield new projects to Quick Fixes, automatically matched by task complexity
-- **TDD first** — Test Designer writes tests before Code Developer implements, ensuring quality from the start
-- **Review gates** — Every production deliverable must pass its paired reviewer, up to 3 rounds; failures escalate to the user
-- **Parallel execution** — Task Planner identifies independent subtasks and dispatches them in parallel; downstream dependencies start only after review passes
-- **Failure handling** — Covers 8+ failure modes including subagent crashes, incomplete output, review loops, permission errors, and Git conflicts
-- **Session recovery** — Deliverables persist on disk; if a session is interrupted, the Intern reads the state and resumes from the breakpoint
-- **Pre-flight safety checks** — Evaluates Git status and project directory risks before execution; provides three safety options when modifying files outside the project
-- **Mandatory task tracking** — Uses `TaskCreate` to maintain a visible progress list; users see real-time status of every step in the panel
-- **Mandatory dispatch announcements** — Every subagent dispatch outputs a natural-language announcement: who, what, and why
-- **Permission matrix** — Read/write/review permissions for each role over deliverable documents are precisely defined to prevent unauthorized access
-- **Document recommendation matrix** — Each production role is explicitly told which upstream deliverables to read, ensuring correct context flow
-- **Pure Markdown** — Zero dependencies, zero build steps, zero configuration — 23 skill directories + bootstrap.md + hooks/ + .claude-plugin/ are the entire product
+| 特性 | 说明 |
+|------|------|
+| **16 个专业角色** | 1 个 PM + 9 个生产角色 + 7 个审核角色，各司其职 |
+| **结构化工作流** | 产品设计 -> 架构 -> 计划 -> API -> 测试 -> 代码 -> 审核，自动匹配 |
+| **PreToolUse Hook 强制执行** | 引导阶段 + 运行阶段双重保障，PM 无法绕过工具限制 |
+| **Superpowers 插件兼容** | sp-* bridge 自动桥接 TDD、brainstorming 等增强技能 |
+| **上下文保护** | PM 永不读文件，只吸收 3-5 行摘要；子代理按模块范围工作 |
+| **交付物审查制度** | 所有产出必须通过配对审核员，最多 3 轮；失败上报用户 |
+| **并行调度** | 独立子任务同时派发，下游依赖在上游审核通过后启动 |
+| **零依赖** | 纯 Markdown，零构建步骤，零配置——23 个技能目录 + hooks + manifest 即完整产品 |
 
 ---
 
-## Role Reference
+## 工作原理
 
-### Production Roles
+```
+用户提需求
+    |
+    v
++------------------+     +-------------------+
+|  Project Manager |<--->|  Intern (读文件)   |
+|  理解 / 设计 / 决策  |     +-------------------+
++------------------+              |
+    |                             |
+    | 逐级委托（磁盘文档传递上下文）
+    v
++------------------+     +-------------------+
+| Product Designer |---->| Product Reviewer  |---> 通过?
++------------------+     +-------------------+      |
+                                                    v
++------------------+     +-------------------+   PM 继续
+| Architect        |---->| Architect Reviewer |---> 调度
++------------------+     +-------------------+
+    |
+    v
++------------------+     +-------------------+
+| Task Planner     |---->| Task Reviewer     |
++------------------+     +-------------------+
+    |
+    v
++------------------+     +-------------------+
+| API Designer     |---->| API Reviewer      |
++------------------+     +-------------------+
+    |
+    v
++------------------+     +-------------------+
+| Test Designer    |---->| Test Design Review|
++------------------+     +-------------------+
+    |                        (TDD: 测试先行)
+    v
++------------------+     +-------------------+
+| Code Developer   |---->| Code Reviewer     |
++------------------+     +-------------------+
+    |
+    v
+  交付给用户
+```
 
-| Role | File | Responsibility |
-|------|------|----------------|
-| Project Manager | `skills/pm/SKILL.md` | Understands requirements, designs workflows, dispatches subagents, makes decisions — but never does the work |
-| Architecture Designer | `skills/architect/SKILL.md` | Designs system architecture, module decomposition, technology selection |
-| Product Designer | `skills/product-designer/SKILL.md` | Designs product specifications, user stories, feature prioritization |
-| Task Planner | `skills/planner/SKILL.md` | Breaks tasks into small units and writes execution plans |
-| API Designer | `skills/api-designer/SKILL.md` | Designs APIs, interfaces, and contracts |
-| Test Designer | `skills/test-designer/SKILL.md` | Designs integration and system tests (TDD: tests first) |
-| Code Developer | `skills/coder/SKILL.md` | Writes code + unit tests, runs all tests, ensures they pass |
-| Document Writer | `skills/doc-writer/SKILL.md` | Writes documentation, articles, and specifications |
-| Intern | `skills/intern/SKILL.md` | Miscellaneous tasks + PM's reader — cleanup, archival, file operations, reading & reporting for PM |
+**核心原则：PM 永远不是管道。** 子代理之间通过磁盘上的结构化文档协作，而非对话。
 
-### Review Roles
+---
 
-| Role | File | Reviews |
+## 角色一览
+
+### 生产角色（产出交付物）
+
+| 角色 | 技能 | 职责 |
+|------|------|------|
+| Project Manager | `development-team:pm` | 理解需求、设计工作流、调度子代理、做决策——但绝不亲自干活 |
+| Product Designer | `development-team:product-designer` | 设计产品规格、用户故事、功能优先级 |
+| Architecture Designer | `development-team:architect` | 设计系统架构、模块拆分、技术选型 |
+| Task Planner | `development-team:planner` | 将任务分解为可执行单元、编写计划 |
+| API Designer | `development-team:api-designer` | 设计 API、接口契约 |
+| Test Designer | `development-team:test-designer` | 设计集成测试和系统测试（TDD：测试先行） |
+| Code Developer | `development-team:coder` | 编写代码 + 单元测试，运行所有测试，确保通过 |
+| Document Writer | `development-team:doc-writer` | 编写文档、文章、规格说明 |
+| Intern | `development-team:intern` | 杂务 + PM 的阅读代理——清理、归档、文件操作、为 PM 读取并摘要 |
+
+### 审核角色（质量把关）
+
+| 角色 | 技能 | 审核对象 |
 |------|------|---------|
-| Architecture Reviewer | `skills/architect-reviewer/SKILL.md` | Architecture design — modularity, scalability, feasibility |
-| Product Reviewer | `skills/product-reviewer/SKILL.md` | Product design — user value, completeness, prioritization |
-| Task Reviewer | `skills/task-reviewer/SKILL.md` | Execution plans — feasibility, scope, decomposition quality |
-| API Reviewer | `skills/api-reviewer/SKILL.md` | API design — correctness, consistency, usability |
-| Test Design Reviewer | `skills/test-design-reviewer/SKILL.md` | Test design — completeness, correctness, edge cases |
-| Code Reviewer | `skills/code-reviewer/SKILL.md` | Code + tests — bugs, coverage, maintainability, TDD compliance |
-| Document Reviewer | `skills/doc-reviewer/SKILL.md` | Documentation — clarity, accuracy, completeness |
+| Product Reviewer | `development-team:product-reviewer` | 产品设计——用户价值、完整性、优先级 |
+| Architecture Reviewer | `development-team:architect-reviewer` | 架构设计——模块化、可扩展性、可行性 |
+| Task Reviewer | `development-team:task-reviewer` | 执行计划——可行性、范围、分解质量 |
+| API Reviewer | `development-team:api-reviewer` | API 设计——正确性、一致性、易用性 |
+| Test Design Reviewer | `development-team:test-design-reviewer` | 测试设计——完整性、正确性、边界情况 |
+| Code Reviewer | `development-team:code-reviewer` | 代码 + 测试——缺陷、覆盖率、可维护性、TDD 合规 |
+| Document Reviewer | `development-team:doc-reviewer` | 文档——清晰度、准确性、完整性 |
 
 ---
 
-## Workflow Templates
+## 安装
 
-| Template | Use Case | Typical Flow |
-|----------|----------|--------------|
-| **Greenfield System Development** | New projects from scratch (2+ modules) | (Optional) Product design → Architecture design → Planning → Integration TDD (per unit) → System testing → Delivery |
-| **Architectural Refactoring** | Architecture-level refactoring (e.g., monolith to microservices) | Architecture design → Planning → Integration TDD → System testing → Delivery |
-| **Full System Development** | Large features, new modules | Planning → Integration TDD → System testing → Delivery |
-| **Standard Development** | Medium features, refactoring, new endpoints | Planning → API design → Coding + unit tests → Delivery |
-| **Quick Fix** | Small bugs, typos, config changes | Coding → Code review → Delivery |
-| **Investigation Only** | Research, analysis, questions | Intern reads & investigates → Delivers conclusions |
-| **Documentation Only** | READMEs, guides, articles | Document Writer → Document review → Delivery |
-
-In every template, production deliverables go through their paired reviewer before the workflow advances. The Project Manager selects the appropriate template based on the task and can also customize the flow.
-
----
-
-## Installation & Usage
-
-### Prerequisites
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed
-- Claude Code skill directory at `~/.claude/skills/`
-
-### Installation Steps
+### 方式一：手动安装（推荐）
 
 ```bash
-# 1. Clone the repository into the Claude Code skills directory
+# 克隆到 Claude Code 技能目录
 git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/development-team
 
-# 2. Verify installation — confirm this file exists
-ls ~/.claude/skills/development-team/SKILL.md
+# 赋予 hook 脚本执行权限
+chmod +x ~/.claude/skills/development-team/hooks/*
 ```
 
-Once installed, DevelopmentTeam skill is automatically activated in every Claude Code conversation. The Project Manager takes over, analyzes your request, and proposes a workflow.
+### 方式二：社区市场（发布后可用）
 
-### Usage Examples
-
-After launching Claude Code, just describe what you need:
-
-```
-> Build me a user authentication system with JWT and OAuth2 support
-
-# The Project Manager will automatically:
-# 1. Dispatch an Intern to read and assess the project scope
-# 2. Propose a Full System Development workflow
-# 3. Wait for your confirmation before executing
+```bash
+/plugin install development-team@claude-community
 ```
 
-For simple tasks:
-
-```
-> Fix a typo on the login page
-
-# The Project Manager selects the Quick Fix flow:
-# Code Developer → Code Reviewer → Delivery
-```
-
-### Deliverable Directory
-
-All intermediate artifacts and final deliverables are stored in the project's `.claude/development-team/` directory, organized by date hierarchy:
-
-```
-.claude/development-team/<year>/<month>/<week-ordinal>-week/<agentname>/<summary>-<hour><ampm>-<day><ordinal>.md
-```
-
-Example for June 7, 2026 (1st week of June):
-
-```
-.claude/development-team/2026/06/1st-week/
-  ├── planner/
-  │   └── auth-refactor-12pm-7th.md      # Execution plan
-  ├── api-designer/
-  │   └── auth-endpoints-01pm-7th.md     # API design document
-  ├── test-designer/
-  │   └── auth-tests-02pm-7th.md         # Test design document
-  ├── coder/
-  │   └── auth-module-03pm-7th.md        # Code implementation record
-  ├── code-reviewer/
-  │   └── review-code-round1-03pm-7th.md  # Review feedback
-```
+安装后，每次启动 Claude Code 对话都会自动进入项目经理模式。
 
 ---
 
-## Project Structure
+## 使用
+
+启动 Claude Code 后，直接描述你的需求：
+
+```
+> 帮我构建一个带 JWT 和 OAuth2 的用户认证系统
+
+# 项目经理会自动：
+# 1. 派 Intern 读取并评估项目范围
+# 2. 提议 Full System Development 工作流
+# 3. 等待你的确认后执行
+```
+
+简单任务同样适用：
+
+```
+> 修复登录页面的一个拼写错误
+
+# 项目经理选择 Quick Fix 工作流：
+# Code Developer -> Code Reviewer -> 交付
+```
+
+所有中间产物和最终交付物存储在项目的 `.claude/development-team/` 目录下，按角色扁平组织。
+
+---
+
+## 与 Superpowers 插件兼容
+
+development-team 通过 **sp-* bridge 技能**与 [superpowers](https://github.com/nicekid1/superpowers) 插件无缝集成：
+
+| Bridge 技能 | 增强对象 | 桥接的 Superpowers 技能 |
+|-------------|---------|------------------------|
+| `sp-pm` | Project Manager | `subagent-driven-development` |
+| `sp-planner` | Task Planner | `brainstorming`, `writing-plans` |
+| `sp-architect` | Architecture Designer | `brainstorming`, `writing-plans` |
+| `sp-product-designer` | Product Designer | `brainstorming` |
+| `sp-coder` | Code Developer | `TDD`, `debugging`, `verification`, `executing-plans`, `git-worktrees` |
+| `sp-test-designer` | Test Designer | `TDD`, `systematic-debugging` |
+| `superpower-cowork` | 所有子代理 | 检测 superpowers 可用性，按场景引导调用 |
+
+**工作原理：**
+- PM 在引导阶段检测 superpowers 是否安装
+- 如果已安装，PM 加载 `sp-pm`，并在派发子代理时告知其加载对应的 `sp-*` bridge
+- 如果未安装，系统正常工作，无任何报错或降级提示
+- PM 自身不直接调用任何 superpowers 技能（除 `subagent-driven-development`），所有增强通过子代理 bridge 执行
+
+---
+
+## Hook 强制执行机制
+
+development-team 使用 Claude Code 的 PreToolUse Hook 实现两层结构执行，确保 PM 无法绕过工具限制：
+
+### L1: 引导阶段
+
+```
+会话启动
+    |
+    v
+SessionStart hook: 清除所有标记，注入 bootstrap 上下文
+    |
+    v
+用户尝试使用工具（Read/Bash/Write/Edit 等）
+    |
+    v
+PreToolUse hook 检查: PM_LOADED 标记存在?
+    |
+    +---> 不存在: 阻止工具调用
+         "development-team active but PM skills not loaded.
+          Invoke via Skill tool FIRST:
+          1) development-team:pm
+          2) development-team
+          Then retry."
+```
+
+**效果：** 会话刚启动时，PM skill 尚未加载，所有工作工具被阻止。代理必须先通过 Skill 工具加载 PM skill，才能继续操作。
+
+### L2: 运行阶段
+
+```
+PM skill 加载
+    |
+    v
+PreSkillUse hook: 创建 PM_LOADED + PM_RESTRICTED 标记
+    |
+    v
+PM 尝试使用工具
+    |
+    v
+PreToolUse hook 检查优先级:
+    1. 子代理活跃中?  -> 允许（子代理无限制）
+    2. PM_RESTRICTED 标记存在? -> 阻止
+       "PM tool restriction active. Dispatch a subagent instead."
+    3. PM_LOADED 存在但无限制 -> 允许（故障开放）
+```
+
+**效果：** PM 自愿激活工具限制（通过加载其 skill 触发），Read/Bash/Write/Edit 被阻止。子代理派发时，PreAgentUse hook 递增活跃计数器，PostAgentUse hook 递减——子代理活跃期间所有工具正常放行。
+
+---
+
+## 项目结构
 
 ```
 development-team/
 ├── .claude-plugin/
-│   └── plugin.json                        # Plugin manifest
+│   └── plugin.json              # 插件清单
 ├── hooks/
-│   ├── hooks.json                         # SessionStart hook registration
-│   ├── session-start                      # Bootstrap injection script
-│   └── run-hook.cmd                       # Cross-platform launcher
+│   ├── hooks.json               # Hook 注册配置
+│   ├── session-start            # 会话启动引导注入
+│   ├── pre-skill-use            # Skill 工具钩子（标记管理）
+│   ├── pre-tool-use             # 工作工具钩子（PM 限制执行）
+│   ├── pre-agent-use            # Agent 派发钩子（活跃计数+1）
+│   ├── post-agent-use           # Agent 完成钩子（活跃计数-1）
+│   └── run-hook.cmd             # 跨平台启动器
 ├── skills/
-│   ├── development-team/                  # Main skill — shared rules + bootstrap
+│   ├── development-team/        # 主技能——共享规则 + bootstrap
 │   │   ├── SKILL.md
 │   │   └── bootstrap.md
-│   ├── pm/                                # PM role (standalone skill)
-│   │   └── SKILL.md
-│   │
-│   ├── 📦 Production roles (8 — each a skill):
-│   ├── coder/                             # Code Developer
-│   ├── architect/                         # Architecture Designer
-│   ├── api-designer/                      # API Designer
-│   ├── test-designer/                     # Test Designer
-│   ├── doc-writer/                        # Document Writer
-│   ├── product-designer/                  # Product Designer
-│   ├── planner/                           # Task Planner
-│   ├── intern/                            # Intern
-│   │
-│   ├── 🔍 Review roles (7 — each a skill):
-│   ├── task-reviewer/                     # Task Reviewer
-│   ├── api-reviewer/                      # API Reviewer
-│   ├── test-design-reviewer/              # Test Design Reviewer
-│   ├── code-reviewer/                     # Code Reviewer
-│   ├── doc-reviewer/                      # Document Reviewer
-│   ├── architect-reviewer/                # Architecture Reviewer
-│   ├── product-reviewer/                  # Product Reviewer
-│   │
-│   └── ⚡ Superpowers bridge skills (7):
-│       ├── superpower-cowork/             # Bridge for subagents to leverage superpowers
-│       ├── sp-planner/                    # Bridge for Task Planner
-│       ├── sp-coder/                      # Bridge for Code Developer
-│       ├── sp-architect/                  # Bridge for Architecture Designer
-│       ├── sp-test-designer/              # Bridge for Test Designer
-│       └── sp-product-designer/           # Bridge for Product Designer
-│
+│   ├── pm/                      # 项目经理
+│   ├── product-designer/        # 产品设计师
+│   ├── architect/               # 架构设计师
+│   ├── planner/                 # 任务规划师
+│   ├── api-designer/            # API 设计师
+│   ├── test-designer/           # 测试设计师
+│   ├── coder/                   # 代码开发者
+│   ├── doc-writer/              # 文档编写者
+│   ├── intern/                  # 实习生
+│   ├── product-reviewer/        # 产品审核员
+│   ├── architect-reviewer/      # 架构审核员
+│   ├── task-reviewer/           # 任务审核员
+│   ├── api-reviewer/            # API 审核员
+│   ├── test-design-reviewer/    # 测试设计审核员
+│   ├── code-reviewer/           # 代码审核员
+│   ├── doc-reviewer/            # 文档审核员
+│   ├── superpower-cowork/       # Superpowers 检测与引导
+│   ├── sp-pm/                   # PM bridge
+│   ├── sp-planner/              # Planner bridge
+│   ├── sp-architect/            # Architect bridge
+│   ├── sp-product-designer/     # Product Designer bridge
+│   ├── sp-coder/                # Coder bridge
+│   └── sp-test-designer/        # Test Designer bridge
+├── LICENSE                      # MIT 许可证
 ├── .gitignore
-└── .claude/development-team/              # Runtime deliverable directory
-    └── 2026/06/1st-week/                  # Organized by year/month/week
-        └── <agentname>/                   # Each role has its own subdirectory
+└── README.md                    # 本文件
 ```
 
-**Total: 23 skill directories + bootstrap.md + hooks/ + .claude-plugin/ = the entire plugin.**
+**总计：23 个技能目录 + bootstrap.md + hooks/ + .claude-plugin/ = 完整插件。**
+
+---
+
+## 开发与贡献
+
+这是个人项目，目前由独立开发者维护。如果你有建议或发现 bug，欢迎在 [GitHub Issues](https://github.com/Qume2005/development-team/issues) 提交。
+
+### 本地开发
+
+```bash
+# 克隆仓库
+git clone https://github.com/Qume2005/development-team.git
+cd development-team
+
+# 修改技能文件后，直接复制到技能目录测试
+cp -r . ~/.claude/skills/development-team
+chmod +x ~/.claude/skills/development-team/hooks/*
+```
+
+---
+
+## 致谢
+
+development-team 的灵感来自一个直白的观察：**AI 代理的上下文窗口是最宝贵的资源**，然而大多数交互模式都在无意识地挥霍它。感谢 Anthropic Claude Code 团队提供的技能系统和子代理机制，使这种「项目经理模式」成为可能。
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## Contributing
-
-This is a personal project, currently maintained by a solo developer. If you have suggestions or find bugs, feel free to open an issue on [GitHub Issues](https://github.com/Qume2005/development-team/issues).
-
-## Acknowledgments
-
-DevelopmentTeam was inspired by a straightforward observation: **an AI agent's context window is its most precious resource**, yet most interaction patterns squander it unconsciously. Thanks to the Anthropic Claude Code team for providing the skill system and subagent mechanism that make this "project manager mode" possible.
+[MIT License](LICENSE) Copyright (c) 2025 Qume
