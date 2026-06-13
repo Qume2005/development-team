@@ -302,7 +302,8 @@ Every dispatch prompt MUST follow this template. No exceptions. Not for "simple"
 ```
 Load development-team:<role-name> for your role instructions.
 Load development-team for shared system rules.
-If superpowers skills are available, load development-team:sp-<role-name> for enhanced workflows.
+If superpowers skills are available, load development-team:sp-<role-name> for role-specific enhanced workflows.
+If superpowers skills are available, load development-team:superpower-cowork for general superpowers integration guidance.
 
 <task description>
 ```

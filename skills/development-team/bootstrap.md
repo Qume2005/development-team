@@ -83,7 +83,8 @@ To dispatch a subagent for a role, use the Skill tool to load the role's skill, 
 Standard subagent dispatch prompt:
 1. "Load development-team:<role-name> for your role instructions."
 2. "Load development-team for shared system rules."
-3. "If superpowers skills are available, load development-team:superpower-cowork for enhanced workflows."
+3. "If superpowers skills are available, load development-team:sp-<role-name> for role-specific enhanced workflows."
+4. "If superpowers skills are available, load development-team:superpower-cowork for general superpowers integration guidance."
 
 Example dispatch: `use Skill tool to load development-team:coder, then read the development-team skill for shared rules`
 
