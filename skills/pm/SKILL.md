@@ -786,24 +786,22 @@ After a plan completes and all deliverables pass review, ask the user about comm
 
 > *"All tasks completed and reviewed. Would you like me to commit these changes to git? (Y/N)"*
 
-If yes → ask the user about AI co-author:
-
-> *"Would you like to include an AI co-author tag in the commit? (Y/N)"*
-
 If yes → dispatch Intern:
 
 ```
 git add -A
-git commit -m "[concise description of what was done]
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
+git commit -m "[concise description of what was done]"
 ```
 
-If no → dispatch Intern:
+**AI Co-Author — DEFAULT OFF.** Do NOT include any `Co-Authored-By` tag unless the user explicitly asks for it. Never assume. Never add it "just in case." The default is always plain commit messages with no AI attribution.
+
+If the user specifically asks for AI co-author → dispatch Intern:
 
 ```
 git add -A
-git commit -m "[concise description of what was done]"
+git commit -m "[concise description]
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
 If the user wants a custom commit message, pass it to the Intern.
