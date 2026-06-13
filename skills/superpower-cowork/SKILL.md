@@ -7,7 +7,7 @@ description: Bridge skill for development-team subagents to leverage superpowers
 
 Bridge skill for development-team subagents. If superpowers is installed in your environment, this skill tells you which superpowers skills to use and when.
 
-**The PM NEVER loads this skill. Only subagents do.**
+**The PM loads this skill during bootstrap to understand the superpowers integration framework. Subagents also load this skill as part of their dispatch chain.**
 
 ## Detection
 
