@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# PreToolUse hook for work tools — enforces PM tool restrictions
+
+  # PreToolUse hook for work tools — enforces PM tool restrictions.
+
+  # Discriminator: subagents carry a non-empty agent_id in the hook stdin;
+
+  # the top-level PM does not. Allow subagents unconditionally (works for
+
+  # both foreground and background dispatch); block only the PM.
+
 set -uo pipefail
 
 SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
@@ -9,25 +17,43 @@ PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${SUFFIX}"
 SESSION="${MARKER_DIR}/.dev-team-session-${SUFFIX}"
 ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
 
-# Priority 1: If a subagent is currently active, allow all tools
+  # Read caller identity from stdin.
+
+INPUT=$(cat 2>/dev/null || true)
+AGENT_ID=""
+if command -v jq &>/dev/null && [ -n "$INPUT" ]; then
+AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null)
+fi
+
+  # Primary discriminator: a subagent has a non-empty agent_id; the PM does not.
+
+  # Robust to foreground AND background dispatch and to skill loading.
+
+if [ -n "$AGENT_ID" ]; then
+exit 0
+fi
+
+  # Fallback (jq missing / stdin unreadable): active-subagent counter.
+
+  # Foreground-safe; background is covered by the primary check above when jq exists.
+
 active_count=$(ls "$ACTIVE_DIR" 2>/dev/null | wc -l | tr -d ' ')
 if [ "$active_count" -gt 0 ]; then
-    exit 0
+exit 0
 fi
 
-# Priority 2: If PM restriction is active and valid, block work tools
+  # Caller is the PM. Enforce restriction.
+
 if [ -f "$PM_RESTRICTED" ]; then
-    if [ ! -f "$SESSION" ] || [ "$PM_RESTRICTED" -nt "$SESSION" ]; then
-        printf '{"decision":"block","reason":"PM tool restriction active. Read/Bash/Write/Edit are blocked for PM role. Dispatch a subagent (Intern, Coder, etc.) via the Agent tool instead."}\n'
-        exit 0
-    fi
+if [ ! -f "$SESSION" ] || [ "$PM_RESTRICTED" -nt "$SESSION" ]; then
+printf '{"decision":"block","reason":"PM tool restriction active. Read/Bash/Write/Edit are blocked for PM role. Dispatch a subagent (Intern, Coder, etc.) via the Agent tool instead."}\n'
+exit 0
+fi
 fi
 
-# Priority 3: If PM not loaded at all, block with bootstrap instructions
 if [ ! -f "$PM_LOADED" ]; then
-    printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry."}\n'
-    exit 0
+printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry."}\n'
+exit 0
 fi
 
-# PM loaded but no restriction active — allow (fail-open)
 exit 0
