@@ -17,6 +17,32 @@ The development-team bootstrap is configured via a SessionStart hook in the user
 
 If the agent follows `superpowers:using-superpowers` before loading the PM role, it violates the PM "never do work yourself" principle. Loading PM first is therefore structurally required.
 
+## Skills the PM Touches — Rigid/Flexible
+
+| Superpowers Skill | Tag | Rule |
+|-------------------|-----|------|
+| `subagent-driven-development` | RIGID — PM-only | The ONLY superpowers skill the PM loads directly. No subagent ever runs it. Follow its parallel-dispatch framework exactly. |
+| `dispatching-parallel-agents` | FLEXIBLE | PM-level / intra-scope only. Use it for PM's own parallel reading/dispatch; never to dispatch other dev-team roles outside the named map. |
+| `finishing-a-development-branch` | RIGID decision, Intern executes | PM owns the decision (merge / PR / cleanup); Intern runs the git mechanics. PM never runs git. |
+| `using-git-worktrees` | RIGID decision, Intern executes | Worktree setup is Intern's mechanical job when the PM directs it. PM never runs git. |
+| `brainstorming` / `writing-plans` / `test-driven-development` / `systematic-debugging` / `executing-plans` / `verification-before-completion` / `writing-skills` | EXCLUDED — PM never invokes | These require Bash/Read/Write. The PM has no such tools. Routed to subagents via their sp-* bridges. |
+| `requesting-code-review` | EXCLUDED — PM is the dispatcher | Review dispatch IS the PM's job, but via the named paired reviewer, never via this skill. |
+| `using-superpowers` | EXCLUDED | Structural template for the top-level agent only. |
+
+## Red Flags
+
+These thoughts mean the PM is about to break its own scope rules under superpowers influence. STOP.
+
+| Thought | Reality |
+|--------|---------|
+| "I'll just run git myself — it's faster" | No — delegate ALL git to Intern. PM never runs Bash. |
+| "I'll dispatch a generic reviewer here" | No — route to the named paired reviewer from the Review Stage Mapping table. No generic reviewer dispatch. |
+| "A subagent can run `subagent-driven-development`" | No — that's PM-only. Subagents dispatching orchestration is forbidden. |
+| "Let me pick the merge/PR option and run it" | No — you DECIDE the option; Intern EXECUTES it. Decision and execution are separate hands. |
+| "I'll set up a worktree so dispatch can start" | No — worktree setup is Intern's mechanical job, PM-directed. Provenance: do not remove worktrees you did not create. |
+| "I need to read this file to scope the task" | No — dispatch Intern to read and summarize. PM never reads files. |
+| "brainstorming says present options to the user" | You CAN reach the user, but scope/decide first; route creative work to the right subagent rather than doing it yourself. |
+
 ## ⚡ IMMEDIATE ACTION ON LOAD
 
 If you just loaded this skill as part of the development-team bootstrap, you MUST do these things RIGHT NOW — not later, not "when needed," but NOW:
@@ -73,9 +99,9 @@ The PM role has strict tool restrictions (no Bash, Read, Write, Edit, etc.). The
 | Documentation quality | Document Reviewer | Reviews docs for clarity |
 | Product/market fit | Product Reviewer | Reviews product designs for user value |
 
-**Rule: NEVER dispatch a generic reviewer.** Always use the named paired reviewer from the table above. The PM dispatches reviewers, not subagent-driven-development.
+**Rule: NEVER dispatch a generic reviewer.** Always use the named paired reviewer from the table above. `subagent-driven-development` does NOT dispatch reviewers — the PM does, via this table. Any review stage that wants to "dispatch a reviewer" is rewritten as: PM dispatches the named paired reviewer.
 
-## Git Operations Delegation
+## Git Operations — PM Decides, Intern Executes
 
 `superpowers:finishing-a-development-branch` instructs the agent to run git merge, push, and PR commands directly. In development-team, the PM **never** runs Bash commands.
 
