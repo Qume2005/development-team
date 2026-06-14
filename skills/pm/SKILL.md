@@ -346,6 +346,33 @@ Load development-team for shared system rules.
 
 **This rule has the same severity as "never do work yourself."**
 
+### Role Skill Requirements — Every Dispatch Must List These (HARD RULE)
+
+**The PM must, in every dispatch:**
+1. **Name the role** in the dispatch announcement (e.g., "dispatching Code Developer").
+2. **Enumerate the role's required skills** in the dispatch prompt — the full set from the table below, not a generic "load your role skill."
+3. **Instruct the subagent to load AND actively use them.** Loading alone is insufficient — the subagent must apply the skills (the coder actually follows TDD; the planner actually runs brainstorming; etc.).
+
+This makes skill usage explicit and auditable, and guarantees each subagent runs with its full required skill set instead of a generic prompt.
+
+**Canonical role → required-skills map** (verify against the sp-<role> bridge files):
+
+| Role | dev-team skills (always load) | superpowers skills (load + use, when available) |
+|------|------------------------------|--------------------------------------------------|
+| Intern | `development-team:intern`, `development-team`, `development-team:sp-intern`, `development-team:superpower-cowork` | `verification-before-completion`; `using-git-worktrees` + `finishing-a-development-branch` when running PM-directed git ops |
+| Code Developer | `development-team:coder`, `development-team`, `development-team:sp-coder`, `development-team:superpower-cowork` | `test-driven-development`, `systematic-debugging`, `verification-before-completion`, `executing-plans`, `using-git-worktrees`, `receiving-code-review` |
+| Task Planner | `development-team:planner`, `development-team`, `development-team:sp-planner`, `development-team:superpower-cowork` | `brainstorming`, `writing-plans` |
+| Architecture Designer | `development-team:architect`, `development-team`, `development-team:sp-architect`, `development-team:superpower-cowork` | `brainstorming`, `writing-plans` |
+| Product Designer | `development-team:product-designer`, `development-team`, `development-team:sp-product-designer`, `development-team:superpower-cowork` | `brainstorming` |
+| Test Designer | `development-team:test-designer`, `development-team`, `development-team:sp-test-designer`, `development-team:superpower-cowork` | `test-driven-development` (informed), `systematic-debugging` |
+| API Designer | `development-team:api-designer`, `development-team`, `development-team:superpower-cowork` | (no sp-bridge — follow the api-designer skill's own guidance) |
+| Document Writer | `development-team:doc-writer`, `development-team`, `development-team:superpower-cowork` | (no sp-bridge — follow the doc-writer skill's own guidance) |
+| Any Reviewer | `development-team:<reviewer-role>`, `development-team`, `development-team:superpower-cowork` | (review per the role skill; no sp-bridge) |
+
+When superpowers is NOT available, drop the sp-bridge and the superpowers-skills column — list only the dev-team skills for that role.
+
+The Dispatch Prompt Template (above) covers the dev-team skill loads. The PM MUST additionally append the role's superpowers skills from this table (when superpowers is available), with the explicit instruction to load AND use them. The announcement may briefly note the key skills for transparency.
+
 ### Event-Driven Non-Blocking Dispatch (DEFAULT MODE)
 
 Production dispatches run in the background by default. The PM is an **event-driven scheduler**, not a blocking caller. Set `run_in_background: true` on every production Agent dispatch.
