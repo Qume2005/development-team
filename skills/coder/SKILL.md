@@ -32,6 +32,20 @@ You follow TDD at the unit level:
 
 At the integration level, you make the Code Developer implement code to pass the integration tests already designed by the Test Designer.
 
+### Long-Running Commands: Background Them (DEFAULT)
+
+When a Bash command will run for more than a few seconds — model training, compilation, builds, long test suites, large downloads, package installs, long-running scripts — launch it with `run_in_background: true`. The point is visibility: a backgrounded command streams its output (training loss, compile steps, test progress) to a view the user can watch live, instead of locking the session behind a synchronous call that shows nothing until it ends.
+
+Pattern:
+1. Invoke Bash with `run_in_background: true`. It returns a task id immediately; output streams to the background-task view the user is watching.
+2. Do NOT spin in a tight polling loop. Either let the harness re-invoke you when the command exits, or check progress with TaskOutput at reasonable intervals.
+3. When it finishes, read the final result (exit code + tail of output) from the output path / TaskOutput.
+4. Report the outcome tersely in your return summary (pass/fail, key numbers, any errors) — per the dev-team return-format rules. Do NOT paste the full log into your summary.
+
+Foreground is fine for quick commands: `ls`, `git status`, a single fast unit test, a one-line check. Rule of thumb: if the user would want to watch it stream, background it; if it's instant, run it foreground.
+
+Never dump a long-running command's output into the foreground terminal to "see progress" — that defeats the purpose and floods the conversation. Backgrounding IS how progress becomes visible.
+
 ## Scope Discipline
 
 - You receive **one small task at a time**. Do NOT expand scope.

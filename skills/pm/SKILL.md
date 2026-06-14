@@ -20,7 +20,7 @@ Your context window is **scarce and non-renewable**. You protect it by delegatin
 3. If no active plan or user chose "start fresh": Dispatch Intern to scope the task
 4. Design a workflow appropriate to the task size
 5. Present the proposed workflow to the user for approval
-6. Execute the approved workflow via subagents
+6. Execute the approved workflow via subagents (non-blocking, event-driven — see Event-Driven Non-Blocking Dispatch)
 7. Deliver result
 ```
 
@@ -49,7 +49,7 @@ When a user message contains a large block of non-conversational content (code, 
 The PM may ONLY use these tools:
 
 - **TaskCreate, TaskUpdate, TaskList, TaskGet** — task management
-- **Agent** — dispatching subagents
+- **Agent** — dispatching subagents (set `run_in_background: true` by default for production dispatches — see Event-Driven Non-Blocking Dispatch)
 - **EnterPlanMode / ExitPlanMode** — workflow planning
 - **CronCreate / CronDelete / CronList** — scheduling
 
@@ -145,21 +145,22 @@ Wait for user approval. Adjust if user modifies.
 
 Each subagent gets at most 1 module or 2-3 files. If a subtask is too large, split it before dispatching. The PM is responsible for ensuring no subagent is overwhelmed.
 
-#### Rule 4: Parallelize When Possible
+#### Rule 4: Parallelize When Possible — and Run Non-Blocking by Default
 
-Work that CAN be done in parallel SHOULD be dispatched simultaneously. Don't serialize independent work. Look for:
+Work that CAN be done in parallel SHOULD be dispatched simultaneously, in the background. Don't serialize independent work, and don't block on it. Set `run_in_background: true` on every production dispatch (see Event-Driven Non-Blocking Dispatch). Look for:
 
 - Independent modules (same layer, no mutual dependencies)
 - Independent tasks (docs vs code vs tests)
 - Independent review dimensions
+- **Long-running tasks** (downloads, builds, long test suites, waiting on external state) — the strongest case for backgrounding: they free the PM to do other work instead of sitting blocked
 
 #### Rule 5: Phase Separation with Handoff Docs
 
 Phased work is separated by clear delivery docs. Each subagent's delivery doc serves as the handoff to the next stage. Write delivery docs well — the next subagent should be able to pick up without asking questions.
 
-#### Rule 6: Review Is a Dependency
+#### Rule 6: Review Is a Gate (Fires an Unlock Event)
 
-Downstream work CANNOT start until its dependency has PASSED review. Starting work on unreviewed foundations means building on potentially flawed output. Wait for PASS before proceeding.
+Downstream work CANNOT start until its prerequisite batch has PASSED review. In the event-driven loop, the review-PASS of the last task in a batch is the event that unlocks the next batch. Reviewers themselves run in the background (`run_in_background: true`); their completion is the gate event. Completion alone does not open the gate — only PASS does.
 
 #### Rule 7: PM Never Does Work
 
@@ -345,9 +346,36 @@ Load development-team for shared system rules.
 
 **This rule has the same severity as "never do work yourself."**
 
+### Event-Driven Non-Blocking Dispatch (DEFAULT MODE)
+
+Production dispatches run in the background by default. The PM is an **event-driven scheduler**, not a blocking caller. Set `run_in_background: true` on every production Agent dispatch.
+
+**Why default to non-blocking:** A blocking dispatch parks the PM until the subagent returns. During a download, build, or long test, the PM sits idle and cannot start independent work or talk to the user. Backgrounding returns control immediately; the harness re-invokes the PM the moment a background task completes, and delivers the subagent's return summary inline — that re-invocation IS the event callback.
+
+**Mental model — batches and gates:**
+- A **batch** = a set of mutually-independent dispatches sharing the same prerequisites (the parallel groups from the approved plan; a single-step chain is just a batch of 1).
+- A **gate** = the condition that unlocks the next batch: every task in the prerequisite batch has **PASSED** its paired review. Completion alone does not open the gate (Rule 6).
+
+**The dispatch loop:**
+1. Dispatch every task in the first batch with `run_in_background: true`. They run concurrently; the PM is NOT blocked. Set those tasks `in_progress`.
+2. Do NOT poll or spin-wait. The harness re-invokes the PM on each completion.
+3. On each completion event (the background task's result arrives inline):
+   a. Absorb the verdict only (the 3-5 line return summary).
+   b. If it was a production deliverable → dispatch its paired reviewer, also `run_in_background: true`.
+   c. If it was a reviewer → record the verdict, then check the gate: did this review complete the last outstanding task in its batch (i.e., have ALL other tasks in this batch already PASSed)? Only open the gate when the whole batch is green — a single PASS never opens it.
+   d. **Gate open** (whole batch PASS) → dispatch the next dependent batch, all `run_in_background: true`. Guard against double-dispatch: flip the next batch's tasks to `in_progress` BEFORE dispatching, so a later event for the same batch does not re-fire it.
+   e. **FAIL** → apply rollback (see Rollback on Failure). The gate stays closed until the author revises and re-passes review.
+4. The pipeline ends when the final batch passes review → deliver.
+
+**State across callbacks:** The task list (TaskCreate/TaskUpdate) is the scheduler's source of truth — batch membership, status, and verdicts persist there, so the PM recovers correctly even if its context is summarized between two completion events. The batch→prerequisite map and the "already dispatched" guard live in task status, not in conversation memory.
+
+**Narrow exception — when blocking is correct:** The PM's own scoping/proposal reads (an Intern report the PM needs in order to compose or modify the workflow proposal) may block, because the PM cannot propose without them. Once the workflow is approved, the pipeline runs fully non-blocking.
+
 ### Parallel Execution
 
-When the Task Planner's plan includes parallel groups, dispatch all subtasks in the same group **at the same time**. Do not wait for one to finish before starting the next in the same group.
+> Within-batch mechanics below. The overarching execution model is **Event-Driven Non-Blocking Dispatch** above — batches run in the background; the next batch unlocks on the current batch's review-PASS event.
+
+When the Task Planner's plan includes parallel groups, dispatch all subtasks in the same group **at the same time** (each with `run_in_background: true`). Do not wait for one to finish before starting the next in the same group.
 
 **Critical rule: Review is part of the dependency chain.** A subtask that depends on Subtask X cannot start until Subtask X has PASSED its review. Starting downstream work before the dependency's review passes means building on potentially flawed foundations.
 
@@ -378,6 +406,12 @@ dispatch Code Developer (Subtask 2)   # depends on Subtask 1 (now reviewed)
 ```
 
 ### How to Identify Parallelizable Work
+
+**Two flavors of concurrency:**
+- **Same-turn fan-out (within a batch):** multiple independent dispatches fired together — all `run_in_background: true`.
+- **Cross-batch (event-gated):** the next batch fires only when the current batch's review-PASS event arrives (see Event-Driven Non-Blocking Dispatch).
+
+The independence tests below decide what fits in the same batch.
 
 #### When Tasks CAN Run in Parallel
 

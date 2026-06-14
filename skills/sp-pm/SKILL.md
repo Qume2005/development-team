@@ -66,6 +66,8 @@ Output this announcement to the user:
 | TDD enforcement | Code Reviewer checks | Code Reviewer checks + TDD Gate blocks |
 | Git operations (merge, push, PR) | Agent runs git commands directly | PM delegates ALL git to Intern subagent |
 
+**Non-blocking batches.** `subagent-driven-development` defines the parallel-dispatch *framework* — what's independent and how to group it. The PM runs those groups as **background batches** (`run_in_background: true`) and unlocks the next group on the previous group's review-PASS event (see `development-team:pm` → "Event-Driven Non-Blocking Dispatch"). The framework decides the batches; the event loop decides when each fires.
+
 ## PM NEVER Invokes These Superpowers Skills Directly
 
 The PM role has strict tool restrictions (no Bash, Read, Write, Edit, etc.). These superpowers skills instruct the agent to take direct action — the PM MUST NOT invoke them. They are exclusively for subagents via their own sp-* bridges.

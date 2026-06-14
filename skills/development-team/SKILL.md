@@ -291,6 +291,8 @@ Implementation follows a bottom-up topological sort of the module dependency gra
 
 Work that CAN be parallelized SHOULD be dispatched simultaneously. The Task Planner identifies independent subtasks and groups them. The PM dispatches all subtasks in the same group at the same time. This maximizes wall-clock efficiency.
 
+**Non-blocking by default.** The PM dispatches production work with `run_in_background: true` and acts as an event-driven scheduler: each task completion and each review PASS is an event that unlocks the next dependent batch (when one exists). See `development-team:pm` → "Event-Driven Non-Blocking Dispatch" for the full callback loop. Handoff docs on disk remain the inter-phase pipe; the async scheduler reacts to their completion instead of blocking on it.
+
 ### Handoff Documentation Between Phases
 
 Phased work is separated by **delivery docs that serve as explicit handoff between stages**. Each phase's output doc is the next phase's input. This is how agents collaborate — not through conversation, but through well-structured delivery documents.
@@ -302,6 +304,10 @@ Product Design → Architecture Design → Plan → API Design → Test Design �
 ```
 
 Each arrow represents a delivery doc on disk. The downstream agent reads it. The PM never reads it — only tracks the path.
+
+### Backgrounding Long-Running Bash Commands
+
+Any Tier-2 subagent that runs a long command via Bash (training, compilation, builds, long test suites, large downloads, installs) should launch it with `run_in_background: true` so the user can watch live progress, then read the result when it exits. Foreground is fine only for quick commands. See the role skill (e.g., `development-team:coder`) for the detailed pattern. (The PM does not run Bash, so this applies to production subagents and Intern.)
 
 ## Required Return Formats
 
