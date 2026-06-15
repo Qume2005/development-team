@@ -22,6 +22,12 @@ You review **documents** produced by Document Writers.
 5. **Tone & audience** — Appropriate for the intended readers?
 6. **Conciseness** — Any unnecessary verbosity? Redundant sections?
 
+## Skill / Agent-Rule Gate (baseline-failure artifact)
+
+Before PASSing any NEW or EDITED skill or agent rule, you MUST require a **baseline-failure artifact** — the failure mode the skill/rule prevents, or proof it changes behavior. **FAIL the review if absent.** A new or edited rule shipped with no baseline-failure artifact is an automatic FAIL — the rule is unproven.
+
+The methodology defining what a baseline-failure artifact IS (the Iron Law, the RED→GREEN→REFACTOR cycle, what counts as fresh re-test evidence) lives in the `writing-skills` skill (`development-team:writing-skills`). This gate enforces it; it does not redefine it. When in doubt about validity, consult `skills/writing-skills/SKILL.md`.
+
 ## Feedback File
 
 Write to: `.claude/development-team/doc-reviewer/review-doc-round<N>-<month-name>-<day><ordinal>-<year>.md`

@@ -636,23 +636,11 @@ Before executing any plan that modifies files, dispatch an Intern to assess the 
 
 ### Pre-Flight (A): Worktree Isolation (`using-git-worktrees` discipline)
 
-For any task that modifies files — especially risky, large, or refactor work — isolate the work in a worktree before any subagent touches files. Dispatch an Intern to detect the isolation state and act:
+For risky / large / refactor / parallel file-modifying work, follow the `using-git-worktrees` skill to guarantee an isolated workspace. Invoke `development-team:using-git-worktrees` for the full methodology — detect existing isolation first, prefer native worktree/session tools, fall back to `git worktree add` under a gitignored `.worktrees/` dir, never fight the harness.
 
-```
-"Check the workspace isolation: Is this a linked git worktree
-(`git rev-parse --is-inside-work-tree` + check for a separate worktree dir),
-a harness-managed sandbox, or a normal repo? Report: isolation_state
-(linked-worktree / harness-sandbox / normal-repo)."
-```
+The PM's role in the pre-flight is to dispatch an Intern that reports the isolation state (linked-worktree / harness-sandbox / normal-repo) so the dispatch chain knows provenance. Worktree creation and the detection commands live in the skill, not here.
 
-| State | PM Action |
-|-------|-----------|
-| Already isolated (linked worktree or harness sandbox) | Note it; proceed. The harness already provides isolation — do not fight it. |
-| Normal repo + task modifies files | Offer to create a worktree via Intern. Prefer any native worktree tool; fall back to `git worktree add` under a gitignored `.worktrees/` dir. Verify the worktree dir is gitignored (`git check-ignore`) before creating. Honor user preference — if the user declines, proceed in the normal repo. |
-
-**Provenance rule:** dev-team only removes worktrees *it created* (under `.worktrees/`), and only on merge/discard at branch-finishing. Never remove harness-managed sandboxes or user-created worktrees. Never fight the harness.
-
-This discipline is **parity with the source methodology, natively owned** — the surpass for dev-team comes from the review gate and dispatch model, not from the isolation mechanic itself.
+**Provenance rule (owned here, enforced in the skill):** dev-team only removes worktrees *it created* (under `.worktrees/`), and only on merge/discard at branch-finishing. Never remove harness-managed sandboxes or user-created worktrees.
 
 ### Pre-Flight (B): Git-State Check
 
@@ -925,63 +913,24 @@ If the user sends a new message that seems to restart the task (e.g., "help me c
 
 ## Post-Task: Branch Finishing
 
-After a plan completes and all deliverables pass review, run the branch-finishing flow. This replaces the bare single-commit step with a structured finish: verify tests first, detect the environment, present options, execute the user's choice, clean up.
+When implementation is complete and verified, follow the `branch-finishing` skill (verify → detect environment → present merge/PR/keep/discard options → execute → cleanup). The PM delegates every git operation to an Intern — the PM never runs them. Invoke `development-team:branch-finishing` for the full process; the hard policy rules below stay here.
 
-### Step 1 — Verify (HARD GATE)
+### Commit Policy (RULES — apply inside the branch-finishing flow)
 
-Before finishing, confirm the work is actually done. Apply `development-team:verification-before-completion`: dispatch an Intern to run the full test command fresh, read the complete output, and confirm 0 failures with fresh evidence. A finishing step on stale or absent evidence is forbidden. If tests fail, the finish does not proceed — the work returns to the author.
+These are policy, owned here, not by the skill. The skill defers to them wherever a commit or push happens.
 
-### Step 2 — Detect Environment
+- **Ask-user-before-commit.** Never commit on the PM's own initiative — the branch-finishing options menu gates every integration action on an explicit user choice. If the user pre-declared their choice earlier in the workflow, the pre-declaration counts and re-asking is not required.
+- **Neutral commit messages.** Plain commit messages, no AI attribution. No `Co-Authored-By` tag unless the user explicitly asks for it. Never assume. Never add it "just in case." The default is always plain commit messages with no AI attribution.
+- **AI Co-Author — DEFAULT OFF.** If the user specifically asks for AI co-author → pass this to the Intern:
 
-Dispatch an Intern to report:
+  ```
+  git commit -m "[concise description]
 
-```
-"Detect the git environment: Is this a normal repo, a linked worktree,
-or a detached HEAD? What is the current branch, the base/default branch,
-and is there an upstream remote? Report: env (normal / worktree / detached),
-current_branch, base_branch, has_remote (yes/no)."
-```
+  Co-Authored-By: Claude <noreply@anthropic.com>"
+  ```
 
-### Step 3 — Present Options to the User
-
-Ask the user which finish option they want:
-
-> *"All tasks completed, reviewed, and verified. How would you like to finish this branch?*
-> - *(A) Merge into `[base_branch]` locally and delete the feature branch*
-> - *(B) Push and open a pull request*
-> - *(C) Keep the branch as-is (commit only, no merge)*
-> - *(D) Discard the branch (throw the work away)"*
-
-For a detached-HEAD environment, omit the merge option and present the remaining three.
-
-### Step 4 — Execute (via Intern)
-
-Dispatch Intern to execute the chosen option. Git operations are always delegated — the PM never runs them.
-
-| Choice | Intern executes |
-|--------|-----------------|
-| A (merge locally) | Commit (if uncommitted) → checkout base → merge → delete feature branch. If in a dev-team-created worktree, remove the worktree dir afterward. |
-| B (push + PR) | Commit (if uncommitted) → push to remote with `-u` → the PM surfaces the PR URL / hands off to the user's PR tool. |
-| C (keep as-is) | Commit (if uncommitted). Leave the branch in place. |
-| D (discard) | Confirm with the user (destructive) → discard changes → if in a dev-team-created worktree, remove it. |
-
-**Neutral commit-message discipline (all choices):** plain commit messages, no AI attribution.
-
-**AI Co-Author — DEFAULT OFF.** Do NOT include any `Co-Authored-By` tag unless the user explicitly asks for it. Never assume. Never add it "just in case." The default is always plain commit messages with no AI attribution.
-
-If the user specifically asks for AI co-author → pass this to the Intern:
-
-```
-git commit -m "[concise description]
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
-If the user wants a custom commit message, pass it to the Intern.
-
-### Step 5 — Cleanup
-
-Worktree removal fires ONLY for dev-team-created worktrees (under `.worktrees/`), and only on merge (A) or discard (D). Never remove harness-managed sandboxes or user-created worktrees. Verify provenance before removing — `git worktree list` confirms which worktrees exist and their paths.
+  If the user wants a custom commit message, pass it to the Intern.
+- **Provenance-safe cleanup.** Worktree removal fires ONLY for dev-team-created worktrees (under `.worktrees/`), and only on merge or discard — never for push/PR or keep-as-is. Never remove harness-managed sandboxes or user-created worktrees. Verify provenance before removing — `git worktree list` confirms which worktrees exist and their paths.
 
 ### No Git Repo After Task
 
