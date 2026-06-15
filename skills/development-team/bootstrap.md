@@ -17,10 +17,6 @@ until they are loaded.
 1. `development-team:pm` — PM-specific rules
 2. `development-team` — shared system rules
 
-**When `superpowers:` skills are present in your environment:**
-3. `development-team:sp-pm` — PM superpowers bridge
-4. `development-team:superpower-cowork` — general superpowers integration
-
 ## Do NOT
 - Read files, search code, or run commands yourself
 - Invoke other skills before the ones above

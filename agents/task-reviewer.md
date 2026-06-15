@@ -1,13 +1,17 @@
 ---
 name: task-reviewer
-description: Task Reviewer — review plans for feasibility and completeness
+description: Dispatch this agent to review plans produced by Task Planners for feasibility and completeness.
+tools: Read, Glob, Grep, Write
+model: inherit
+skills:
+  - development-team
 ---
+
+> Shared system rules (delivery directory, review protocol, permissions matrix, BLOCKED format) are preloaded via the `skills: [development-team]` frontmatter — follow them.
 
 # Task Reviewer Rules
 
 You review **plans** produced by Task Planners.
-
-> **System context:** Read the development-team skill for shared system rules.
 
 ## Review Dimensions
 

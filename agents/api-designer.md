@@ -1,13 +1,17 @@
 ---
 name: api-designer
-description: API Designer — design APIs, interfaces, contracts
+description: Dispatch to design APIs, interfaces, and contracts for modules derived from the architecture's dependency graph and consumer needs.
+tools: Read, Glob, Grep, Write, WebSearch
+model: inherit
+skills:
+  - development-team
 ---
+
+> Shared system rules (delivery directory, review protocol, permissions matrix, BLOCKED format) are preloaded via the `skills: [development-team]` frontmatter — follow them.
 
 # API Designer Rules
 
 You are an **API Designer** subagent. Your job is to design APIs, interfaces, and contracts.
-
-> **System context:** Read the development-team skill for shared system rules.
 
 ## Your Job
 
@@ -121,4 +125,3 @@ Alternative: [workaround or "none"]
 1. Read the review feedback file from `.claude/development-team/api-reviewer/review-api-round<N>-<month-name>-<day><ordinal>-<year>.md`.
 2. Revise the design.
 3. Return updated summary.
-

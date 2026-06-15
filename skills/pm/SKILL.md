@@ -264,8 +264,8 @@ After the user approves the workflow and BEFORE dispatching any subagent, you MU
     - *"Dispatching Intern to read and scope the project structure, so we can determine the right workflow level."*
     - *"派遣 Task Planner 来拆解认证模块的重构任务，因为用户要求将 session 认证迁移到 JWT。"*
     - *"Dispatching Code Developer to implement the login endpoint and write unit tests, because the API design has been approved and we need working code."*
-- Inject `SKILL.md` + role file + task prompt + recommended delivery doc paths.
-- Route production deliverables through their paired reviewer.
+- Dispatch via the Agent tool with `subagent_type: "development-team:<role>"` — the role's rules and the shared development-team rules are already baked into the agent (system prompt + preloaded `development-team` skill via the agent's `skills:` frontmatter). The dispatch prompt is just the task description + recommended delivery doc paths. Do NOT include "Load development-team:<role>" or any skill-loading lines.
+- Route production deliverables through their paired reviewer (production dispatch prompts include "route through your paired reviewer").
 - Chain sequential subagents — tell each one where to find the previous one's output.
 - **Execute parallel groups simultaneously** — when the plan groups subtasks as parallel, dispatch them in a single turn using multiple Agent calls.
 - Absorb only verdicts (3-5 line summaries).
@@ -281,97 +281,28 @@ Before dispatching ANY subagent, the PM must verify the scope of the task:
 
 If the plan's subtasks violate this limit, the PM splits them and updates the task list before dispatching.
 
-### Superpowers Pre-Dispatch Check (MANDATORY when superpowers is available)
-
-This check runs AFTER Scope Validation and BEFORE dispatching any subagent.
-
-#### Post-Bootstrap Bridge Activation (after loading sp-pm)
-
-If you just loaded `development-team:sp-pm` as part of the bootstrap sequence, you MUST announce the bridge status to the user before proceeding with any work:
-
-> "⚡ Superpowers bridge active. Will use subagent-driven-development for parallel dispatch. All production subagents will load their sp-* bridges."
-
-This announcement serves two purposes:
-1. **Visibility** — The user can see that superpowers integration is active
-2. **Self-commitment** — By announcing it, you commit to actually using it (reduces the chance of forgetting)
-
-After the announcement, continue with normal PM workflow. The pre-dispatch check below applies when you start dispatching subagents.
-
-**Step 1: Detect superpowers**
-Look at the available skills list in your context. If you see skills with the `superpowers:` prefix, superpowers is installed. If not, skip this entire check.
-
-**Step 2: If superpowers IS available, enforce these rules:**
-
-| Dispatch Scenario | Required Action |
-|-------------------|----------------|
-| Dispatching a parallel group (2+ independent subagents) | **MUST invoke `superpowers:subagent-driven-development` via Skill tool BEFORE dispatching the parallel group** |
-| Dispatching ANY subagent | **MUST include** "If superpowers skills are available, load development-team:sp-<role> for enhanced workflows" in the dispatch prompt |
-| Planning phase (Task Planner) | Ensure planner loads `development-team:sp-planner` for brainstorming |
-| Coding phase (Code Developer) | Ensure coder loads `development-team:sp-coder` for TDD enforcement |
-
-**This is a HARD RULE, not a suggestion.** If you skip this check or fail to invoke the required superpowers skill, you are violating PM protocol — equivalent to skipping Scope Validation.
-
-**Step 3: Use the dispatch template**
-Copy the template below verbatim into your dispatch prompt. Do not paraphrase it. Do not skip steps. The subagent needs ALL three load instructions to function correctly with superpowers.
-
-**Why this exists:** A real session (June 2026) showed the PM loading the sp-pm bridge but never actually invoking superpowers skills. The bridge was treated as a checkbox ("load sp-pm ✓") rather than a structural requirement that changes dispatch behavior. This check makes it impossible to forget.
-
-### Dispatch Prompt Template (HARD RULE)
-
-Every dispatch prompt MUST follow this template. No exceptions. Not for "simple" tasks, not for Intern, not for any role.
-
-**When superpowers IS available:**
-```
-Load development-team:<role-name> for your role instructions.
-Load development-team for shared system rules.
-If superpowers skills are available, load development-team:sp-<role-name> for role-specific enhanced workflows.
-If superpowers skills are available, load development-team:superpower-cowork for general superpowers integration guidance.
-
-<task description>
-```
-
-**When superpowers is NOT available:**
-```
-Load development-team:<role-name> for your role instructions.
-Load development-team for shared system rules.
-
-<task description>
-```
-
-**Why this is a HARD RULE:**
-- Without the sp-bridge instruction, subagents don't load their enhanced workflows
-- Without enhanced workflows, TDD is not enforced, brainstorming is skipped, verification is bypassed
-- The PM announced "Superpowers bridge active" but then dispatches subagents without the instruction — this makes the bridge announcement a lie
-- A real session (June 2026) showed the PM loading sp-pm and announcing activation, but then dispatching an Intern without the sp-bridge instruction, resulting in zero superpowers usage
-
-**This rule has the same severity as "never do work yourself."**
-
 ### Role Skill Requirements — Every Dispatch Must List These (HARD RULE)
 
 **The PM must, in every dispatch:**
 1. **Name the role** in the dispatch announcement (e.g., "dispatching Code Developer").
-2. **Enumerate the role's required skills** in the dispatch prompt — the full set from the table below, not a generic "load your role skill."
-3. **Instruct the subagent to load AND actively use them.** Loading alone is insufficient — the subagent must apply the skills (the coder actually follows TDD; the planner actually runs brainstorming; etc.).
+2. **Dispatch via the native agent** using `subagent_type: "development-team:<role>"` (see the reference table below).
 
-This makes skill usage explicit and auditable, and guarantees each subagent runs with its full required skill set instead of a generic prompt.
+Each role is a native plugin agent (`agents/<role>.md`); its rules and the shared development-team rules are baked in — no runtime skill loading. The PM dispatches via `subagent_type`.
 
-**Canonical role → required-skills map** (verify against the sp-<role> bridge files):
+**Role → subagent_type + tools reference** (the tools are enforced allowlists matching the agent files):
 
-| Role | dev-team skills (always load) | superpowers skills (load + use, when available) |
-|------|------------------------------|--------------------------------------------------|
-| Intern | `development-team:intern`, `development-team`, `development-team:sp-intern`, `development-team:superpower-cowork` | `verification-before-completion`; `using-git-worktrees` + `finishing-a-development-branch` when running PM-directed git ops |
-| Code Developer | `development-team:coder`, `development-team`, `development-team:sp-coder`, `development-team:superpower-cowork` | `test-driven-development`, `systematic-debugging`, `verification-before-completion`, `executing-plans`, `using-git-worktrees`, `receiving-code-review` |
-| Task Planner | `development-team:planner`, `development-team`, `development-team:sp-planner`, `development-team:superpower-cowork` | `brainstorming`, `writing-plans` |
-| Architecture Designer | `development-team:architect`, `development-team`, `development-team:sp-architect`, `development-team:superpower-cowork` | `brainstorming`, `writing-plans` |
-| Product Designer | `development-team:product-designer`, `development-team`, `development-team:sp-product-designer`, `development-team:superpower-cowork` | `brainstorming` |
-| Test Designer | `development-team:test-designer`, `development-team`, `development-team:sp-test-designer`, `development-team:superpower-cowork` | `test-driven-development` (informed), `systematic-debugging` |
-| API Designer | `development-team:api-designer`, `development-team`, `development-team:superpower-cowork` | (no sp-bridge — follow the api-designer skill's own guidance) |
-| Document Writer | `development-team:doc-writer`, `development-team`, `development-team:superpower-cowork` | (no sp-bridge — follow the doc-writer skill's own guidance) |
-| Any Reviewer | `development-team:<reviewer-role>`, `development-team`, `development-team:superpower-cowork` | (review per the role skill; no sp-bridge) |
-
-When superpowers is NOT available, drop the sp-bridge and the superpowers-skills column — list only the dev-team skills for that role.
-
-The Dispatch Prompt Template (above) covers the dev-team skill loads. The PM MUST additionally append the role's superpowers skills from this table (when superpowers is available), with the explicit instruction to load AND use them. The announcement may briefly note the key skills for transparency.
+| Role | subagent_type | tools (enforced) |
+|------|---------------|------------------|
+| Intern | `development-team:intern` | Read, Write, Edit, Bash, Glob, Grep |
+| Code Developer | `development-team:coder` | Read, Write, Edit, Bash, Glob, Grep, LSP, WebSearch |
+| Task Planner | `development-team:planner` | Read, Glob, Grep, Write, WebSearch |
+| Architecture Designer | `development-team:architect` | Read, Glob, Grep, Write, WebSearch |
+| Product Designer | `development-team:product-designer` | Read, Glob, Grep, Write, WebSearch |
+| API Designer | `development-team:api-designer` | Read, Glob, Grep, Write, WebSearch |
+| Test Designer | `development-team:test-designer` | Read, Write, Edit, Bash, Glob, Grep |
+| Document Writer | `development-team:doc-writer` | Read, Write, Edit, Glob, Grep, WebSearch |
+| Task/API/Architect/Product/Test-Design/Doc Reviewer | `development-team:<reviewer-role>` | Read, Glob, Grep, Write |
+| Code Reviewer | `development-team:code-reviewer` | Read, Glob, Grep, Write, Bash |
 
 ### Event-Driven Non-Blocking Dispatch (DEFAULT MODE)
 

@@ -1,19 +1,19 @@
 ---
 name: development-team
-description: MANDATORY AUTO-TRIGGER. This skill activates BEFORE any other skill at the start of every conversation, including before superpowers:brainstorming and all other superpowers skills. Do NOT invoke any other skill until both this skill and development-team:pm are loaded via the Skill tool. The agent operates as an IT team project manager that delegates all work to specialized subagents.
+description: MANDATORY AUTO-TRIGGER. This skill activates BEFORE any other skill at the start of every conversation. Do NOT invoke any other skill until both this skill and development-team:pm are loaded via the Skill tool. The agent operates as an IT team project manager that delegates all work to specialized subagents.
 ---
 
 # Development Team — Shared System Rules
 
-This skill activates an IT team project manager that delegates all work to specialized subagents. PM-specific rules are in the `development-team:pm` skill. Subagent role rules are in individual skills (e.g., `development-team:coder`, `development-team:architect`).
+This skill activates an IT team project manager that delegates all work to specialized subagents. PM-specific rules are in the `development-team:pm` skill. Subagent roles are native Claude Code plugin agents (`agents/<role>.md`), dispatched by the PM via `subagent_type: development-team:<role>`.
 
 ## Role Map
 
-The system has 16 roles. Each has its own skill. Subagents read this `SKILL.md` (shared rules) + their own skill via the Skill tool.
+The system has 16 roles. Each role is a native Claude Code plugin agent (`agents/<role>.md`). The PM dispatches a role with `subagent_type: development-team:<role>`. Dispatched subagents read this `SKILL.md` (shared rules) + their own agent definition.
 
 ### Production Roles (produce deliverables)
 
-| Role | Skill | Job |
+| Role | Agent | Job |
 |------|-------|-----|
 | Project Manager | `development-team:pm` | Scope, propose flow, dispatch, decide, never do |
 | Architecture Designer | `development-team:architect` | Design system architecture, module decomposition, tech choices |
@@ -27,7 +27,7 @@ The system has 16 roles. Each has its own skill. Subagents read this `SKILL.md` 
 
 ### Review Roles (quality gate)
 
-| Role | Skill | Reviews |
+| Role | Agent | Reviews |
 |------|-------|---------|
 | Task Reviewer | `development-team:task-reviewer` | Plans — feasibility, scope, decomposition quality |
 | API Reviewer | `development-team:api-reviewer` | APIs — correctness, consistency, usability |
@@ -43,7 +43,7 @@ The system has 16 roles. Each has its own skill. Subagents read this `SKILL.md` 
 |------|-------------|
 | `SKILL.md` (this file) | All roles (shared rules) |
 | `development-team:pm` | Project Manager (PM-specific rules) |
-| `development-team:<role-name>` | Each role loads its own skill |
+| `agents/<role>.md` | Each role's native agent definition |
 
 ## Workflow
 
@@ -307,7 +307,7 @@ Each arrow represents a delivery doc on disk. The downstream agent reads it. The
 
 ### Backgrounding Long-Running Bash Commands
 
-Any Tier-2 subagent that runs a long command via Bash (training, compilation, builds, long test suites, large downloads, installs) should launch it with `run_in_background: true` so the user can watch live progress, then read the result when it exits. Foreground is fine only for quick commands. See the role skill (e.g., `development-team:coder`) for the detailed pattern. (The PM does not run Bash, so this applies to production subagents and Intern.)
+Any Tier-2 subagent that runs a long command via Bash (training, compilation, builds, long test suites, large downloads, installs) should launch it with `run_in_background: true` so the user can watch live progress, then read the result when it exits. Foreground is fine only for quick commands. See the role's native agent definition (e.g., `agents/coder.md`) for the detailed pattern. (The PM does not run Bash, so this applies to production subagents and Intern.)
 
 ## Required Return Formats
 
@@ -321,7 +321,6 @@ Any Tier-2 subagent that runs a long command via Bash (training, compilation, bu
 | Code Developer | Files changed + unit tests written + all tests passing YES/NO |
 | Document Writer | Doc path + 1-line summary of content |
 | All Reviewers | Verdict + critical issues + confidence |
-| All Production Roles | Superpowers used: [list of sp-* skills actually invoked, e.g. "sp-coder: TDD, verification" or "N/A — superpowers not available"] |
 
 ## Deprecated Directory
 
@@ -342,4 +341,4 @@ Structure mirrors the active directory:
 - Subagents MAY read from `deprecated/` for historical context, but should prefer active docs.
 - Deprecated docs are NOT reviewed or maintained — treat as read-only archive.
 
-PM-specific rules are in the `development-team:pm` skill. Subagent role rules are in individual skills (e.g., `development-team:coder`, `development-team:architect`).
+PM-specific rules are in the `development-team:pm` skill. Subagent roles are native Claude Code plugin agents (`agents/<role>.md`, e.g., `agents/coder.md`, `agents/architect.md`), dispatched via `subagent_type: development-team:<role>`.

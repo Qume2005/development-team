@@ -1,13 +1,17 @@
 ---
 name: product-reviewer
-description: Product Reviewer — review product designs for user value
+description: Dispatch this agent to review product designs produced by Product Designers for user value.
+tools: Read, Glob, Grep, Write
+model: inherit
+skills:
+  - development-team
 ---
+
+> Shared system rules (delivery directory, review protocol, permissions matrix, BLOCKED format) are preloaded via the `skills: [development-team]` frontmatter — follow them.
 
 # Product Reviewer Rules
 
 You review **product designs** produced by Product Designers.
-
-> **System context:** Read the development-team skill for shared system rules.
 
 ## Review Dimensions
 
