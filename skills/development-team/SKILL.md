@@ -48,6 +48,18 @@ The system has 19 roles. Each role is a native Claude Code plugin agent (`agents
 | `development-team:pm` | Project Manager (PM-specific rules) |
 | `agents/<role>.md` | Each role's native agent definition |
 
+### Methodology Skills (cross-cutting, contextually invoked)
+
+These three skills are invokable via the Skill tool as `development-team:<name>`. They are NOT loaded at bootstrap — the PM (and, where relevant, subagents) invoke them contextually at the moment each discipline applies. They sit alongside the role map above as available methodology, not as roles.
+
+| Skill | Invocation | One-line purpose | Trigger |
+|-------|------------|------------------|---------|
+| Brainstorming | `development-team:brainstorming` | Turn an ambiguous/creative request into a short, user-approved design BEFORE any production work. | PM invokes before proposing a workflow on ambiguous/creative tasks (open design space, greenfield, multi-option decision). Skipped for well-specified mechanical work. |
+| Systematic Debugging | `development-team:systematic-debugging` | Force root-cause investigation before any fix, on any bug/test-failure/unexpected-behavior task. | PM references it in every bug-fix dispatch (Example G); Code Developer self-invokes during reproduction/root-cause. Code Reviewer enforces the contract as a PASS/FAIL gate. |
+| Verification Before Completion | `development-team:verification-before-completion` | Require fresh verification evidence (run command, read output, confirm) before ANY completion/passing/fixed claim. | Every producer before a completion claim; Code Reviewer as a hard PASS/FAIL gate; PM treats satisfaction as a precondition to "deliver". |
+
+**Who can invoke:** the PM (at the moments above) and subagents within their own scope (e.g., a Code Developer self-invokes systematic-debugging during a bug fix; a Code Reviewer applies verification-before-completion as a gate). They do NOT spawn agents and do NOT replace the role map — they are disciplines applied within the existing dispatch chain.
+
 ## Workflow
 
 ```dot
@@ -83,6 +95,11 @@ digraph context_flow {
 ```
 
 **The project manager is NEVER the pipe.** Documents on disk carry context between subagents.
+
+**Methodology phases bracketing the diagram:**
+
+- **Pre-plan (brainstorming):** for ambiguous/creative requests, `development-team:brainstorming` runs BEFORE the PM enters the dispatch chain above. The approved design feeds the PM's workflow proposal. The diagram topology itself is unchanged — brainstorming is a front door, not a new node.
+- **Pre-deliver (verification gate):** `development-team:verification-before-completion` is a HARD gate before the final "Project Manager → User" edge. Every producer's completion return AND the PM's deliver must carry fresh command-output evidence, not assertions. The Code Reviewer's PASS already implies this; the gate makes it explicit at the deliver step.
 
 ## Information Access Model (2-Tier)
 
@@ -282,6 +299,42 @@ Every production deliverable goes through its paired reviewer. Maximum **3 revie
 | DevOps Engineer → | Code Reviewer |
 | Data Engineer → | Code Reviewer |
 | Migrator → | Code Reviewer |
+
+## Writing Skills — TDD-for-Docs (Self-Extension Discipline)
+
+When dev-team extends itself — authoring a new skill, adding an agent, or editing any rule in this file or a sibling `SKILL.md` — the work follows a TDD-for-docs discipline. A skill or rule that does not change behavior is documentation bloat, not methodology. The discipline proves the doc earns its place.
+
+### The Iron Law
+
+```
+NO SKILL OR RULE WITHOUT A FAILING TEST FIRST
+```
+
+Applies to NEW skills AND to edits of existing ones. If you cannot show the failure mode the new/edited rule prevents, you cannot ship it.
+
+### The Cycle (RED → GREEN → REFACTOR)
+
+**RED — observe and document the baseline failure.** Before writing the doc, capture the failure mode it prevents: what goes wrong without the rule, with verbatim rationalizations / observed misbehavior. This is the baseline-failure artifact — a short note (a delivery doc under the author's role directory) showing the bad outcome and the reasoning that led to it. Without this, the doc has nothing to prove it changes behavior.
+
+**GREEN — write the minimal doc addressing those specific failures.** Author the skill/rule to close exactly the failure modes documented in RED — no more, no less. Use `development-team:brainstorming` for the design if the rule's shape is open. Cross-reference existing skills rather than duplicating.
+
+**REFACTOR — close loopholes discovered on re-test.** Re-run the scenario from RED against the new rule. Does the rule actually prevent the failure? Close any escape hatches (spirit-vs-letter wording, rationalization gaps, ambiguous triggers). Verify compliance with `development-team:verification-before-completion` — the proof is fresh evidence the behavior changed, not an assertion that it did.
+
+### The Reviewer Gate (PASS/FAIL)
+
+This is what makes writing-skills a genuine surpass over honor-system doc authoring: **the Document Reviewer enforces the TDD-for-docs cycle as a PASS/FAIL gate.** Any new or edited dev-team skill/rule is routed through the Document Reviewer, who checks:
+
+1. **Baseline-failure artifact present.** Does the delivery include a RED note documenting the failure mode the rule prevents (the observed misbehavior + the rationalization that allowed it)? A new skill shipped without a baseline-failure artifact is an automatic FAIL — the rule is unproven.
+2. **The rule addresses the documented failure.** Does the GREEN doc actually close the failure mode from RED, specifically?
+3. **Compliance re-test evidence.** Does the delivery include fresh evidence (per `verification-before-completion`) that the rule changes behavior — e.g., a re-run of the RED scenario showing the failure no longer occurs under the new rule?
+
+If any are missing, the review FAILS and the author must produce the baseline-failure artifact before the skill ships. This is the same enforcement model as the Code Reviewer's systematic-debugging and verification-evidence gates — process discipline backed by an independent reviewer, not the author's say-so.
+
+**Routing:** the PM routes any "add/improve a dev-team skill or agent rule" task explicitly through this discipline, naming the TDD-for-docs cycle in the dispatch prompt and routing the output through the Document Reviewer.
+
+### Conscious Framing
+
+This discipline is **parity, natively owned** at the methodology level — the TDD-for-docs idea is not unique to dev-team. The surpass is the reviewer gate: the Document Reviewer enforces the baseline-failure requirement, making self-extension externally checked rather than aspirational. Where the source methodology relies on the author's rigor, dev-team backs it with a PASS/FAIL blocker.
 
 ## Module-Driven Implementation
 

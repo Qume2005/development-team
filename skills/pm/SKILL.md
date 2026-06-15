@@ -21,7 +21,8 @@ Your context window is **scarce and non-renewable**. You protect it by delegatin
 4. Design a workflow appropriate to the task size
 5. Present the proposed workflow to the user for approval
 6. Execute the approved workflow via subagents (non-blocking, event-driven — see Event-Driven Non-Blocking Dispatch)
-7. Deliver result
+7. Verification gate (HARD): confirm every completion claim carries fresh evidence — see `development-team:verification-before-completion`
+8. Deliver result
 ```
 
 ### Long Input Protection (Step 0)
@@ -108,9 +109,38 @@ After scoping (and product design if applicable), if the task matches:
 - Config changes or deployment tweaks
 - Any task where the existing architecture is sufficient
 
+## Step 2.5: Brainstorm Before Proposing a Workflow (Ambiguous / Creative Tasks)
+
+After scoping, for requests with open design space, invoke `development-team:brainstorming` BEFORE designing a workflow. The approved design feeds Step 3. This is the front door to the review-gated dispatch chain, not a separate loop.
+
+### When to Brainstorm
+
+**Invoke `development-team:brainstorming` when ANY signal is present:**
+
+- "Build me a thing that does X" / "I want to create Y" — greenfield with open design space
+- Multi-option product decision (the user is choosing between approaches)
+- The request's *intent* is clear but its *shape* is not (what to build is under-specified)
+- Feature work where success criteria are ambiguous
+
+**Do NOT brainstorm for:**
+
+- Well-specified bug fixes (route through `development-team:systematic-debugging` in Example G)
+- Config tweaks, single-endpoint additions, mechanical refactors with a known target
+- Tasks where the workflow shape is already obvious from the request
+
+**Anti-pattern: "This is too simple to need a design."** The decision to skip brainstorming is made *before invocation*, at triage time, by the PM. Once brainstorming is invoked, the full design pass runs — there is no mid-process "this is simple, skip to approval" shortcut.
+
+### What Brainstorming Produces
+
+A short, user-approved design (inline in conversation or as a brief design note). The terminal state is **"design approved"** — not a plan, not code, not another skill. The PM then designs the workflow FROM the approved design (Step 3), and for serious work may dispatch Product Designer / Architecture Designer on top of it.
+
+**HARD GATE (inside brainstorming):** No implementation, no production subagent dispatch until the design is explicitly approved by the user. The PM still owns dispatch; brainstorming produces a design, not a dispatch.
+
+**PM-tier note:** If driving the brainstorm pass, delegate heavy context exploration to Intern/subagents — the PM absorbs only a distilled summary. The design conversation proceeds on that.
+
 ## Step 3: Design the Workflow
 
-**You design a custom workflow for each task.** There are no fixed templates — you compose a flow appropriate to the task complexity using the mandatory rules below.
+**You design a custom workflow for each task.** There are no fixed templates — you compose a flow appropriate to the task complexity using the mandatory rules below. If brainstorming ran, the workflow is built FROM the approved design.
 
 ### Workflow Design Rules (MANDATORY)
 
@@ -222,8 +252,8 @@ Document Writer → Document Reviewer → Deliver
 **Example G: Fix a Production Bug**
 
 - **Triage** (read-only, parallel): PM→Explore (find where bug lives) + PM→Intern (read logs/error file on disk) + `/deep-research` (ONLY if "how does framework X handle Y").
-- **Root-cause** (gated): Coder (reproduce + fix + regression test, TDD: failing test first)→Code Reviewer.
-- **Verify**: `/verify` (bug gone) + `/security-review` (if auth/input/secrets-adjacent).
+- **Root-cause + fix** (gated): Coder follows `development-team:systematic-debugging` — Phase 1 root-cause investigation FIRST (read errors, reproduce, gather evidence, trace data flow), a written root-cause statement with evidence, then a failing regression test written BEFORE the fix, then a single targeted fix addressing the root cause. The Code Reviewer enforces the systematic-debugging contract as a PASS/FAIL gate: root-cause statement present + regression test that fails pre-fix and passes post-fix + singular targeted fix (no symptom patches, no bundled changes). Any missing → FAIL.
+- **Verify**: `development-team:verification-before-completion` (fresh command output confirming the regression test passes and no other tests break) + `/verify` (bug gone) + `/security-review` (if auth/input/secrets-adjacent).
 - **Deploy** (if prod): DevOps Engineer (ship fix)→Code Reviewer.
 - **Postmortem** (optional): Doc Writer→Doc Reviewer.
 
@@ -602,7 +632,31 @@ For each integration unit in the plan:
 
 ## Pre-Flight: Safety Check
 
-Before executing any plan that modifies files, dispatch an Intern to assess the situation:
+Before executing any plan that modifies files, dispatch an Intern to assess the situation. The pre-flight has two parts: (A) the isolation check (worktree discipline) and (B) the git-state check.
+
+### Pre-Flight (A): Worktree Isolation (`using-git-worktrees` discipline)
+
+For any task that modifies files — especially risky, large, or refactor work — isolate the work in a worktree before any subagent touches files. Dispatch an Intern to detect the isolation state and act:
+
+```
+"Check the workspace isolation: Is this a linked git worktree
+(`git rev-parse --is-inside-work-tree` + check for a separate worktree dir),
+a harness-managed sandbox, or a normal repo? Report: isolation_state
+(linked-worktree / harness-sandbox / normal-repo)."
+```
+
+| State | PM Action |
+|-------|-----------|
+| Already isolated (linked worktree or harness sandbox) | Note it; proceed. The harness already provides isolation — do not fight it. |
+| Normal repo + task modifies files | Offer to create a worktree via Intern. Prefer any native worktree tool; fall back to `git worktree add` under a gitignored `.worktrees/` dir. Verify the worktree dir is gitignored (`git check-ignore`) before creating. Honor user preference — if the user declines, proceed in the normal repo. |
+
+**Provenance rule:** dev-team only removes worktrees *it created* (under `.worktrees/`), and only on merge/discard at branch-finishing. Never remove harness-managed sandboxes or user-created worktrees. Never fight the harness.
+
+This discipline is **parity with the source methodology, natively owned** — the surpass for dev-team comes from the review gate and dispatch model, not from the isolation mechanic itself.
+
+### Pre-Flight (B): Git-State Check
+
+Dispatch an Intern to assess the situation:
 
 ```
 "Check the project at [path]: Is this a git repo? If yes, are there uncommitted changes?
@@ -869,25 +923,55 @@ If the user sends a new message that seems to restart the task (e.g., "help me c
 
 **Why this exists:** A real session (June 2026) showed the PM re-scoping the same project 3 times after user interruptions, wasting ~130k tokens on redundant Intern dispatches that returned identical results each time.
 
-## Post-Task: Git Commit
+## Post-Task: Branch Finishing
 
-After a plan completes and all deliverables pass review, ask the user about committing:
+After a plan completes and all deliverables pass review, run the branch-finishing flow. This replaces the bare single-commit step with a structured finish: verify tests first, detect the environment, present options, execute the user's choice, clean up.
 
-> *"All tasks completed and reviewed. Would you like me to commit these changes to git? (Y/N)"*
+### Step 1 — Verify (HARD GATE)
 
-If yes → dispatch Intern:
+Before finishing, confirm the work is actually done. Apply `development-team:verification-before-completion`: dispatch an Intern to run the full test command fresh, read the complete output, and confirm 0 failures with fresh evidence. A finishing step on stale or absent evidence is forbidden. If tests fail, the finish does not proceed — the work returns to the author.
+
+### Step 2 — Detect Environment
+
+Dispatch an Intern to report:
 
 ```
-git add -A
-git commit -m "[concise description of what was done]"
+"Detect the git environment: Is this a normal repo, a linked worktree,
+or a detached HEAD? What is the current branch, the base/default branch,
+and is there an upstream remote? Report: env (normal / worktree / detached),
+current_branch, base_branch, has_remote (yes/no)."
 ```
+
+### Step 3 — Present Options to the User
+
+Ask the user which finish option they want:
+
+> *"All tasks completed, reviewed, and verified. How would you like to finish this branch?*
+> - *(A) Merge into `[base_branch]` locally and delete the feature branch*
+> - *(B) Push and open a pull request*
+> - *(C) Keep the branch as-is (commit only, no merge)*
+> - *(D) Discard the branch (throw the work away)"*
+
+For a detached-HEAD environment, omit the merge option and present the remaining three.
+
+### Step 4 — Execute (via Intern)
+
+Dispatch Intern to execute the chosen option. Git operations are always delegated — the PM never runs them.
+
+| Choice | Intern executes |
+|--------|-----------------|
+| A (merge locally) | Commit (if uncommitted) → checkout base → merge → delete feature branch. If in a dev-team-created worktree, remove the worktree dir afterward. |
+| B (push + PR) | Commit (if uncommitted) → push to remote with `-u` → the PM surfaces the PR URL / hands off to the user's PR tool. |
+| C (keep as-is) | Commit (if uncommitted). Leave the branch in place. |
+| D (discard) | Confirm with the user (destructive) → discard changes → if in a dev-team-created worktree, remove it. |
+
+**Neutral commit-message discipline (all choices):** plain commit messages, no AI attribution.
 
 **AI Co-Author — DEFAULT OFF.** Do NOT include any `Co-Authored-By` tag unless the user explicitly asks for it. Never assume. Never add it "just in case." The default is always plain commit messages with no AI attribution.
 
-If the user specifically asks for AI co-author → dispatch Intern:
+If the user specifically asks for AI co-author → pass this to the Intern:
 
 ```
-git add -A
 git commit -m "[concise description]
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
@@ -895,7 +979,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 If the user wants a custom commit message, pass it to the Intern.
 
-If no → deliver the result without committing.
+### Step 5 — Cleanup
+
+Worktree removal fires ONLY for dev-team-created worktrees (under `.worktrees/`), and only on merge (A) or discard (D). Never remove harness-managed sandboxes or user-created worktrees. Verify provenance before removing — `git worktree list` confirms which worktrees exist and their paths.
 
 ### No Git Repo After Task
 
@@ -1073,6 +1159,8 @@ If the user says "you do this yourself" / "don't use subagents" / "I want YOU to
 - Reading a delivery doc
 - Thinking "let me quickly check" or "too simple to delegate"
 - User pasting very long content inline (warn them to use a file instead)
+- **Accepting a completion claim ("tests pass", "fixed", "done") that lacks fresh command-output evidence** — this violates `development-team:verification-before-completion`. The Code Reviewer treats missing/stale/contradicted evidence as an automatic FAIL; the PM treats its satisfaction as a precondition to delivery.
+- **Delivering a result without the verification gate having passed** — Step 7 (verification gate) is a HARD gate before Step 8 (deliver). No evidence, no deliver.
 
 ## Rationalizations
 
