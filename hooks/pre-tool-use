@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-
-  # PreToolUse hook for work tools — enforces PM tool restrictions.
-
-  # Discriminator: subagents carry a non-empty agent_id in the hook stdin;
-
-  # the top-level PM does not. Allow subagents unconditionally (works for
-
-  # both foreground and background dispatch); block only the PM.
-
+# PreToolUse hook for work tools — enforces PM tool restrictions.
+#
+# Discriminator: a subagent (foreground OR background) carries a non-null
+# agent_id / agent_type in the PreToolUse stdin; the top-level PM/root
+# agent carries agent_id == null (or the field is absent). Allow any
+# subagent unconditionally; block only the root/PM.
+#
+# The identity check is parsed WITHOUT depending on jq (jq is frequently
+# absent, e.g. on minimal Linux images), so the discriminator works in
+# every environment. The active-subagent counter is retained only as a
+# degraded last-resort fallback for the case where stdin is unreadable.
 set -uo pipefail
 
 SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
@@ -17,43 +19,54 @@ PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${SUFFIX}"
 SESSION="${MARKER_DIR}/.dev-team-session-${SUFFIX}"
 ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
 
-  # Read caller identity from stdin.
-
+# Read caller identity from stdin.
 INPUT=$(cat 2>/dev/null || true)
-AGENT_ID=""
-if command -v jq &>/dev/null && [ -n "$INPUT" ]; then
-AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null)
+
+# Primary discriminator: detect a non-null agent_id or agent_type.
+# jq is parsed when available; otherwise fall back to a grep/sed scan of
+# the raw JSON so the check still works on images without jq.
+is_subagent=0
+if [ -n "$INPUT" ]; then
+    aid=""
+    atype=""
+    if command -v jq &>/dev/null; then
+        aid=$(echo "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null)
+        atype=$(echo "$INPUT" | jq -r '.agent_type // empty' 2>/dev/null)
+    else
+        # jq-free parse: pull the quoted string value for each key.
+        # Returns empty for null/absent because the regex requires a
+        # non-empty quoted string after the colon.
+        aid=$(echo "$INPUT" | grep -oE '"agent_id"[[:space:]]*:[[:space:]]*"[^"]+"' 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/')
+        atype=$(echo "$INPUT" | grep -oE '"agent_type"[[:space:]]*:[[:space:]]*"[^"]+"' 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/')
+    fi
+    if [ -n "$aid" ] || [ -n "$atype" ]; then
+        is_subagent=1
+    fi
 fi
 
-  # Primary discriminator: a subagent has a non-empty agent_id; the PM does not.
-
-  # Robust to foreground AND background dispatch and to skill loading.
-
-if [ -n "$AGENT_ID" ]; then
-exit 0
+if [ "$is_subagent" -eq 1 ]; then
+    exit 0
 fi
 
-  # Fallback (jq missing / stdin unreadable): active-subagent counter.
-
-  # Foreground-safe; background is covered by the primary check above when jq exists.
-
+# Fallback (stdin unreadable / identity fields absent): active-subagent
+# counter. Foreground-safe only; background subagents are recognized via
+# the agent_id/agent_type check above.
 active_count=$(ls "$ACTIVE_DIR" 2>/dev/null | wc -l | tr -d ' ')
 if [ "$active_count" -gt 0 ]; then
-exit 0
+    exit 0
 fi
 
-  # Caller is the PM. Enforce restriction.
-
+# Caller is the root/PM. Enforce restriction.
 if [ -f "$PM_RESTRICTED" ]; then
-if [ ! -f "$SESSION" ] || [ "$PM_RESTRICTED" -nt "$SESSION" ]; then
-printf '{"decision":"block","reason":"PM tool restriction active. Read/Bash/Write/Edit are blocked for PM role. Dispatch a subagent (Intern, Coder, etc.) via the Agent tool instead."}\n'
-exit 0
-fi
+    if [ ! -f "$SESSION" ] || [ "$PM_RESTRICTED" -nt "$SESSION" ]; then
+        printf '{"decision":"block","reason":"PM tool restriction active. Read/Bash/Write/Edit are blocked for PM role. Dispatch a subagent (Intern, Coder, etc.) via the Agent tool instead."}\n'
+        exit 0
+    fi
 fi
 
 if [ ! -f "$PM_LOADED" ]; then
-printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry."}\n'
-exit 0
+    printf '{"decision":"block","reason":"development-team active but PM skills not loaded. Invoke via Skill tool FIRST: 1) development-team:pm  2) development-team  Then retry."}\n'
+    exit 0
 fi
 
 exit 0
