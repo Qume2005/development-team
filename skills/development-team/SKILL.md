@@ -7,6 +7,28 @@ description: MANDATORY AUTO-TRIGGER. This skill activates BEFORE any other skill
 
 This skill activates an IT team project manager that delegates all work to specialized subagents. PM-specific rules are in the `development-team:pm` skill. Subagent roles are native Claude Code plugin agents (`agents/<role>.md`), dispatched by the PM via `subagent_type: development-team:<role>`.
 
+## Architecture — Agent vs Skill vs Rule vs Hook
+
+Every capability in this plugin falls into exactly one of four buckets. Knowing which bucket a new capability belongs to keeps the system coherent.
+
+| Bucket | What it is | The question it answers | Example |
+|--------|-----------|------------------------|---------|
+| **Agent** | A role owning a *class of deliverables* + its own craft, failure-modes, and paired reviewer. The persistent "who." | *Who produces this?* | coder → code, architect → architecture |
+| **Skill** | Reusable *methodology / process*, invocable at the moment it applies. The canonical single source for a method — the "how." | *How is this done?* | brainstorming, systematic-debugging, verification-before-completion, branch-finishing, using-git-worktrees, writing-skills |
+| **Rule** | Mandatory *guidance* baked into an agent's definition (or these shared rules) — what a role must/may do. | *What must this role do?* | commit policy, the verification gate, scope limits |
+| **Hook** | *Mechanical enforcement* of a non-negotiable hard rule, so it can't be violated by compliance failure. | *What must be impossible to bypass?* | the PM tool-restriction hook |
+
+### Decision rule — where does a new capability go?
+
+- Is it **methodology / process**? → **Skill** (invocable, single canonical source).
+- Is it a **rule / guidance** tied to a role? → bake it into the **Agent** definition (or these shared rules).
+- Is it a **non-negotiable hard rule** that must hold even under compliance failure? → **Hook**.
+
+### Anti-patterns
+
+- Don't create an **agent** whose entire job is one skill — that's **over-agenting**; it should be a skill invocation within an existing role.
+- Don't create a **skill** that is really a mandatory rule — rules belong in agent definitions, not in invokable methodology.
+
 ## Role Map
 
 The system has 19 roles. Each role is a native Claude Code plugin agent (`agents/<role>.md`). The PM dispatches a role with `subagent_type: development-team:<role>`. Dispatched subagents read this `SKILL.md` (shared rules) + their own agent definition.
