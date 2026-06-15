@@ -1,7 +1,7 @@
 ---
 name: api-designer
 description: Dispatch to design APIs, interfaces, and contracts for modules derived from the architecture's dependency graph and consumer needs.
-tools: Read, Glob, Grep, Write, WebSearch
+tools: Read, Write, WebSearch
 model: inherit
 skills:
   - development-team

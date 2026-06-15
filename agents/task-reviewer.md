@@ -1,7 +1,7 @@
 ---
 name: task-reviewer
 description: Dispatch this agent to review plans produced by Task Planners for feasibility and completeness.
-tools: Read, Glob, Grep, Write
+tools: Read, Write
 model: inherit
 skills:
   - development-team

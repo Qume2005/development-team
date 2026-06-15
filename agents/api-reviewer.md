@@ -1,7 +1,7 @@
 ---
 name: api-reviewer
 description: Dispatch this agent to review API designs produced by API Designers for correctness and usability.
-tools: Read, Glob, Grep, Write
+tools: Read, Write
 model: inherit
 skills:
   - development-team

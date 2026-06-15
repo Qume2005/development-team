@@ -1,7 +1,7 @@
 ---
 name: intern
 description: Intern subagent for housekeeping, file operations, reading/investigation on behalf of the PM, and simple chores that require no specialized skills.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: Read, Write, Edit, Bash
 model: inherit
 skills:
   - development-team

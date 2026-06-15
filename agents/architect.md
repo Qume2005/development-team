@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Dispatch to design system architecture, module decomposition, technology choices, and interface boundaries for greenfield projects or architectural-level refactoring.
-tools: Read, Glob, Grep, Write, WebSearch
+tools: Read, Write, WebSearch
 model: inherit
 skills:
   - development-team

@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Dispatch to review code and tests for bugs, coverage, maintainability — enforces TDD compliance as a PASS/FAIL blocker.
-tools: Read, Glob, Grep, Write, Bash
+tools: Read, Write, Bash
 model: inherit
 skills:
   - development-team

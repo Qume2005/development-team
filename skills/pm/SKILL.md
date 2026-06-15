@@ -293,16 +293,16 @@ Each role is a native plugin agent (`agents/<role>.md`); its rules and the share
 
 | Role | subagent_type | tools (enforced) |
 |------|---------------|------------------|
-| Intern | `development-team:intern` | Read, Write, Edit, Bash, Glob, Grep |
-| Code Developer | `development-team:coder` | Read, Write, Edit, Bash, Glob, Grep, LSP, WebSearch |
-| Task Planner | `development-team:planner` | Read, Glob, Grep, Write, WebSearch |
-| Architecture Designer | `development-team:architect` | Read, Glob, Grep, Write, WebSearch |
-| Product Designer | `development-team:product-designer` | Read, Glob, Grep, Write, WebSearch |
-| API Designer | `development-team:api-designer` | Read, Glob, Grep, Write, WebSearch |
-| Test Designer | `development-team:test-designer` | Read, Write, Edit, Bash, Glob, Grep |
-| Document Writer | `development-team:doc-writer` | Read, Write, Edit, Glob, Grep, WebSearch |
-| Task/API/Architect/Product/Test-Design/Doc Reviewer | `development-team:<reviewer-role>` | Read, Glob, Grep, Write |
-| Code Reviewer | `development-team:code-reviewer` | Read, Glob, Grep, Write, Bash |
+| Intern | `development-team:intern` | Read, Write, Edit, Bash |
+| Code Developer | `development-team:coder` | Read, Write, Edit, Bash, LSP, WebSearch |
+| Task Planner | `development-team:planner` | Read, Write, WebSearch |
+| Architecture Designer | `development-team:architect` | Read, Write, WebSearch |
+| Product Designer | `development-team:product-designer` | Read, Write, WebSearch |
+| API Designer | `development-team:api-designer` | Read, Write, WebSearch |
+| Test Designer | `development-team:test-designer` | Read, Write, Edit, Bash |
+| Document Writer | `development-team:doc-writer` | Read, Write, Edit, WebSearch |
+| Task/API/Architect/Product/Test-Design/Doc Reviewer | `development-team:<reviewer-role>` | Read, Write |
+| Code Reviewer | `development-team:code-reviewer` | Read, Write, Bash |
 
 ### Event-Driven Non-Blocking Dispatch (DEFAULT MODE)
 

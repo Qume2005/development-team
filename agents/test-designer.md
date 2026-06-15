@@ -1,7 +1,7 @@
 ---
 name: test-designer
 description: Test Designer — design integration and system tests before code is written (TDD); dispatch when a test design task is tied to an API design or plan.
-tools: Read, Write, Edit, Bash, Glob, Grep
+tools: Read, Write, Edit, Bash
 model: inherit
 skills:
   - development-team

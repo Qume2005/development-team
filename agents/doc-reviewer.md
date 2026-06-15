@@ -1,7 +1,7 @@
 ---
 name: doc-reviewer
 description: Dispatch to review documents for clarity, accuracy, completeness, and structure.
-tools: Read, Glob, Grep, Write
+tools: Read, Write
 model: inherit
 skills:
   - development-team

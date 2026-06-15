@@ -1,7 +1,7 @@
 ---
 name: product-reviewer
 description: Dispatch this agent to review product designs produced by Product Designers for user value.
-tools: Read, Glob, Grep, Write
+tools: Read, Write
 model: inherit
 skills:
   - development-team

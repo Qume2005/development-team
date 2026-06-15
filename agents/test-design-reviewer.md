@@ -1,7 +1,7 @@
 ---
 name: test-design-reviewer
 description: Dispatch to review test designs for completeness — verdict, coverage gaps, and confidence on each design.
-tools: Read, Glob, Grep, Write
+tools: Read, Write
 model: inherit
 skills:
   - development-team

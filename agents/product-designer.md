@@ -1,7 +1,7 @@
 ---
 name: product-designer
 description: Dispatch to design product specifications — user personas, user stories, feature prioritization, and success criteria — for serious, complex requirements.
-tools: Read, Glob, Grep, Write, WebSearch
+tools: Read, Write, WebSearch
 model: inherit
 skills:
   - development-team

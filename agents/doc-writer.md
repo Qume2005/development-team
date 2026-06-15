@@ -1,7 +1,7 @@
 ---
 name: doc-writer
 description: Document Writer — write documents, articles, specs, guides, and READMEs; dispatch when a prose deliverable needs to be produced.
-tools: Read, Write, Edit, Glob, Grep, WebSearch
+tools: Read, Write, Edit, WebSearch
 model: inherit
 skills:
   - development-team

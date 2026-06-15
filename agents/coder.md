@@ -1,7 +1,7 @@
 ---
 name: coder
 description: Code Developer subagent that writes code and unit tests, runs all tests, and verifies everything passes — implements one module per dispatch.
-tools: Read, Write, Edit, Bash, Glob, Grep, LSP, WebSearch
+tools: Read, Write, Edit, Bash, LSP, WebSearch
 model: inherit
 skills:
   - development-team

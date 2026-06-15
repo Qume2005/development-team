@@ -1,7 +1,7 @@
 ---
 name: planner
 description: Task Planner subagent that decomposes user requests into small executable subtasks and writes structured execution plans.
-tools: Read, Glob, Grep, Write, WebSearch
+tools: Read, Write, WebSearch
 model: inherit
 skills:
   - development-team

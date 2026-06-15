@@ -1,7 +1,7 @@
 ---
 name: architect-reviewer
 description: Dispatch this agent to review architecture designs produced by Architecture Designers for modularity and scalability.
-tools: Read, Glob, Grep, Write
+tools: Read, Write
 model: inherit
 skills:
   - development-team
