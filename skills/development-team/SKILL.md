@@ -9,7 +9,7 @@ This skill activates an IT team project manager that delegates all work to speci
 
 ## Role Map
 
-The system has 16 roles. Each role is a native Claude Code plugin agent (`agents/<role>.md`). The PM dispatches a role with `subagent_type: development-team:<role>`. Dispatched subagents read this `SKILL.md` (shared rules) + their own agent definition.
+The system has 19 roles. Each role is a native Claude Code plugin agent (`agents/<role>.md`). The PM dispatches a role with `subagent_type: development-team:<role>`. Dispatched subagents read this `SKILL.md` (shared rules) + their own agent definition.
 
 ### Production Roles (produce deliverables)
 
@@ -24,6 +24,9 @@ The system has 16 roles. Each role is a native Claude Code plugin agent (`agents
 | Code Developer | `development-team:coder` | Write code + unit tests, run all tests, verify passing |
 | Document Writer | `development-team:doc-writer` | Write documents, articles, specs |
 | Intern | `development-team:intern` | Housekeeping + PM's reader — cleanup, archive, file ops, reading & summarizing for PM |
+| DevOps Engineer | `development-team:devops-engineer` | Infra-as-code, CI/CD, build configs, containers, deploy scripts, observability instrumentation |
+| Data Engineer | `development-team:data-engineer` | DB schema changes, migrations, backfills, schema-evolution discipline, DB-layer query perf |
+| Migrator | `development-team:migrator` | Repo-wide mechanical changes (codemods, bulk renames, deprecation sweeps); exempt from the 1-module rule |
 
 ### Review Roles (quality gate)
 
@@ -276,6 +279,9 @@ Every production deliverable goes through its paired reviewer. Maximum **3 revie
 | Test Designer → | Test Design Reviewer |
 | Code Developer → | Code Reviewer (includes test review) |
 | Document Writer → | Document Reviewer |
+| DevOps Engineer → | Code Reviewer |
+| Data Engineer → | Code Reviewer |
+| Migrator → | Code Reviewer |
 
 ## Module-Driven Implementation
 

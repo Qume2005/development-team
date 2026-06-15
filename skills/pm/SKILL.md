@@ -210,6 +210,58 @@ Intern (read & investigate) → Deliver findings to user
 Document Writer → Document Reviewer → Deliver
 ```
 
+**Example F: Add a Feature (web-facing, medium)**
+
+- **Scoping**: PM→Intern (scope) + PM→Explore (broad "where does this live") [parallel, read-only].
+- **Design chain** (gated): Product Designer→Product Reviewer (skip if simple) → API Designer→API Reviewer → Test Designer→Test Design Reviewer.
+- **Implementation**: Coder (TDD)→Code Reviewer.
+- **Verification** (built-ins the PM invokes directly, not agents): `/verify`, chrome-devtools a11y-debugging (if user-facing), `postman:run-collection` (if endpoint).
+- **Docs**: Doc Writer→Doc Reviewer (parallel with verify).
+- **Deliver+commit**: PM→Intern.
+
+**Example G: Fix a Production Bug**
+
+- **Triage** (read-only, parallel): PM→Explore (find where bug lives) + PM→Intern (read logs/error file on disk) + `/deep-research` (ONLY if "how does framework X handle Y").
+- **Root-cause** (gated): Coder (reproduce + fix + regression test, TDD: failing test first)→Code Reviewer.
+- **Verify**: `/verify` (bug gone) + `/security-review` (if auth/input/secrets-adjacent).
+- **Deploy** (if prod): DevOps Engineer (ship fix)→Code Reviewer.
+- **Postmortem** (optional): Doc Writer→Doc Reviewer.
+
+**Example H: Security Hardening Pass**
+
+- **Discovery** (parallel, read-only): `/security-review` (diff-scoped) + `postman:security` (API OWASP Top-10) + Explore (find all auth/secret/crypto touchpoints).
+- PM synthesizes + ranks findings.
+- **Remediation** (gated, per HIGH finding): Coder (fix + regression test)→Code Reviewer→`/security-review` re-run to confirm fixed.
+- **Verify**: `postman:run-collection` + `/verify`.
+- (No security-engineer agent — `/security-review` is the reviewer, coder is the producer.)
+
+**Example I: Performance Optimization**
+
+- **Profile** (built-ins, read-only): chrome-devtools `performance_start_trace` (web: LCP/INP/CLS) + `memory-leak-debugging` (if memory). For backend: Coder adds a profiling run via Bash, or Explore finds the suspected N+1/hot loop.
+- **Diagnose**: PM absorbs trace findings (Intern summarizes large reports).
+- **Fix** (gated): Coder (apply fix + bench test)→Code Reviewer; if DB-layer, Data Engineer instead of Coder.
+- **Re-profile**: chrome-devtools `performance_start_trace` (before/after compare).
+
+**Example J: Large Refactor / Migration**
+
+- **Architecture** (gated): Architect (refactoring assessment: breaking changes, migration path, rollback)→Architect Reviewer.
+- **Plan** (gated): Planner (decompose; mark mechanical vs semantic steps)→Task Reviewer.
+- **Execution — two tracks:**
+  - **Track A MECHANICAL** — Migrator (one codemod/rename per dispatch)→Code Reviewer (verify no missed refs)→`/verify`→gate; repeat per mechanical step.
+  - **Track B SEMANTIC** — per module: API Designer→API Reviewer→Coder→Code Reviewer→gate.
+- **System test** (gated): Test Designer (post-migration behavior)→Test Design Reviewer; Coder (run, fix fallout)→Code Reviewer.
+- **Deploy**: DevOps Engineer (ship via migration path)→Code Reviewer.
+
+**Example K: Greenfield System (extends Example C)**
+
+Product Designer→Product Reviewer→Architect→Architect Reviewer→Planner→Task Reviewer.
+- Per layer top-down API design: API Designer (Layer N)→API Reviewer→… bottom-up impl: Coder (Layer 0 parallel)→Code Reviewer (all)→Coder (Layer 1)→…
+- **Data layer** (NEW): Data Engineer (initial schema + first migrations)→Code Reviewer (parallel with Layer 0 if schema is a leaf dep).
+- **Infra** (NEW): DevOps Engineer (CI + Dockerfile + deploy skeleton)→Code Reviewer (parallel with impl).
+- **System test**: Test Designer→Test Design Reviewer; Coder (run)→Code Reviewer.
+- **Final verify** (built-ins): `/verify`, chrome-devtools `lighthouse_audit` (web), `postman:run-collection` (API).
+- **Docs+commit**: Doc Writer→Doc Reviewer (parallel); PM→Intern.
+
 ### Presenting the Workflow to the User
 
 **This step is MANDATORY for ALL tasks, including Quick Fix.** No matter how small the task, you must propose a flow and get user approval before dispatching any subagent.
@@ -303,6 +355,51 @@ Each role is a native plugin agent (`agents/<role>.md`); its rules and the share
 | Document Writer | `development-team:doc-writer` | Read, Write, Edit, WebSearch |
 | Task/API/Architect/Product/Test-Design/Doc Reviewer | `development-team:<reviewer-role>` | Read, Write |
 | Code Reviewer | `development-team:code-reviewer` | Read, Write, Bash |
+| DevOps Engineer | `development-team:devops-engineer` | Read, Write, Edit, Bash, WebSearch |
+| Data Engineer | `development-team:data-engineer` | Read, Write, Edit, Bash, LSP |
+| Migrator | `development-team:migrator` | Read, Write, Edit, Bash, LSP (exempt from the 1-module rule — see migrator agent) |
+
+## Built-in Helpers (use these — don't build duplicates)
+
+Built-ins are read-only helpers and automated gates the PM invokes directly. They do NOT produce delivery docs, do NOT enter the review protocol, and do NOT spawn agents. Use them instead of minting a custom agent whenever they cover the need.
+
+- **`Explore` agent** — broad codebase search / "where does X live" (read-only, returns conclusions). Prefer over Intern for fan-out searches.
+- **`/security-review`** — diff-scoped security review. Gate for any auth/payment/secret change.
+- **`postman:security`** + **`postman:run-collection`** — API OWASP Top-10 + contract tests against running endpoints.
+- **`postman:generate-spec`** — generate OpenAPI from code.
+- **chrome-devtools MCP** (`performance_start_trace`, `debug-optimize-lcp`, `memory-leak-debugging`, `a11y-debugging`, `lighthouse_audit`) — web perf, memory, a11y profiling/auditing.
+- **`/verify`** + **`/run`** — drive/launch the app and confirm behavior (the "does it actually work" step).
+- **`/deep-research`** — multi-source fact-checked research (market/competitor/standards grounding for design).
+- **`code-simplifier`** agent + **`/simplify`** — simplify changed code after review (quality, not a gate).
+- **`Plan`** agent — read-only architecture brainstorming before committing to an Architect dispatch.
+- **`context7`** MCP — library/framework API facts (suppresses hallucinated API usage; default instruction for coder/api-designer dispatches).
+- **`microsoft-docs`** MCP — Azure/.NET/M365 correctness.
+
+## Methodology — When to Build vs Use Built-in vs Delegate
+
+**Decision ladder** (evaluate in order):
+1. **Can the PM reason it out directly?** (no file access, no tool) → do that. This covers decisions, routing, and workflow sizing.
+2. **Does a built-in agent/skill do exactly this?** → use it; do NOT build a duplicate.
+3. **Is it a recurring PRODUCTION DELIVERABLE that** (a) mutates files, (b) has its own craft/failure-modes distinct from existing roles, and (c) needs review discipline? → build a custom dev-team agent. (Most candidates fail this bar.)
+4. **One-off or niche?** → dispatch `general-purpose` or compose built-ins ad hoc.
+
+**Anti-bar:** if a proposed agent's entire job is "run one skill," it should be a skill invocation, not an agent. Agents earn their keep by owning a CLASS of deliverables with consistent review needs.
+
+**Composition rules:**
+- Agents NEVER spawn agents (BLOCKED protocol — PM is the only scheduler).
+- Built-ins are read-only helpers, not pipeline stages; the PM may promote a built-in's output to a gate explicitly.
+- Built-ins can run in PARALLEL with a dev-team review (different lens, same diff).
+
+**Anti-patterns to reject:**
+- Over-agenting (frontend/backend/mobile variants of coder).
+- Duplicating built-ins (code-searcher vs Explore, security-agent vs `/security-review`).
+- Agent-whose-job-is-one-skill.
+- Producer-without-reviewer.
+- Treating built-ins as second-class.
+
+**Granularity:** default 1 module / 2-3 files per dispatch. **EXCEPTION:** `migrator` is exempt (repo-wide by design). Split signal: if a dispatch has "and" joining two concerns → split; if it has "across" + repo-wide scope → consider migrator.
+
+**Tool discipline:** every dev-team agent searches via Bash (`rg`/`grep`/`find`) — Glob/Grep are not granted to plugin agents in this environment, so never rely on them; ensure Bash is in any agent's allowlist that needs search or command execution.
 
 ### Event-Driven Non-Blocking Dispatch (DEFAULT MODE)
 
