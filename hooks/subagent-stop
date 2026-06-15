@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# SubagentStop hook — decrements active subagent count when a subagent
+# actually finishes. SubagentStop fires when the subagent's run ends,
+# which (unlike PostToolUse:Agent) is correct for BOTH foreground and
+# background subagents:
+#   - Foreground: dispatch (increment) -> run -> finish -> SubagentStop (decrement).
+#   - Background: dispatch (increment) -> Agent returns immediately (NO
+#     decrement here) -> run with counter>0 -> finish -> SubagentStop (decrement).
+set -uo pipefail
+
+SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
+
+# Remove the oldest active marker file (FIFO)
+if [ -d "$ACTIVE_DIR" ]; then
+    oldest=$(ls -t "$ACTIVE_DIR" 2>/dev/null | tail -1)
+    [ -n "$oldest" ] && rm -f "${ACTIVE_DIR}/${oldest}" 2>/dev/null || true
+    rmdir "$ACTIVE_DIR" 2>/dev/null || true
+fi
+
+exit 0

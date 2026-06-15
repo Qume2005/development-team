@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
-# PostToolUse hook for Agent tool — decrements active subagent count
+# PostToolUse hook for Agent tool.
+#
+# Historically this decremented the active-subagent counter. That was a
+# latent landmine for BACKGROUND subagents: the Agent tool call returns
+# immediately (the subagent is still running), so decrementing here
+# drained the counter to 0 mid-run. The decrement now lives on the
+# SubagentStop event (see hooks/subagent-stop), which fires only when
+# the subagent actually finishes. This hook is retained as a no-op
+# router target so the PostToolUse:Agent matcher stays valid.
 set -uo pipefail
-
-SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
-MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
-ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
-
-# Remove the oldest active marker file (FIFO)
-if [ -d "$ACTIVE_DIR" ]; then
-    oldest=$(ls -t "$ACTIVE_DIR" 2>/dev/null | tail -1)
-    [ -n "$oldest" ] && rm -f "${ACTIVE_DIR}/${oldest}" 2>/dev/null || true
-    rmdir "$ACTIVE_DIR" 2>/dev/null || true
-fi
 
 exit 0
