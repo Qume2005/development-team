@@ -32,7 +32,7 @@ escape_for_json() {
 }
 
 bootstrap_escaped=$(escape_for_json "$bootstrap_content")
-session_context="<EXTREMELY_IMPORTANT>\nYou have the development-team skill available.\n\n**Below is the bootstrap context for your 'development-team' skill - your introduction to the IT project manager operating mode. For full rules, invoke the Skill tool with 'development-team':**\n\n${bootstrap_escaped}\n</EXTREMELY_IMPORTANT>"
+session_context="<EXTREMELY_IMPORTANT>\nYou have the development-team skill available.\n\n**Below is the bootstrap context for your 'development-team' skill - your introduction to the IT project manager operating mode. Regardless of what the user asked, you MUST load BOTH skills via the Skill tool FIRST, before anything else: 1) development-team:pm  2) development-team.**\n\n${bootstrap_escaped}\n</EXTREMELY_IMPORTANT>"
 
 # Output context injection as JSON.
 # Cursor hooks expect additional_context (snake_case).
