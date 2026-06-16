@@ -1,270 +1,320 @@
-# development-team: 给 Claude Code 配一支完整的 AI 开发团队
+# development-team
 
-> **16 个专业角色 + 严格审核流程——一支协同作业的 AI 开发团队，分工明确、逐道把关。**
+> A Claude Code plugin that turns the main agent into an IT Project Manager — it scopes, proposes a workflow, dispatches 19 specialized native subagents, and gates every deliverable behind a paired reviewer.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-orange)](https://docs.anthropic.com/en/docs/claude-code)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Qume2005/development-team/pulls)
 
-## ⚡ 快速开始
+**English** | [简体中文](README-CN.md)
 
-**一行命令装好，然后把需求甩给团队——剩下的事，团队来。**
+---
+
+## Detailed Contents
+
+- [What it is](#what-it-is)
+- [📦 Installation](#-installation)
+- [🚀 Usage](#-usage)
+- [✨ Features](#-features)
+- [🧠 How it works](#-how-it-works)
+- [👥 Roles (20)](#-roles-20)
+- [🛠️ Skills (9)](#️-skills-9)
+- [⚙️ Hooks](#-hooks)
+- [❓ FAQ & Troubleshooting](#-faq--troubleshooting)
+- [📐 Project structure](#-project-structure)
+- [🤝 Contributing](#-contributing)
+- [License](#license)
+
+---
+
+## What it is
+
+`development-team` is a Claude Code plugin (v1.0.0, MIT, by [Qume2005](https://github.com/Qume2005)) that puts the main agent into an **IT Project Manager operating mode**. The PM never does the work itself — it scopes tasks, proposes a workflow, dispatches specialized native subagents, and decides based on reviewer verdicts. **Every production deliverable is gated by a paired reviewer (PASS/FAIL, max 3 rounds).**
+
+Why you'd want this:
+
+- **Structured workflow** — a request flows through a real pipeline: product design → architecture → planning → API design → test design → code → review → deliver. The PM picks the right slice of that pipeline for the size of the task.
+- **Mandatory review** — no code, plan, API, or doc ships until its paired reviewer returns PASS. Bug fixes require a root-cause statement plus a failing-first regression test; completion claims require fresh command-output evidence.
+- **Context protection** — the PM structurally cannot `Read` / `Write` / `Bash`. It sees only short subagent summaries, so the scarce context window is reserved for decision-making, not file content.
+- **Zero dependencies, zero build step** — the entire plugin is pure Markdown (skills + agent definitions) plus bash hooks. No `npm install`, no compile, no runtime. Clone it and it runs.
+
+---
+
+## 📦 Installation
+
+### Method 1 — `git clone` (recommended)
 
 ```bash
 git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/development-team
 chmod +x ~/.claude/skills/development-team/hooks/*
 ```
 
-🧹 需要卸载？直接跳到 [快速卸载](#快速卸载)。
+Two commands, no build step, no config.
 
-装完启动 Claude Code，直接说一句你要什么（比如「帮我做一个带 JWT 的登录系统」）。团队会自己接手：理解需求 → 设计方案 → 拆任务 → 编码 → 审核 → 交付。你只管提需求、看结果。
-
----
-
-## 这是一支怎样的团队
-
-一次安装，然后把整个任务交给团队。
-
-你只要说清目标，剩下的全由一支 16 人的 AI 开发团队端到端完成：理清范围 → 设计架构 → 拆解任务 → 设计接口 → 编写测试 → 敲定代码 → 逐道审核 → 交付成果。整条流水线自动跑通，每一份产出都要经过配对审核员的把关。
-
-development-team 把这套协作模式搬进 Claude Code：9 个生产角色各司其职地产出，7 个审核角色逐道把关，项目经理（PM）在其中只做协调——理解需求、设计工作流、调度子代理、做决策，**不亲自干活**。所有工作通过磁盘上的交付文档在角色之间流转，每一份产出都必须通过配对审核（最多 3 轮），Hook 强制执行规则。
-
-简单说，它给你的是一支分工清楚、流程严格、上下文纪律靠结构保证的团队——你负责提需求，团队负责把它做出来。
-
----
-
-## 核心特性
-
-| 特性 | 说明 |
-|------|------|
-| **一支 16 人的团队** | 9 个生产角色（架构师 / 产品设计师 / 任务规划 / API 设计师 / 测试设计师 / 编码 / 文档 / 实习生 / PM）+ 7 个审核角色，平权协作 |
-| **逐道审核流程** | 每一份产出都经过配对审核员，最多 3 轮；失败则回滚并上报用户 |
-| **磁盘文档驱动协作** | 角色之间通过磁盘上的结构化交付文档流转上下文，无需对话传递 |
-| **Hook 强制执行** | PreToolUse Hook 双层保障（L1 引导 / L2 运行），PM 的工具限制无法被绕过 |
-| **上下文保护** | PM 永不读文件，只吸收 3-5 行摘要；各生产角色按模块范围（1 模块 / 2-3 文件）专注工作 |
-| **结构化工作流** | 产品设计 -> 架构 -> 计划 -> API -> 测试 -> 代码 -> 审核，按任务大小自动匹配 |
-| **并行调度** | 独立子任务同时派发，下游依赖在上游审核通过后才启动 |
-| **零依赖** | 纯 Markdown，零构建步骤，零配置——技能目录 + hooks + manifest 即完整产品 |
-
----
-
-## 工作原理
-
-团队以磁盘文档为协作管道。每一阶段的产出文档，就是下一阶段的输入：
-
-```
-用户提需求
-    |
-    v
-+------------------+     +-------------------+
-|  Project Manager |<--->|  Intern (读文件)   |
-|  协调 / 决策 / 调度  |     +-------------------+
-+------------------+              |
-    |                             |
-    | 团队协作（磁盘文档传递上下文）
-    v
-+------------------+     +-------------------+
-| Product Designer |---->| Product Reviewer  |---> 通过?
-+------------------+     +-------------------+      |
-                                                    v
-+------------------+     +-------------------+   PM 继续
-| Architect        |---->| Architect Reviewer |---> 调度
-+------------------+     +-------------------+
-    |
-    v
-+------------------+     +-------------------+
-| Task Planner     |---->| Task Reviewer     |
-+------------------+     +-------------------+
-    |
-    v
-+------------------+     +-------------------+
-| API Designer     |---->| API Reviewer      |
-+------------------+     +-------------------+
-    |
-    v
-+------------------+     +-------------------+
-| Test Designer    |---->| Test Design Review|
-+------------------+     +-------------------+
-    |                        (TDD: 测试先行)
-    v
-+------------------+     +-------------------+
-| Code Developer   |---->| Code Reviewer     |
-+------------------+     +-------------------+
-    |
-    v
-  交付给用户
-```
-
-**团队协作的核心原则：PM 永远不是管道。** 各生产角色读自己需要的源码与上游文档、产出交付物、交由配对审核员把关；角色之间靠磁盘上的结构化文档协作，无需对话。PM 只追踪文档路径、吸收审核结论（通过/失败 + 关键问题），据此决定下一步调度。
-
----
-
-## 角色一览
-
-这是一支 16 人的团队。生产角色负责产出，审核角色负责把关，二者**平权呈现**——团队的价值来自这 16 个角色协作 + 严格审核流程。
-
-### 生产角色（产出交付物）
-
-| 角色 | 技能 | 职责 |
-|------|------|------|
-| Product Designer | `development-team:product-designer` | 设计产品规格、用户故事、功能优先级 |
-| Architecture Designer | `development-team:architect` | 设计系统架构、模块拆分、技术选型 |
-| Task Planner | `development-team:planner` | 将任务分解为可执行单元、编写计划 |
-| API Designer | `development-team:api-designer` | 设计 API、接口契约 |
-| Test Designer | `development-team:test-designer` | 设计集成测试和系统测试（TDD：测试先行） |
-| Code Developer | `development-team:coder` | 编写代码 + 单元测试，运行所有测试，确保通过 |
-| Document Writer | `development-team:doc-writer` | 编写文档、文章、规格说明 |
-| Intern | `development-team:intern` | 杂务 + PM 的阅读代理——清理、归档、文件操作、为 PM 读取并摘要 |
-| Project Manager | `development-team:pm` | 团队里的协调角色：理解需求、设计工作流、调度子代理、做决策——**不亲自写代码 / 读文件 / 跑命令** |
-
-### 审核角色（质量把关）
-
-每一份生产产出都流向其配对审核员。审核是依赖链的一环——下游工作必须等上游审核通过才能启动。
-
-| 角色 | 技能 | 审核对象 |
-|------|------|---------|
-| Product Reviewer | `development-team:product-reviewer` | 产品设计——用户价值、完整性、优先级 |
-| Architecture Reviewer | `development-team:architect-reviewer` | 架构设计——模块化、可扩展性、可行性 |
-| Task Reviewer | `development-team:task-reviewer` | 执行计划——可行性、范围、分解质量 |
-| API Reviewer | `development-team:api-reviewer` | API 设计——正确性、一致性、易用性 |
-| Test Design Reviewer | `development-team:test-design-reviewer` | 测试设计——完整性、正确性、边界情况 |
-| Code Reviewer | `development-team:code-reviewer` | 代码 + 测试——缺陷、覆盖率、可维护性、TDD 合规 |
-| Document Reviewer | `development-team:doc-reviewer` | 文档——清晰度、准确性、完整性 |
-
-> **关于 PM：** PM 是这 16 个角色里唯一的协调角色。它不写代码、不读文件、不跑命令——这是事实，也是它准确的工作边界。团队的价值在于其余角色各司其职地产出，以及 7 个审核员逐道把关；PM 的工作是让这套协作高效运转、守住上下文纪律。
-
----
-
-## 安装
-
-两种方式任选其一。**推荐用方式一——它就是上面「快速开始」里那条一行命令的安装路径，克隆即用。**
-
-### 方式一：git clone（推荐 · 一行命令装好）
-
-```bash
-# 克隆到 Claude Code 技能目录
-git clone https://github.com/Qume2005/development-team.git ~/.claude/skills/development-team
-
-# 赋予 hook 脚本执行权限
-chmod +x ~/.claude/skills/development-team/hooks/*
-```
-
-两行命令跑完即装好，无需额外配置。
-
-### 方式二：社区市场（发布后可用）
+### Method 2 — community marketplace (not yet live)
 
 ```bash
 /plugin install development-team@claude-community
 ```
 
-> **注意：** 此命令在市场正式发布后才可用，当前请使用方式一。
+> **Note:** the marketplace listing is not live yet. Until it is, use Method 1.
 
-安装后，每次启动 Claude Code 对话都会自动唤醒这支团队。
+### Activation
 
----
+There is **no slash command** and nothing to run after install. Start a Claude Code session in any project and the `SessionStart` hook injects the bootstrap context automatically. The agent will load the PM skill and enter project-manager operating mode — just state a goal.
 
-## 快速卸载
-
-不想用了？两步干净移除（本地 `git clone` 安装不受 `/plugin uninstall` 管理，需手动清理）：
+### Uninstall
 
 ```bash
 rm -rf ~/.claude/skills/development-team
 ```
 
-然后（可选但推荐）清理注册表：编辑 `~/.claude/plugins/installed_plugins.json`，删掉整个 `"development-team@local": [ ... ]` 块，注意保持 JSON 合法（别留下多余逗号）。`settings.json` 无需改动。
-
-改完重启 Claude Code（或执行 `/clear`），团队就不会在下一次会话自动唤醒——彻底停用。
+Optionally clean the registry: edit `~/.claude/plugins/installed_plugins.json` and remove the `"development-team@local"` block (keep the JSON valid — no trailing commas). `settings.json` needs no change. Restart Claude Code (or `/clear`) so the next session does not auto-activate the team.
 
 ---
 
-## 使用
+## 🚀 Usage
 
-**装好之后，你只做一件事：用一句话描述你要什么，然后放手。**
+After install, your only job is to **state a goal in one sentence** and let go. The PM sizes the workflow to the task, dispatches the right roles, and gates every deliverable.
 
-团队会自动按任务大小匹配工作流，从理解需求一路跑到交付，全程带配对审核——你不需要拆任务、不需要盯流程、不需要逐个催角色。
-
-**大任务 → 完整工作流（全员出动，逐道审核）：**
+### A large task → full pipeline
 
 ```
-> 帮我构建一个带 JWT 和 OAuth2 的用户认证系统
+> Build a user authentication system with JWT and OAuth2.
 
-# 团队会自动：
-# 1. PM 派 Intern 读取并评估项目范围
-# 2. PM 提议 Full System Development 工作流（含产品/架构/计划/API/测试/编码各角色 + 审核）
-# 3. 等待你确认后，各角色并行/串行执行，逐道审核
+# The PM will:
+#  1. (optionally) dispatch Intern/Explore to scope the codebase
+#  2. propose a Full System Development workflow
+#     (Product → Architecture → Plan → API → Test Design → Code → Review → deliver)
+#  3. wait for your approval, then run it — producers in parallel where independent,
+#     each deliverable gated by its paired reviewer (max 3 rounds)
 ```
 
-**小任务 → Quick Fix（按需裁剪，快进快出）：**
+### A small task → Quick Fix
 
 ```
-> 修复登录页面的一个拼写错误
+> Fix the typo on the login page.
 
-# PM 选择 Quick Fix 工作流：
-# Code Developer -> Code Reviewer -> 交付
+# The PM picks a Quick Fix workflow:
+#  Code Developer → Code Reviewer → deliver
+# (bug fixes still require a root-cause statement + failing-first regression test)
 ```
 
-无论任务大小，每一份产出都必须通过配对审核员的把关（最多 3 轮），失败则回滚上报。所有中间产物和最终交付物存储在项目的 `.claude/development-team/` 目录下，按角色扁平组织。
+In both cases, every deliverable must pass its paired reviewer and carry fresh verification evidence. Intermediate and final artifacts land under the project's `.claude/development-team/<role>/` directory, organized flatly per role.
 
 ---
 
-## Hook 强制执行机制
+## ✨ Features
 
-团队纪律靠 Hook 强制执行，而非靠自觉。development-team 使用 Claude Code 的 PreToolUse Hook 实现两层结构，确保 PM 无法绕过工具限制：
-
-### L1: 引导阶段
-
-```
-会话启动
-    |
-    v
-SessionStart hook: 清除所有标记，注入 bootstrap 上下文
-    |
-    v
-用户尝试使用工具（Read/Bash/Write/Edit 等）
-    |
-    v
-PreToolUse hook 检查: PM_LOADED 标记存在?
-    |
-    +---> 不存在: 阻止工具调用
-         "development-team active but PM skills not loaded.
-          Invoke via Skill tool FIRST:
-          1) development-team:pm
-          2) development-team
-          Then retry."
-```
-
-**效果：** 会话刚启动时，PM skill 尚未加载，所有工作工具被阻止。代理必须先通过 Skill 工具加载 PM skill，才能继续操作。
-
-### L2: 运行阶段
-
-```
-PM skill 加载
-    |
-    v
-PreSkillUse hook: 创建 PM_LOADED + PM_RESTRICTED 标记
-    |
-    v
-PM 尝试使用工具
-    |
-    v
-PreToolUse hook 检查优先级:
-    1. 子代理活跃中?  -> 允许（子代理无限制）
-    2. PM_RESTRICTED 标记存在? -> 阻止
-       "PM tool restriction active. Dispatch a subagent instead."
-    3. PM_LOADED 存在但无限制 -> 允许（故障开放）
-```
-
-**效果：** PM 自愿激活工具限制（通过加载其 skill 触发），Read/Bash/Write/Edit 被阻止。子代理派发时，PreAgentUse hook 递增活跃计数器，PostAgentUse hook 递减——子代理活跃期间所有工具正常放行。生产角色因此能自由读写，PM 的上下文纪律则在结构上得到保证。
+| Feature | What it gives you |
+|---------|-------------------|
+| **20 specialized roles** | 13 producers (PM, Intern, Code Developer, Task Planner, Architecture Designer, Product Designer, API Designer, Test Designer, Document Writer, DevOps Engineer, Data Engineer, Migrator, Explore) + 7 reviewers. Each role is a native Claude Code plugin agent with its own craft and tool list. |
+| **Mandatory paired review** | Every deliverable flows to its paired reviewer. PASS/FAIL, max 3 rounds. A FAIL returns the work for revision; only a PASS lets the PM treat the artifact as deliverable. |
+| **TDD discipline** | The Test Designer designs integration and system tests **before** code is written; the Code Developer writes unit tests first (red → green) and implements against the pre-designed tests. |
+| **Verification gate** | No "done / passing / fixed" claim without fresh command output from the current turn. Stale runs, "should pass", and assertions-without-evidence are reviewer FAILs by default. |
+| **Event-driven, non-blocking dispatch** | Independent subtasks are dispatched in parallel. The PM is an event-driven scheduler: each completion and each review PASS is an event that unlocks the next dependent batch. |
+| **Hook-enforced PM tool restriction** | The PM's tool limit is enforced **structurally** by a hook, not by good behavior — the PM literally cannot invoke `Read`, `Write`, `Edit`, `Bash`, `Glob`, `Grep`, `WebSearch`, `LSP`, or `NotebookEdit`. Subagents are unaffected. |
+| **Anti-idle supervisory polling** | A `Stop` hook prevents the PM from going silently idle on pending work: if nothing will auto-resume the session (no background task, no valid supervisory cron), the stop is blocked and the PM must set up explainable polling. |
+| **Zero dependencies** | Pure Markdown + bash hooks. No build step, no install step beyond `chmod +x`. Runs anywhere bash runs. |
 
 ---
 
-## 项目结构
+## 🧠 How it works
+
+### The PM loop
+
+```
+1. Scope        — PM (optionally) dispatches Intern/Explore to read the request and report a 3–5 line summary
+2. Propose      — PM designs a workflow sized to the task and presents it for user approval
+3. Dispatch     — PM dispatches producers (non-blocking, event-driven); independent work runs in parallel
+4. Review gate  — each producer's deliverable goes to its paired reviewer (PASS/FAIL, max 3 rounds)
+5. Deliver      — once every gate is PASS and fresh verification evidence is attached, PM delivers to the user
+```
+
+### Two-tier information access
+
+The system deliberately splits information access across two tiers:
+
+| Tier | Role | Can read |
+|------|------|----------|
+| **Tier 1** | Project Manager | **Only** user conversation + subagent return summaries (3–5 lines). The PM never reads files. When it needs to understand something, it dispatches an Intern to read and report back. |
+| **Tier 2** | Everyone else (Intern, all producers, all reviewers) | Anything they need — source code, configs, delivery docs, papers. Their constraint is **task scope** (≈1 module / 2–3 files), not access. |
+
+This is what "context protection" means in practice: the PM's context window is reserved for decisions, while the workers read freely within a focused scope.
+
+### Producer → reviewer pipeline
+
+Context flows between roles as **Markdown delivery docs on disk**, written under `.claude/development-team/<role>/`. Each phase's output doc is the next phase's input. The PM never reads these docs — it only tracks their paths and absorbs the reviewer's verdict.
+
+```
+                        ┌─────────────────────────────────────────────┐
+                        │              Project Manager                 │
+                        │  scope → propose → dispatch → decide         │
+                        │  (reads only summaries, never files)         │
+                        └─────────────┬───────────────────┬────────────┘
+                                      │ dispatches        │ dispatches
+                                      ▼                   ▼
+   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+   │   Intern /   │   │    Product   │   │ Architecture │   │ Task Planner │
+   │   Explore    │   │   Designer   │   │   Designer   │   │              │
+   │ (read/map)   │   │      │       │   │      │       │   │      │       │
+   └──────────────┘   │      ▼       │   │      ▼       │   │      ▼       │
+                 ┌────┴──────────────┴┐  ┌┴──────────────┴┐  ┌┴──────────────┐
+                 │  Product Reviewer  │  │ Arch. Reviewer  │  │ Task Reviewer │
+                 │      (PASS?)       │  │    (PASS?)      │  │    (PASS?)    │
+                 └─────────┬──────────┘  └────────┬────────┘  └───────┬───────┘
+                           │                      │                   │
+                           └──────────┬───────────┴───────────────────┘
+                                      ▼
+                          ┌───────────────────────┐    ┌───────────────────────┐
+                          │     API Designer      │───▶│     API Reviewer       │
+                          └───────────┬───────────┘    └───────────┬───────────┘
+                                      ▼ (TDD: tests first)
+                          ┌───────────────────────┐    ┌───────────────────────┐
+                          │     Test Designer     │───▶│ Test Design Reviewer   │
+                          └───────────┬───────────┘    └───────────┬───────────┘
+                                      ▼                            │ PASS
+                          ┌───────────────────────┐    ┌───────────────────────┐
+                          │     Code Developer    │───▶│     Code Reviewer       │
+                          └───────────┬───────────┘    └───────────┬───────────┘
+                                      ▼                            │ PASS
+                                      ▼                            ▼
+                          ┌──────────────────────────────────────────────────┐
+                          │      Verification gate (fresh evidence)           │
+                          └──────────────────────────┬───────────────────────┘
+                                                     ▼
+                                          ┌────────────────────┐
+                                          │   Deliver to user   │
+                                          └────────────────────┘
+```
+
+> The PM is never the pipe. Documents on disk carry context between roles. The PM only tracks paths and absorbs verdicts.
+
+---
+
+## 👥 Roles (20)
+
+There are **20 roles**: 19 are native Claude Code plugin agent files in `agents/`, plus the **Project Manager**, which is the `skills/pm` skill (not an agent file). Each role is dispatched via `subagent_type: development-team:<role>`.
+
+### Producers (13)
+
+| Role | Produces | Tools |
+|------|----------|-------|
+| **Project Manager** (`skills/pm`, not an agent file) | Scopes, proposes workflow, dispatches, decides — never produces a deliverable itself | *(structurally restricted — see [Hooks](#-hooks))* |
+| **Intern** | Housekeeping + the PM's reader: cleanup, archive, file ops, targeted reading & summarizing | `Read, Write, Edit, Bash` |
+| **Code Developer** (`coder`) | Application code + unit tests for one module; runs all tests; verifies passing | `Read, Write, Edit, Bash, LSP, WebSearch` |
+| **Task Planner** (`planner`) | Execution plans: decomposes work into single-module subtasks with explicit dependency edges | `Read, Write, WebSearch` |
+| **Architecture Designer** (`architect`) | System architecture: module decomposition, tech choices, dependency-graph layering, system-test scope | `Read, Write, WebSearch` |
+| **Product Designer** (`product-designer`) | Product specs: user personas, user stories, feature prioritization, success criteria | `Read, Write, WebSearch` |
+| **API Designer** (`api-designer`) | APIs, interfaces, and contracts (contract-first, top-down) | `Read, Write, WebSearch` |
+| **Test Designer** (`test-designer`) | Integration & system tests, designed before code (TDD) | `Read, Write, Edit, Bash` |
+| **Document Writer** (`doc-writer`) | Documents, articles, specs, guides, READMEs | `Read, Write, Edit, WebSearch` |
+| **DevOps Engineer** (`devops-engineer`) | Infra-as-code, CI/CD pipelines, build configs, containers, deploy scripts, observability wiring | `Read, Write, Edit, Bash, WebSearch` |
+| **Data Engineer** (`data-engineer`) | DB schema changes, migrations, backfills, seeds; schema-evolution discipline (expand→contract, reversible) | `Read, Write, Edit, Bash, LSP` |
+| **Migrator** (`migrator`) | Repo-wide mechanical changes (codemods, bulk renames, deprecation sweeps); exempt from the 1-module rule | `Read, Write, Edit, Bash, LSP` |
+| **Explore** (`explore`) | Broad fan-out codebase search & mapping — "where does X live", touchpoint enumeration. Read-only to code; writes a map doc; no reviewer | `Read, Bash, Write` |
+
+### Reviewers (7)
+
+Each reviewer is a PASS/FAIL gate for the artifact type in its column. A single FAIL stops the review and returns the work for revision.
+
+| Reviewer | What it gates |
+|----------|---------------|
+| **Product Reviewer** (`product-reviewer`) | Product designs — user value, completeness, prioritization |
+| **Architecture Reviewer** (`architect-reviewer`) | Architecture designs — modularity, scalability, feasibility |
+| **Task Reviewer** (`task-reviewer`) | Execution plans — feasibility, scope, decomposition quality |
+| **API Reviewer** (`api-reviewer`) | APIs — correctness, consistency, usability |
+| **Test Design Reviewer** (`test-design-reviewer`) | Test designs — completeness, correctness, edge cases |
+| **Code Reviewer** (`code-reviewer`) | Code + unit tests (also DevOps/Data/Migrator output) — bugs, coverage, maintainability, TDD compliance, root-cause & verification-evidence gates |
+| **Document Reviewer** (`doc-reviewer`) | Documents — clarity, accuracy, completeness; also enforces the `writing-skills` baseline-failure gate for skill/rule edits |
+
+> **About the PM:** the PM is the only coordination role. It writes no code, reads no files, and runs no commands — that is both a fact and its accurate scope. The team's value comes from the 12 other producers each owning their craft and the 7 reviewers gating each gate.
+
+---
+
+## 🛠️ Skills (9)
+
+Skills are reusable **methodology** — the canonical "how" at the moment a discipline applies. The PM (and, where relevant, subagents) invoke them contextually. They are *not* loaded at bootstrap and they *do not* replace the role map.
+
+| Skill | When it fires | One-line purpose |
+|-------|---------------|------------------|
+| **`development-team`** | Auto-triggers at the start of every session (via the SessionStart hook) | The shared system rules — delivery directory, review protocol, role map, permissions matrix. The mandatory bootstrap skill. |
+| **`pm`** | Loaded by the agent at session start (after `development-team`) | PM-specific rules: the core operating loop, non-blocking dispatch, verification gate, commit policy. |
+| **`brainstorming`** | PM invokes before proposing a workflow on ambiguous/creative tasks | Turn an open-ended request into a short, user-approved design *before* any production work. |
+| **`systematic-debugging`** | PM references it in every bug-fix dispatch; Code Developer self-invokes during reproduction | Force root-cause investigation (reproduce → isolate → root cause → minimal fix → verify) before any fix. |
+| **`verification-before-completion`** | Every producer before a completion claim; Code Reviewer as a hard PASS/FAIL gate | Require fresh verification evidence (run command → read output → confirm) before any "done/passing/fixed" claim. |
+| **`branch-finishing`** | PM invokes when a task is complete and the branch must close out | Bring a feature branch to a mergeable state (tests green, rebased, PR-ready) before handoff or merge. |
+| **`using-git-worktrees`** | PM invokes before parallel/risky/large file-modifying work | Isolate parallel work streams in separate git worktrees so concurrent branches don't clobber each other. |
+| **`supervisory-polling`** | PM invokes at the moment it is about to set a polling cron while blocked | Make a polling cron *supervise* (check → escalate) rather than silently re-arm. |
+| **`writing-skills`** | PM invokes before dispatching any "add/improve a skill or agent rule" task | Author skills/rules as TDD-for-docs — baseline-failure artifact first, then the minimal doc that closes it. |
+
+---
+
+## ⚙️ Hooks
+
+The plugin's discipline is enforced **structurally** by bash hooks, not by good behavior. Hooks are registered in [`hooks/hooks.json`](hooks/hooks.json). All hook scripts run through [`hooks/run-hook.cmd`](hooks/run-hook.cmd), a cross-platform polyglot launcher (bash on Unix; it locates Git-for-Windows bash on Windows). The registered events:
+
+| Event (matcher) | Script | What it does |
+|-----------------|--------|--------------|
+| **`SessionStart`** (`startup\|clear\|compact`) | `session-start` | Clears all per-session markers, then injects the bootstrap context. This is **how the team activates** — there is no slash command. At session start the PM skill is not yet loaded, so all work tools are blocked until the agent loads `development-team:pm` and `development-team` via the Skill tool. |
+| **`PreToolUse`** (`Skill`) | `pre-skill-use` | When `development-team:pm` is loaded, creates the `PM_LOADED` and `PM_RESTRICTED` markers. Always allows the Skill call. |
+| **`PreToolUse`** (`Agent`) | `pre-agent-use` | Increments the active-subagent counter (one marker file per dispatch). Always allows the Agent call. |
+| **`PreToolUse`** (`Read\|Bash\|Write\|Edit\|Glob\|Grep\|WebSearch\|LSP\|NotebookEdit`) | `pre-tool-use` | **The structural PM tool restriction.** Identifies the caller: any subagent (foreground or background, by non-null `agent_id`/`agent_type`) is allowed unconditionally; the root/PM agent is blocked if `PM_RESTRICTED` is set, or if `PM_LOADED` is absent (bootstrap state). The check parses JSON with a `grep`/`sed` fallback when `jq` is absent, so it works on minimal images. |
+| **`PostToolUse`** (`Agent`) | `post-agent-use` | **No-op router.** The counter decrement used to live here, but for *background* subagents the Agent tool returns immediately while the subagent keeps running, so decrementing here drained the counter mid-run. The decrement now lives on `SubagentStop`. This script is retained only so the matcher stays valid. |
+| **`SubagentStop`** (all) | `subagent-stop` | Decrements the active-subagent counter when a subagent *actually* finishes — correct for both foreground and background dispatches (the active counter stays > 0 for the entire run of a background subagent). |
+| **`Stop`** (all) | `stop` | **Anti-idle / explainable polling.** If the PM has pending todos and nothing will auto-resume the session (no in-flight background task, no valid supervisory cron with a non-trivial prompt and a bounded next-fire gap), the stop is **blocked** and the PM is told to create an explainable polling cron. Has an anti-loop backstop (`stop_hook_active`) and a path-traversal guard on `session_id`. |
+
+> **Not registered (do not confuse with live hooks):**
+> - There is no `commands/` directory — there are **no slash commands**. Activation is purely the SessionStart hook plus the mandatory auto-trigger `development-team` skill.
+> - `hooks/test-stop.sh` is a **dry-run test driver** for the Stop hook (19 cases). It is not registered in `hooks.json`.
+
+### jq is optional
+
+Every hook that reads JSON prefers `jq` when present but falls back to `grep`/`sed`, so the plugin works on minimal Linux images and fresh macOS installs where `jq` is not available.
+
+---
+
+## ❓ FAQ & Troubleshooting
+
+### "All my tools are blocked!"
+
+That is **expected at session start**. The SessionStart hook injects bootstrap context, but the PM skill is not loaded yet, so `pre-tool-use` blocks `Read`/`Bash`/`Write`/etc. with a message telling the agent to load the PM skill first via the Skill tool:
+
+```
+development-team active but PM skills not loaded.
+Invoke via Skill tool FIRST:
+  1) development-team:pm
+  2) development-team
+Then retry.
+```
+
+Once the agent loads `development-team:pm`, the `pre-skill-use` hook sets the `PM_LOADED` and `PM_RESTRICTED` markers. From then on the PM is intentionally restricted (it dispatches subagents instead), and subagents are unrestricted.
+
+### "Where did `.claude/development-team/` come from?"
+
+That directory holds **internal delivery docs** — the Markdown handoffs the roles write to each other (plans, designs, review feedback, maps). It is created on first use and is **gitignored** (see [`.gitignore`](.gitignore): `.claude/`). It is safe to delete; it is not part of the plugin and not part of your source tree.
+
+### Windows / cross-platform
+
+The hooks are bash scripts. On Windows they run via [`hooks/run-hook.cmd`](hooks/run-hook.cmd), which locates Git-for-Windows bash (or `bash` on `PATH`) and delegates to it. If no bash is found, the launcher exits silently — the plugin still loads, it just skips the SessionStart context injection (the PM restriction hook still runs where bash is available). macOS and Linux work natively.
+
+### Is `jq` required?
+
+No. Every hook that reads JSON prefers `jq` when present and falls back to `grep`/`sed`. The plugin runs on minimal images without `jq`.
+
+### How do I add a role or skill?
+
+Authoring or editing a skill or agent rule follows the **`writing-skills`** methodology (TDD-for-docs): produce a baseline-failure artifact first, then the minimal doc that closes that failure, then a loophole-closing re-test. Invoke `development-team:writing-skills` for the full method. The Document Reviewer enforces the baseline-failure requirement as a PASS/FAIL gate.
+
+---
+
+## 📐 Project structure
 
 ```
 development-team/
 ├── .claude-plugin/
-│   └── plugin.json              # 插件清单
-├── agents/                      # 15 native Claude Code plugin agents (flat .md files)
+│   └── plugin.json                  # Plugin manifest (name, version, author, license, keywords)
+├── agents/                          # 19 native Claude Code plugin agents (flat .md files)
 │   ├── intern.md
 │   ├── coder.md
 │   ├── planner.md
@@ -273,6 +323,10 @@ development-team/
 │   ├── api-designer.md
 │   ├── test-designer.md
 │   ├── doc-writer.md
+│   ├── devops-engineer.md
+│   ├── data-engineer.md
+│   ├── migrator.md
+│   ├── explore.md
 │   ├── task-reviewer.md
 │   ├── api-reviewer.md
 │   ├── architect-reviewer.md
@@ -280,52 +334,47 @@ development-team/
 │   ├── test-design-reviewer.md
 │   ├── code-reviewer.md
 │   └── doc-reviewer.md
-├── hooks/
-│   ├── hooks.json               # Hook 注册配置
-│   ├── session-start            # 会话启动引导注入
-│   ├── pre-skill-use            # Skill 工具钩子（标记管理）
-│   ├── pre-tool-use             # 工作工具钩子（PM 限制执行）
-│   ├── pre-agent-use            # Agent 派发钩子（活跃计数+1）
-│   ├── post-agent-use           # Agent 完成钩子（活跃计数-1）
-│   └── run-hook.cmd             # 跨平台启动器
-├── skills/
-│   ├── development-team/        # 共享系统规则 + bootstrap
+├── skills/                          # 9 skills (each a directory with SKILL.md)
+│   ├── development-team/            #   shared system rules + bootstrap (auto-trigger)
 │   │   ├── SKILL.md
 │   │   └── bootstrap.md
-│   └── pm/                      # PM 技能（协调角色的专属规则）
-├── LICENSE                      # MIT 许可证
-├── .gitignore
-└── README.md                    # 本文件
+│   ├── pm/                          #   PM-specific rules (the 20th role)
+│   ├── brainstorming/
+│   ├── systematic-debugging/
+│   ├── verification-before-completion/
+│   ├── branch-finishing/
+│   ├── using-git-worktrees/
+│   ├── supervisory-polling/
+│   └── writing-skills/
+├── hooks/
+│   ├── hooks.json                   # Hook registration (SessionStart, PreToolUse, PostToolUse, SubagentStop, Stop)
+│   ├── run-hook.cmd                 # Cross-platform launcher (bash polyglot)
+│   ├── session-start                # SessionStart: clear markers + inject bootstrap
+│   ├── pre-skill-use                # PreToolUse:Skill: set PM_LOADED / PM_RESTRICTED
+│   ├── pre-agent-use                # PreToolUse:Agent: increment active-subagent counter
+│   ├── pre-tool-use                 # PreToolUse:Read|Bash|...: enforce PM tool restriction
+│   ├── post-agent-use               # PostToolUse:Agent: no-op router (decrement moved to SubagentStop)
+│   ├── subagent-stop                # SubagentStop: decrement active-subagent counter
+│   ├── stop                         # Stop: anti-idle / explainable polling enforcement
+│   └── test-stop.sh                 # Dry-run test driver for the Stop hook (not registered)
+├── .gitignore                       # Ignores .claude/ (delivery docs), skills-lock.json, editor dirs
+├── LICENSE                          # MIT
+├── README.md                        # This file (English, primary)
+└── README-CN.md                     # Simplified Chinese mirror
 ```
 
-**总计：15 个原生 agent（`agents/*.md`）+ PM skill（`development-team:pm`）+ 共享 `development-team` skill = 16 个角色。bootstrap.md + hooks/ + .claude-plugin/ = 完整插件。15 个被派发的角色都是原生 Claude Code 插件代理（`agents/*.md`），PM 与共享规则仍以技能形式保留。**
+**Counts:** 19 agent files (`agents/*.md`) + the PM skill (`skills/pm`) = **20 roles**. 9 skill directories under `skills/`. 7 registered hook scripts (plus `run-hook.cmd` launcher and `test-stop.sh` test driver). No `commands/` directory.
 
 ---
 
-## 开发与贡献
+## 🤝 Contributing
 
-这是个人项目，目前由独立开发者维护。如果你有建议或发现 bug，欢迎在 [GitHub Issues](https://github.com/Qume2005/development-team/issues) 提交。
+This is a personal project, currently maintained by a single developer. Suggestions and bug reports are welcome via [GitHub Issues](https://github.com/Qume2005/development-team/issues); pull requests are welcome too.
 
-### 本地开发
-
-```bash
-# 克隆仓库
-git clone https://github.com/Qume2005/development-team.git
-cd development-team
-
-# 修改技能文件后，直接复制到技能目录测试
-cp -r . ~/.claude/skills/development-team
-chmod +x ~/.claude/skills/development-team/hooks/*
-```
-
----
-
-## 致谢
-
-development-team 的灵感来自一个直白的观察：**一支好的开发团队靠的是分工协作与严格的质量把关**，每个环节都有专人产出、有专人审核。感谢 Anthropic Claude Code 团队提供的技能系统和子代理机制，让一支分工明确、带审核流程的 AI 开发团队成为可能。
+> A `CONTRIBUTING.md` is a future follow-up and out of scope for this README. No banner/logo image assets exist in the repo today — one can be added later if provided (do not invent image paths).
 
 ---
 
 ## License
 
-[MIT License](LICENSE) Copyright (c) 2025 Qume
+[MIT License](LICENSE) © 2025 Qume
