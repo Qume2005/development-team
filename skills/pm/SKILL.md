@@ -530,6 +530,22 @@ dispatch Code Developer (Subtask 2) # <- correct, building on approved design
 ```
 Why correct: Code implementing a contract must build on the reviewed version of that contract — launching early means rework (or latent bugs) if review rejects or revises the design.
 
+#### Rule 4b: Scope Every Review's Diff to Its Target Files
+
+When you dispatch multiple agents that MUTATE files in the SAME working tree, their uncommitted changes co-mingle in that tree. A reviewer you then dispatch that runs a bare `git diff` sees ALL uncommitted changes — including sibling agents' unrelated work — and can mis-scope its review: flagging out-of-scope files, polluting its verdict, or relaying confusion that has nothing to do with its actual target. This is a scheduler-owned failure: the PM controls review scope, so the PM owns the scope discipline that prevents it.
+
+**Three obligations (all mandatory):**
+
+1. **State each reviewer's exact file scope in the dispatch prompt.** Never dispatch a reviewer against a working tree that may contain sibling work without naming the files it is to review (e.g., "review only `README.md` and `README-CN.md`"). A dispatch prompt with no file scope leaves the reviewer to infer scope from the diff — which is circular when the diff is polluted.
+
+2. **Reviewers MUST scope their diff to the target files** (`git diff -- <file>...`), never bare `git diff`, whenever other uncommitted changes may exist. Tell the reviewer this directly in the dispatch prompt. A bare `git diff` is the named anti-pattern under parallel mutation: it surfaces every sibling agent's work as if it were part of the review target.
+
+3. **For parallel MUTATING agents, prefer git worktree isolation** so changes don't co-mingle in the first place. Invoke `development-team:using-git-worktrees` and dispatch each mutating agent into its own worktree. The diff-scope rule (1–2) is the fallback defense when isolation is not used; isolation is the preferred prevention because it removes the co-mingling at the source.
+
+**Anti-pattern — Polluted Diff:** a reviewer runs a bare `git diff`, sees a sibling agent's hook changes mixed into its README review, and flags them as "out-of-scope modified files — do not let them ride this review's PASS." The flagging is the symptom; the bare diff surfaced work that was never this review's target. **Target:** the PM states the file scope, the reviewer runs `git diff -- <files>`, and the sibling work never appears.
+
+**Real failure this closes (2026-06-16):** during a parallel 4-agent edit batch, the README-restructure Document Reviewer ran a bare `git diff` and saw a sibling Coder's hook changes plus `pm/bootstrap` changes; it then flagged the hook files as out-of-scope, polluting the review's verdict. A scoped `git diff -- README.md README-CN.md` (or worktree isolation) would have prevented it. Baseline-failure artifact: `.claude/development-team/doc-writer/baseline-failure-review-diff-scope-june-16th-2026.md`.
+
 **Within a parallel group**, all subtasks are truly independent — no dependencies between them, no shared files. They CAN run simultaneously because none reads another's output.
 
 **Across groups**, nothing starts until its dependency group has fully passed review.

@@ -314,6 +314,8 @@ File paths, URLs — NOT inline content.
 
 Every production deliverable goes through its paired reviewer. Maximum **3 review rounds**. Author reads reviewer feedback from the delivery directory. Project Manager only sees the verdict (PASS/FAIL + critical issues + confidence). Review feedback files follow the path format: `.claude/development-team/<reviewer-role-name>/review-<type>-round<N>-<month-name>-<day><ordinal>-<year>.md` (written by reviewer under their own role directory).
 
+**Review diff scope (PM-owned):** when multiple mutating agents share a working tree, the PM MUST state each reviewer's exact file scope in the dispatch prompt, and reviewers MUST scope their diff to those files (`git diff -- <file>...`), never bare `git diff`. See `development-team:pm` → "Rule 4b: Scope Every Review's Diff to Its Target Files" for the full rule and the failure it closes.
+
 ### Review Routing
 
 | Producer | Reviewer |
