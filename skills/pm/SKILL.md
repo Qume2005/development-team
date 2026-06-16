@@ -496,6 +496,14 @@ Production dispatches run in the background by default. The PM is an **event-dri
 
 **Narrow exception — when blocking is correct:** The PM's own scoping/proposal reads (an Intern report the PM needs in order to compose or modify the workflow proposal) may block, because the PM cannot propose without them. Once the workflow is approved, the pipeline runs fully non-blocking.
 
+### When a Polling Cron Is the Right Tool (`development-team:supervisory-polling`)
+
+The event-driven model covers the normal case: the harness re-invokes the PM on each background completion. But some waits will **not** produce a re-invocation event — nothing in the harness auto-resumes the PM when an *external* build finishes, an external state flips, or a person who may not return finally responds. In those cases a polling cron is the correct tool, and the companion Stop hook will mechanically force you to create one when you have pending todos and nothing will resume you.
+
+**A cron that merely exists supervises nothing.** When you reach for `CronCreate` for any of these signals — the Stop hook just blocked you; you are waiting on external state the harness won't notify you about; you are waiting on a person — invoke `development-team:supervisory-polling` IN FULL this turn, before creating the cron. That skill defines the interval discipline (match the wait target, respect the 5-minute prompt-cache window) and the on-fire checklist that the cron prompt must encode (CHECK concretely → if cleared proceed → if not ESCALATE, e.g. push a Feishu message via `cc-alarm-larkcli` → re-arm only with a stated reason and a coarsened interval). Creating a cron whose prompt is bare `"Continue."` is the named anti-pattern this skill exists to prevent.
+
+**Composition, stated plainly:** the Stop hook (mechanical) forces "a cron must exist"; `development-team:supervisory-polling` (methodology) guarantees "the cron supervises." You need both.
+
 ### Parallel Execution
 
 > Within-batch mechanics below. The overarching execution model is **Event-Driven Non-Blocking Dispatch** above — batches run in the background; the next batch unlocks on the current batch's review-PASS event.

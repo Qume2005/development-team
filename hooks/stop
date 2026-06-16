@@ -1,0 +1,424 @@
+#!/usr/bin/env bash
+# Stop hook — prevents the development-team PM from going "silently idle" on
+# pending work. When there are pending todos AND nothing will auto-resume the
+# session (no background tasks in flight, no valid supervisory polling cron),
+# BLOCK the stop and force the PM to set up explainable supervisory polling.
+#
+# ---------------------------------------------------------------------------
+# FIRING LOGIC (first match wins; every ALLOW path exits 0 with no stdout):
+#
+#   1. stop_hook_active == true (stdin)            -> ALLOW
+#      Anti-loop backstop, UNCONDITIONAL. Never loop on ourselves.
+#
+#   2. PM mode not active (marker ${PM_LOADED}      -> ALLOW
+#      absent). Only enforce inside dev-team PM sessions.
+#
+#   3. No pending todos                              -> ALLOW
+#      "pending" = task status not in {completed, deleted}, so
+#      pending / in_progress / blocked / anything-else all count.
+#      Graceful: dir missing -> no tasks -> ALLOW; a task file that
+#      fails to parse -> skip it; a task missing status -> skip it.
+#
+#      SECURITY (path traversal): session_id is validated BEFORE any path
+#      construction. Any session_id containing `/`, `\`, or `..` is rejected —
+#      the tasks dir for it is treated as UNREADABLE (count_pending_todos is
+#      NOT called on a constructed path, so the hook never scans outside
+#      DEV_TEAM_TASKS_DIR). On rejection the pending-count is treated as
+#      UNKNOWN, NOT zero: the "0 pending -> ALLOW" early-exit is therefore
+#      skipped, and the flow falls through to steps 4-6. Net effect: a
+#      traversal-shaped session_id with no background task and no valid cron
+#      resolves to BLOCK (bias-to-BLOCK when pending state cannot be safely
+#      read), never an ALLOW. A traversal id WITH a background task or valid
+#      cron still ALLOWs (those steps do not depend on the tasks dir).
+#
+#   4. background_tasks non-empty (stdin)           -> ALLOW
+#      Harness re-invokes the session when one completes.
+#
+#   5. A VALID supervisory cron exists              -> ALLOW
+#      Valid = BOTH (a) non-trivial prompt (non-empty AND length > 10,
+#      heuristic) AND (b) next-fire <= DEV_TEAM_POLL_MAX_WAIT_S (def 3600)
+#      seconds from now. See FIELD-SHAPE / DEGRADATION note below for why
+#      (b) is a best-effort upper-bound estimate.
+#
+#   6. Otherwise (pending + no bg + no valid cron)  -> BLOCK
+#      Single-line {"decision":"block","reason":"..."} on stdout.
+#
+# ---------------------------------------------------------------------------
+# AUDIT LOG (requirement E): on every BLOCK append one line to
+#   ${MARKER_DIR}/.dev-team-poll-blocks-${SUFFIX}.log :
+#   <iso8601>\t<session_id>\tpending=<n>\t<reason snippet>
+# Best-effort via `date`; never let logging affect the decision.
+#
+# ---------------------------------------------------------------------------
+# FIELD-SHAPE / DEGRADATION (session_crons & background_tasks):
+#
+# Per Claude Code v2.1.145+, Stop/SubagentStop hook input adds:
+#   background_tasks: array of {id,type,status,description,command?,agent?...}
+#   session_crons:    array of {id,schedule,recurring,prompt}
+#
+# IMPORTANT: session crons expose NO next_run_at / next_fire field — only a
+# raw cron expression in `schedule` (e.g. "*/5 * * * *", "0 9 * * 1-5") plus
+# a `recurring` flag and the `prompt`. There is therefore no authoritative
+# next-fire timestamp to compare against DEV_TEAM_POLL_MAX_WAIT_S.
+#
+# Degradation strategy for check (b):
+#   - We parse the cron `schedule` and compute an UPPER BOUND on the
+#     worst-case gap between fires.
+#   - The minute field can bound the gap ONLY when hour, dom, month, AND dow
+#     are ALL exactly `*` (uniform-within-hour cadence): minute `*`->60s,
+#     minute `*/N`->60*N, minute anything else->3600 (true upper bound, since
+#     any minute pattern fires at least once per hour when the other fields
+#     are all `*`). See the GUARD block on cron_gap_upper_bound_seconds.
+#   - If ANY of hour/dom/month/dow is NOT `*`, the cross-field next-fire
+#     interaction governs the gap and minute-only math would under-bound it
+#     (false-allow, e.g. `* 9 * * *` has a ~23h real gap). We return BEYOND
+#     so the <= threshold check BLOCKs. This is deliberately STRICTER than
+#     allowing `*/N` in non-minute fields (see STRICTNESS NOTE in the
+#     function): it is provably no-false-allow and only affects cadences the
+#     supervisory-polling skill does not prescribe.
+#   - If the estimated worst-case gap <= threshold -> cron counts as
+#     "within threshold".
+#   - If the schedule cannot be parsed -> we treat it conservatively as
+#     "beyond threshold" (does NOT count). This biases toward BLOCK, which
+#     is the safe direction (forces an explainable cron over a mystery one).
+#   - The PRIMARY validity signal remains (a) the non-trivial prompt, which
+#     is the real "explainable" guarantee. (b) is a freshness guard only.
+#
+# PRE-v2.1.145 (fields ABSENT from stdin):
+#   - step 4 -> best-effort transcript parse: grep transcript_path for
+#     Agent/Bash tool_uses with run_in_background:true lacking a completion.
+#     If any such in-flight background tool is found -> ALLOW.
+#   - step 5 -> treat as "no valid cron known" -> proceed toward BLOCK
+#     (anti-loop in step 1 still applies).
+#
+# TESTABILITY: the tasks dir is overridable via DEV_TEAM_TASKS_DIR (default
+# ~/.claude/tasks) so the dry-run driver can point at a fixture.
+# ---------------------------------------------------------------------------
+
+set -uo pipefail
+
+SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${SUFFIX}"
+BLOCK_LOG="${MARKER_DIR}/.dev-team-poll-blocks-${SUFFIX}.log"
+
+# Tasks dir overridable for tests. Default ~/.claude/tasks.
+DEV_TEAM_TASKS_DIR="${DEV_TEAM_TASKS_DIR:-${HOME}/.claude/tasks}"
+
+# Max acceptable worst-case cron gap, in seconds. Default 1 hour.
+DEV_TEAM_POLL_MAX_WAIT_S="${DEV_TEAM_POLL_MAX_WAIT_S:-3600}"
+
+# --- read stdin once -------------------------------------------------------
+INPUT=$(cat 2>/dev/null || true)
+
+# --- helpers: jq-with-grep-fallback (jq may be absent) ---------------------
+# Pull a scalar string value for a top-level key from the raw JSON.
+get_str() {
+    # $1 = key. Echoes the value or empty. Never errors.
+    local key="$1"
+    if [ -z "$INPUT" ]; then printf ''; return; fi
+    if command -v jq &>/dev/null; then
+        printf '%s' "$(printf '%s' "$INPUT" | jq -r --arg k "$key" '.[$k] // empty' 2>/dev/null)"
+    else
+        printf '%s' "$(printf '%s' "$INPUT" | grep -oE "\"${key}\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/')"
+    fi
+}
+
+# Pull a boolean value for a top-level key.
+get_bool() {
+    # $1 = key. Echoes "true"/"false" or empty.
+    local key="$1"
+    if [ -z "$INPUT" ]; then printf ''; return; fi
+    if command -v jq &>/dev/null; then
+        printf '%s' "$(printf '%s' "$INPUT" | jq -r --arg k "$key" '.[$k] // empty' 2>/dev/null)"
+    else
+        printf '%s' "$(printf '%s' "$INPUT" | grep -oE "\"${key}\"[[:space:]]*:[[:space:]]*(true|false)" 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*//')"
+    fi
+}
+
+# --- STEP 1: anti-loop backstop (unconditional) ----------------------------
+stop_hook_active="$(get_bool stop_hook_active)"
+if [ "$stop_hook_active" = "true" ]; then
+    exit 0
+fi
+
+# --- STEP 2: only enforce in dev-team PM sessions --------------------------
+if [ ! -f "$PM_LOADED" ]; then
+    exit 0
+fi
+
+# --- STEP 3: pending todos -------------------------------------------------
+session_id="$(get_str session_id)"
+
+count_pending_todos() {
+    # Echoes a non-negative integer count of pending tasks. Never errors.
+    local dir="$1"
+    local count=0
+    [ -z "$dir" ] && { printf '0'; return; }
+    [ -d "$dir" ] || { printf '0'; return; }
+    # Iterate *.json, skip *.lock. Use find for portability.
+    while IFS= read -r tf; do
+        [ -z "$tf" ] && continue
+        [ -f "$tf" ] || continue
+        local status=""
+        if command -v jq &>/dev/null; then
+            status=$(jq -r '.status // empty' "$tf" 2>/dev/null || true)
+        else
+            status=$(grep -oE '"status"[[:space:]]*:[[:space:]]*"[^"]*"' "$tf" 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/')
+        fi
+        [ -z "$status" ] && continue   # missing status -> skip
+        case "$status" in
+            completed|deleted) ;;       # done -> not pending
+            *) count=$((count + 1)) ;;  # pending / in_progress / blocked / other
+        esac
+    done < <(find "$dir" -maxdepth 1 -type f -name '*.json' ! -name '*.lock' 2>/dev/null)
+    printf '%s' "$count"
+}
+
+# --- STEP 3: pending todos (with session_id path-traversal guard) ----------
+# SECURITY: session_id arrives from stdin and is interpolated into a filesystem
+# path. An UNSANITIZED id containing `/`, `\`, or `..` makes count_pending_todos
+# scan OUTSIDE DEV_TEAM_TASKS_DIR (e.g. id=".." scans the tasks-dir PARENT). We
+# validate BEFORE constructing any path: any session_id containing a path
+# separator or parent-reference is rejected, and in that case we do NOT call
+# count_pending_todos at all (no traversal path is ever built or read).
+#
+# On rejection the pending count is UNKNOWN, not zero. We therefore skip the
+# "0 pending -> ALLOW" early-exit (never grant an ALLOW based on an unreadable
+# tasks dir) and fall through to steps 4-6. A traversal id with no background
+# task and no valid cron -> BLOCK; one with a bg task or valid cron -> ALLOW
+# (those do not depend on the tasks dir). Bias-to-BLOCK when pending state
+# cannot be safely read.
+pending=""
+traversal_rejected=0
+case "$session_id" in
+    *[\\/]* | *..* )
+        # Reject: path separator or parent reference present. Do NOT build or
+        # scan the path. pending stays "" (unknown) -> skip the ALLOW early-exit.
+        traversal_rejected=1
+        ;;
+    *)
+        pending=$(count_pending_todos "${DEV_TEAM_TASKS_DIR}/${session_id}")
+        ;;
+esac
+
+# "0 pending -> ALLOW" applies ONLY when we actually counted (pending is a
+# number). A rejected/unknown pending never grants the early ALLOW.
+if [ "$traversal_rejected" -eq 0 ] && [ "$pending" -eq 0 ]; then
+    exit 0
+fi
+
+# --- STEP 4: background in-flight ------------------------------------------
+# Presence test: does the background_tasks array have >=1 element?
+bg_present=0
+if [ -n "$INPUT" ]; then
+    if command -v jq &>/dev/null; then
+        bg_len=$(printf '%s' "$INPUT" | jq -r '.background_tasks | if type=="array" then length else 0 end' 2>/dev/null || echo 0)
+        [ "${bg_len:-0}" -gt 0 ] && bg_present=1
+    else
+        # grep fallback: array present and non-empty (contains an object)
+        if printf '%s' "$INPUT" | grep -qE '"background_tasks"[[:space:]]*:[[:space:]]*\[[[:space:]]*\{'; then
+            bg_present=1
+        fi
+    fi
+fi
+
+if [ "$bg_present" -eq 1 ]; then
+    exit 0
+fi
+
+# PRE-v2.1.145 fallback (background_tasks field ABSENT): best-effort
+# transcript scan for Agent/Bash tool_uses with run_in_background:true that
+# lack a completion. Only runs when the field is genuinely absent.
+if [ -n "$INPUT" ] && ! printf '%s' "$INPUT" | grep -qE '"background_tasks"'; then
+    transcript_path="$(get_str transcript_path)"
+    if [ -n "$transcript_path" ] && [ -f "$transcript_path" ]; then
+        # Heuristic: a background tool_use with run_in_background:true
+        # and no matching tool_result yet => still in flight. We look for
+        # any run_in_background:true; confirming absence of completion in
+        # a streaming transcript is unreliable, so presence is enough to
+        # give the session the benefit of the doubt (ALLOW).
+        if grep -qE '"run_in_background"[[:space:]]*:[[:space:]]*true' "$transcript_path" 2>/dev/null; then
+            exit 0
+        fi
+    fi
+fi
+
+# --- STEP 5: valid supervisory cron ----------------------------------------
+# A cron counts as valid ONLY if BOTH:
+#   (a) prompt non-empty AND length > 10   (explainable)
+#   (b) estimated worst-case next-fire gap <= DEV_TEAM_POLL_MAX_WAIT_S  (fresh)
+#
+# session_crons element shape: {id, schedule(cron expr), recurring, prompt}
+# NOTE: no next_run_at field is exposed (see header). (b) is an upper-bound
+# estimate from the cron expression; unparseable -> treated as beyond threshold.
+
+# cron_gap_upper_bound_seconds <cron-expr>
+# Echoes an integer upper bound on seconds between fires, or a large sentinel
+# (BEYOND) if the gap cannot be safely bounded by the minute field alone.
+# The caller compares the returned value <= DEV_TEAM_POLL_MAX_WAIT_S; any value
+# > threshold (including the sentinel) is treated as "beyond threshold": BLOCK.
+#
+# -----------------------------------------------------------------------
+# GUARD (closes the round-2 "accepted limitation"):
+#
+# The MINUTE field alone can bound the inter-fire gap ONLY when hour, dom,
+# month, AND dow are ALL exactly `*`. In that case the cadence is uniform
+# within each hour and we can read the gap from the minute field:
+#   minute `*`    -> 60s   (every minute)
+#   minute `*/N`  -> 60*N  (every N minutes, pure full-range step)
+#   minute other  -> 3600  (any single value / list / range: with all other
+#                           fields `*` the minute pattern fires at least once
+#                           per hour, so max inter-fire gap <= 3600s)
+#
+# If ANY of hour/dom/month/dow is NOT exactly `*` (specific value, range,
+# list, step `*/N`, named token, anything at all): the gap CANNOT be safely
+# bounded by the minute field alone, because the cross-field next-fire
+# interaction determines the real gap. We return BEYOND (a large sentinel) so
+# the <= threshold check treats it as BLOCK.
+#
+# STRICTNESS NOTE (vs the reviewer's literal suggestion):
+#   Round 2 floated allowing `*/N` in non-minute fields. We deliberately do
+#   NOT. Permitting `*/N` in a non-minute field while still doing minute-only
+#   arithmetic admits false-allows: e.g. `*/30 */2 * * *` has a real ~90min
+#   gap across the inactive hour, but minute-only math would claim 1800s.
+#   Blocking ALL non-`*` non-minute fields is (a) simple, (b) provably
+#   no-false-allow, and (c) only affects cadences the supervisory-polling
+#   skill does not prescribe (the skill recommends uniform every-N-minutes or
+#   every-N-hours polling, never time-windowed schedules). This is the
+#   bias-to-BLOCK direction: when unsure, force an explainable cron.
+# -----------------------------------------------------------------------
+# BEYOND sentinel: any value strictly greater than DEV_TEAM_POLL_MAX_WAIT_S
+# would do; 999999 is well beyond any realistic poll-wait threshold and keeps
+# the arithmetic obvious in audits.
+BEYOND=999999
+cron_gap_upper_bound_seconds() {
+    local expr="$1"
+    [ -z "$expr" ] && { printf '%s' "$BEYOND"; return; }
+    # Split into the 5 standard fields. Some schedules may have fewer/more;
+    # we only act on the standard 5-field form.
+    # Disable globbing around the split: a bare `*` field (e.g. the canonical
+    # "every minute" schedule `* * * * *`) would otherwise be filename-expanded
+    # against the cwd, corrupting the schedule. Defaults (${N:-}) guard set -u
+    # when the schedule has fewer than 5 fields (no stderr leak on malformed input).
+    # shellcheck disable=SC2086
+    set -f
+    set -- $expr
+    set +f
+    local minute="${1:-}" hour="${2:-}" dom="${3:-}" month="${4:-}" dow="${5:-}"
+    # Need at least the minute field to estimate.
+    [ -z "$minute" ] && { printf '%s' "$BEYOND"; return; }
+
+    # --- GUARD: minute-only bounding requires every other field == '*' ---
+    # If ANY of hour/dom/month/dow is not exactly `*`, the cross-field
+    # next-fire interaction governs the gap and minute-only math would
+    # under-bound it (false-allow). Return BEYOND (BLOCK).
+    if [ "$hour" != "*" ] || [ "$dom" != "*" ] || [ "$month" != "*" ] || [ "$dow" != "*" ]; then
+        printf '%s' "$BEYOND"; return
+    fi
+
+    # --- minute field drives sub-hour resolution (all other fields are `*`) ---
+    case "$minute" in
+        \*)
+            # every minute -> 60s gap
+            printf '%s' '60'; return
+            ;;
+        \*\/*)
+            # pure full-range step "*/N" every N minutes -> 60*N gap.
+            # A step with a range base (e.g. "10-50/5") is not a pure full-range
+            # step and falls through to the "anything else" 3600s branch below.
+            n="${minute#\*\/}"
+            if printf '%s' "$n" | grep -qE '^[0-9]+$' && [ "$n" -gt 0 ] 2>/dev/null; then
+                printf '%s' "$(( n * 60 ))"; return
+            fi
+            # malformed step base -> conservative BEYOND (does not count).
+            printf '%s' "$BEYOND"; return
+            ;;
+        L|H|l|h)
+            # named macro tokens unparseable here -> BEYOND (bias to BLOCK).
+            printf '%s' "$BEYOND"; return
+            ;;
+        *)
+            # single value (0), comma list (5,35), range (0-29), etc.
+            # With hour/dom/month/dow all `*`, any minute pattern fires at
+            # least once per hour -> max inter-fire gap <= 3600s. This is a
+            # TRUE upper bound, not an estimate.
+            printf '%s' '3600'; return
+            ;;
+    esac
+}
+
+has_valid_cron=0
+if [ -n "$INPUT" ] && command -v jq &>/dev/null; then
+    n_crons=$(printf '%s' "$INPUT" | jq -r '.session_crons | if type=="array" then length else 0 end' 2>/dev/null || echo 0)
+    i=0
+    while [ "$i" -lt "${n_crons:-0}" ] 2>/dev/null; do
+        cron_prompt=$(printf '%s' "$INPUT" | jq -r ".session_crons[$i].prompt // empty" 2>/dev/null || true)
+        cron_schedule=$(printf '%s' "$INPUT" | jq -r ".session_crons[$i].schedule // empty" 2>/dev/null || true)
+        i=$((i + 1))
+        # (a) non-trivial prompt
+        if [ -z "$cron_prompt" ] || [ "${#cron_prompt}" -le 10 ]; then
+            continue
+        fi
+        # (b) freshness upper bound. cron_gap_upper_bound_seconds returns an
+        # integer gap, or BEYOND (999999) when the minute field alone cannot
+        # safely bound it (constrained cron) or the schedule is unparseable.
+        # Bias-to-BLOCK: any non-numeric or unparseable result does NOT count.
+        gap=$(cron_gap_upper_bound_seconds "$cron_schedule")
+        # Guard against non-numeric output (defensive; function always emits a
+        # number, but a future regression must not crash the arithmetic test).
+        if ! printf '%s' "$gap" | grep -qE '^[0-9]+$'; then
+            continue   # unparseable -> does not count (bias to BLOCK)
+        fi
+        if [ "$gap" -le "$DEV_TEAM_POLL_MAX_WAIT_S" ] 2>/dev/null; then
+            has_valid_cron=1
+            break
+        fi
+    done
+else
+    # grep fallback for pre-jq or non-jq envs: we can detect presence of a
+    # session_crons array with a prompt, but cannot reliably iterate elements
+    # or read the schedule. Degrade to: a cron with a non-trivial prompt field
+    # present -> treat as valid (best-effort). Documented limitation.
+    if [ -n "$INPUT" ] && printf '%s' "$INPUT" | grep -qE '"session_crons"[[:space:]]*:[[:space:]]*\[[[:space:]]*\{.*"prompt"[[:space:]]*:[[:space:]]*"[^"]\{10,\}"'; then
+        has_valid_cron=1
+    fi
+fi
+
+if [ "$has_valid_cron" -eq 1 ]; then
+    exit 0
+fi
+
+# --- PRE-v2.1.145 fields-absent path for crons -----------------------------
+# If session_crons field is absent (old version) we already have no valid cron;
+# step 4 handled background fallback. Proceed toward BLOCK. Anti-loop (step 1)
+# still applies on the next fire.
+
+# --- STEP 6: BLOCK ---------------------------------------------------------
+# Build the reason string. Escape double-quotes/backslashes for JSON embedding.
+# pending_display: the integer count where known, or "unknown" when the tasks
+# dir could not be safely read (path-traversal-rejected session_id).
+if [ "$traversal_rejected" -eq 1 ]; then
+    pending_display="unknown"
+else
+    pending_display="$pending"
+fi
+reason="Pending todos: ${pending_display}. Nothing will auto-resume this session (no background tasks in flight, no valid supervisory cron within ${DEV_TEAM_POLL_MAX_WAIT_S}s with an explainable prompt). You MUST create a supervisory polling cron via CronCreate before stopping: give it a concrete reason/prompt stating WHAT you are waiting for, WHY, and a sensible interval (e.g. every 5-15 min for fast-changing external state, 20-30 min for slower state). Invoke development-team:supervisory-polling for the method. On cron fire you MUST check whether the blocker cleared and escalate (notify the user, e.g. via cc-alarm-larkcli) rather than silently re-waiting. NOTE: stop_hook_active is ONLY the anti-loop backstop, NOT an encouraged escape hatch — do not set it to bypass this."
+
+# Escape for JSON string embedding.
+reason_esc="${reason//\\/\\\\}"
+reason_esc="${reason_esc//\"/\\\"}"
+
+printf '{"decision":"block","reason":"%s"}\n' "$reason_esc"
+
+# --- AUDIT LOG (best-effort) -----------------------------------------------
+# Wrap the whole block so a log-write failure (e.g. BLOCK_LOG is a directory
+# or otherwise unwritable) produces NO stderr — logging must be fully silent.
+{
+    iso=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date 2>/dev/null || echo "?")
+    # reason snippet: first 120 chars, tab/newline stripped
+    snippet=$(printf '%s' "$reason" | tr '\t\n' '  ' | cut -c1-120 2>/dev/null)
+    printf '%s\t%s\tpending=%s\t%s\n' "$iso" "${session_id:-?}" "$pending_display" "$snippet" >> "$BLOCK_LOG" || true
+} 2>/dev/null || true
+
+exit 0

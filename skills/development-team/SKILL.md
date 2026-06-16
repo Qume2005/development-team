@@ -14,7 +14,7 @@ Every capability in this plugin falls into exactly one of four buckets. Knowing 
 | Bucket | What it is | The question it answers | Example |
 |--------|-----------|------------------------|---------|
 | **Agent** | A role owning a *class of deliverables* + its own craft, failure-modes, and paired reviewer. The persistent "who." | *Who produces this?* | coder → code, architect → architecture |
-| **Skill** | Reusable *methodology / process*, invocable at the moment it applies. The canonical single source for a method — the "how." | *How is this done?* | brainstorming, systematic-debugging, verification-before-completion, branch-finishing, using-git-worktrees, writing-skills |
+| **Skill** | Reusable *methodology / process*, invocable at the moment it applies. The canonical single source for a method — the "how." | *How is this done?* | brainstorming, systematic-debugging, verification-before-completion, branch-finishing, using-git-worktrees, writing-skills, supervisory-polling |
 | **Rule** | Mandatory *guidance* baked into an agent's definition (or these shared rules) — what a role must/may do. | *What must this role do?* | commit policy, the verification gate, scope limits |
 | **Hook** | *Mechanical enforcement* of a non-negotiable hard rule, so it can't be violated by compliance failure. | *What must be impossible to bypass?* | the PM tool-restriction hook |
 
@@ -72,7 +72,7 @@ The system has 19 roles. Each role is a native Claude Code plugin agent (`agents
 
 ### Methodology Skills (cross-cutting, contextually invoked)
 
-These six skills are invokable via the Skill tool as `development-team:<name>`. They are NOT loaded at bootstrap — the PM (and, where relevant, subagents) invoke them contextually at the moment each discipline applies. They sit alongside the role map above as available methodology, not as roles.
+These skills are invokable via the Skill tool as `development-team:<name>`. They are NOT loaded at bootstrap — the PM (and, where relevant, subagents) invoke them contextually at the moment each discipline applies. They sit alongside the role map above as available methodology, not as roles.
 
 | Skill | Invocation | One-line purpose | Trigger |
 |-------|------------|------------------|---------|
@@ -82,6 +82,7 @@ These six skills are invokable via the Skill tool as `development-team:<name>`. 
 | Branch Finishing | `development-team:branch-finishing` | Bring a feature branch to a mergeable state (tests green, rebased, conflicts resolved, PR-ready) before it is handed off or merged. | PM invokes when a task is complete and the branch must be closed out; Code Developer self-invokes before requesting review/merge. |
 | Using Git Worktrees | `development-team:using-git-worktrees` | Isolate parallel work streams in separate git worktrees so concurrent branches do not clobber each other. | PM invokes when dispatching parallel work that would otherwise touch the same working tree; Code Developer / Migrator self-invoke when juggling multiple in-flight changes. |
 | Writing Skills | `development-team:writing-skills` | Enforce authoring skills/rules as TDD-for-docs — baseline-failure artifact first, then the minimal doc that closes it, then loophole-closing re-test. | PM invokes before dispatching any "add/improve a dev-team skill or agent rule" task; Document Reviewer enforces the baseline-failure requirement as a PASS/FAIL gate (see `agents/doc-reviewer.md`). |
+| Supervisory Polling | `development-team:supervisory-polling` | Make a polling cron SUPERVISE (check → escalate) rather than silently re-arm, closing the failure where a cron exists but nobody supervises. | PM invokes at the moment it is about to set a polling cron because the harness will NOT auto-resume it — e.g. the Stop hook just blocked it with pending todos, or it is deliberately waiting on external state / a person who may not return. |
 
 **Who can invoke:** the PM (at the moments above) and subagents within their own scope (e.g., a Code Developer self-invokes systematic-debugging during a bug fix; a Code Reviewer applies verification-before-completion as a gate). They do NOT spawn agents and do NOT replace the role map — they are disciplines applied within the existing dispatch chain.
 
