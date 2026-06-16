@@ -31,7 +31,7 @@ Every capability in this plugin falls into exactly one of four buckets. Knowing 
 
 ## Role Map
 
-The system has 19 roles. Each role is a native Claude Code plugin agent (`agents/<role>.md`). The PM dispatches a role with `subagent_type: development-team:<role>`. Dispatched subagents read this `SKILL.md` (shared rules) + their own agent definition.
+The system has 20 roles. Each role is a native Claude Code plugin agent (`agents/<role>.md`). The PM dispatches a role with `subagent_type: development-team:<role>`. Dispatched subagents read this `SKILL.md` (shared rules) + their own agent definition.
 
 ### Production Roles (produce deliverables)
 
@@ -49,6 +49,7 @@ The system has 19 roles. Each role is a native Claude Code plugin agent (`agents
 | DevOps Engineer | `development-team:devops-engineer` | Infra-as-code, CI/CD, build configs, containers, deploy scripts, observability instrumentation |
 | Data Engineer | `development-team:data-engineer` | DB schema changes, migrations, backfills, schema-evolution discipline, DB-layer query perf |
 | Migrator | `development-team:migrator` | Repo-wide mechanical changes (codemods, bulk renames, deprecation sweeps); exempt from the 1-module rule |
+| Explore | `development-team:explore` | Broad fan-out codebase search/mapping — "where does X live", touchpoint enumeration, locating suspects. Read-only to codebase; writes a map doc; no reviewer (findings factual) |
 
 ### Review Roles (quality gate)
 
@@ -94,6 +95,7 @@ digraph context_flow {
   node [shape=box];
   "User Request" -> "Project Manager";
   "Project Manager" -> "Intern" [label="scoping / reading", style=dashed];
+  "Project Manager" -> "Explore" [label="fan-out search / mapping", style=dashed];
   "Project Manager" -> "Product Designer" [label="serious requirements", style=dashed];
   "Product Designer" -> "Product Reviewer";
   "Product Reviewer" -> "Project Manager" [label="pass"];
@@ -303,6 +305,7 @@ File paths, URLs — NOT inline content.
 | Code Developer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
 | Document Writer | Yes — Same role directory | Yes | Yes | Yes — Within task scope | No — Others: BLOCKED |
 | Intern | Yes — Same role directory | Yes | N/A | Yes — As directed by PM | No — Others: BLOCKED |
+| Explore | Yes — Same role directory | Yes | N/A | Yes — Within task scope | No — Others: BLOCKED |
 | Architecture Reviewer | Yes — Doc being reviewed | Yes — Feedback | N/A | Yes — Within review scope | No — Others: BLOCKED |
 | Product Reviewer | Yes — Doc being reviewed | Yes — Feedback | N/A | Yes — Within review scope | No — Others: BLOCKED |
 | All other Reviewers | Yes — Doc being reviewed | Yes — Feedback | N/A | Yes — Within review scope | No — Others: BLOCKED |
@@ -373,6 +376,7 @@ Any Tier-2 subagent that runs a long command via Bash (training, compilation, bu
 | Test Designer | Tests designed + test file paths + coverage summary |
 | Code Developer | Files changed + unit tests written + all tests passing YES/NO |
 | Document Writer | Doc path + 1-line summary of content |
+| Explore | Map doc path + question answered + entry points + hit count + pattern + confidence |
 | All Reviewers | Verdict + critical issues + confidence |
 
 ## Deprecated Directory

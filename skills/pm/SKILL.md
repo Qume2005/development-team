@@ -422,18 +422,19 @@ Each role is a native plugin agent (`agents/<role>.md`); its rules and the share
 | DevOps Engineer | `development-team:devops-engineer` | CI/CD, Dockerfiles, deploy scripts, build configs, observability instrumentation | Application business logic, API contracts | Read, Write, Edit, Bash, WebSearch |
 | Data Engineer | `development-team:data-engineer` | DB schema changes, migrations, backfills, DB-layer query perf | Application code outside the DB layer | Read, Write, Edit, Bash, LSP |
 | Migrator | `development-team:migrator` | Repo-wide mechanical changes (codemods, bulk renames, deprecation sweeps) | Semantic multi-module logic changes; single-module features (→ Code Developer) | Read, Write, Edit, Bash, LSP (exempt from the 1-module rule — see migrator agent) |
+| Explore | `development-team:explore` | Broad fan-out codebase search/mapping — "where does X live", touchpoint enumeration, locating suspects | Single-target reading of one known file (→ Intern); any file mutation/op (→ Intern); designing anything (→ Designers) | Read, Bash, Write |
 
 **Priority tiebreakers** (when a task could fit two roles):
 - Repo-wide rename/codemod → Migrator, NOT Code Developer (Migrator is exempt from 1-module; Code Developer would file OVERSCOPED).
 - DB-layer query/migration → Data Engineer, NOT Code Developer (schema-evolution discipline lives with Data Engineer).
 - Ship/deploy/CI → DevOps Engineer, NOT Code Developer.
 - Tests before code (TDD integration/system) → Test Designer, NOT Code Developer (unit tests stay with Code Developer).
+- Fan-out search / unknown target set → Explore, NOT Intern (Explore maps many and persists the map; Intern answers one).
 
 ## Built-in Helpers (use these — don't build duplicates)
 
 Built-ins are read-only helpers and automated gates the PM invokes directly. They do NOT produce delivery docs, do NOT enter the review protocol, and do NOT spawn agents. Use them instead of minting a custom agent whenever they cover the need.
 
-- **`Explore` agent** — broad codebase search / "where does X live" (read-only, returns conclusions). Prefer over Intern for fan-out searches.
 - **`/security-review`** — diff-scoped security review. Gate for any auth/payment/secret change.
 - **`postman:security`** + **`postman:run-collection`** — API OWASP Top-10 + contract tests against running endpoints.
 - **`postman:generate-spec`** — generate OpenAPI from code.
@@ -462,7 +463,7 @@ Built-ins are read-only helpers and automated gates the PM invokes directly. The
 
 **Anti-patterns to reject:**
 - Over-agenting (frontend/backend/mobile variants of coder).
-- Duplicating built-ins (code-searcher vs Explore, security-agent vs `/security-review`).
+- Duplicating built-ins (custom security-agent vs `/security-review`, a second code-searcher vs the plugin Explore role).
 - Agent-whose-job-is-one-skill.
 - Producer-without-reviewer.
 - Treating built-ins as second-class.
@@ -1083,6 +1084,7 @@ Max 3 review rounds, then escalate to user. Author reads reviewer feedback from 
 | Test Designer | Tests designed + test file paths + coverage summary |
 | Code Developer | Files changed + unit tests written + all tests passing YES/NO |
 | Document Writer | Doc path + 1-line summary of content |
+| Explore | Map doc path + question answered + entry points + hit count + pattern + confidence |
 | All Reviewers | Verdict + critical issues + confidence |
 
 If any subagent returns too much, reject: *"Summarize to the minimal decision input."*
