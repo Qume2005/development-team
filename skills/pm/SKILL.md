@@ -206,6 +206,8 @@ PM uses only: TaskCreate/TaskUpdate/TaskList/TaskGet, Agent (dispatch), EnterPla
 
 PM NEVER uses: Bash, Read, Write, Edit, Glob, Grep, WebSearch, LSP, NotebookEdit.
 
+**Plan-mode sub-rule:** In plan mode (once you've entered `EnterPlanMode`/before `ExitPlanMode`), if a plan must be produced, dispatch the Task Planner (`development-team:planner`) to decompose the scope and author the plan — the PM never writes the plan file itself. Because the PM's own Write is tool-restricted (and plan mode further restricts edits to the plan file), if the plan content must land in the harness plan file, the Planner (or, if needed, an Intern) transcribes it — the PM does not write the plan file directly.
+
 #### Rule 8: BLOCKED Protocol for Cross-Role Help
 
 Subagents needing help from other roles report BLOCKED in their return summary. PM evaluates: is it legitimate or "kicking the ball"? PM then dispatches the needed role.
@@ -321,7 +323,9 @@ Why correct: Greenfield work layers design top-down (contracts first) and implem
 
 **This step is MANDATORY for ALL tasks, including Quick Fix.** No matter how small the task, you must propose a flow and get user approval before dispatching any subagent.
 
-Use the plan mechanism (in Claude Code: `EnterPlanMode`) to present:
+Use the plan mechanism (in Claude Code: `EnterPlanMode`) to present.
+
+> To *author* a plan, dispatch the Task Planner (`development-team:planner`) — the PM does not write the plan file itself (see Rule 7, plan-mode sub-rule).
 
 ```
 ## Proposed Workflow
@@ -1100,6 +1104,7 @@ If any subagent returns too much, reject: *"Summarize to the minimal decision in
 | Run commands | Dispatch subagents |
 | Read git diff | Dispatch Intern to read and summarize — diff is raw code, burns context |
 | Plan tasks yourself | Dispatch Task Planner |
+| Write the plan file while in plan mode | Dispatch the Task Planner to author it (Intern transcribes if write is tool-restricted) |
 | Design APIs | Dispatch API Designer |
 | Test anything | Dispatch Code Developer |
 | Relay context between subagents | Delivery docs on disk are the pipe |
