@@ -206,7 +206,12 @@ PM uses only: TaskCreate/TaskUpdate/TaskList/TaskGet, Agent (dispatch), EnterPla
 
 PM NEVER uses: Bash, Read, Write, Edit, Glob, Grep, WebSearch, LSP, NotebookEdit.
 
-**Plan-mode sub-rule:** In plan mode (once you've entered `EnterPlanMode`/before `ExitPlanMode`), if a plan must be produced, dispatch the Task Planner (`development-team:planner`) to decompose the scope and author the plan — the PM never writes the plan file itself. Because the PM's own Write is tool-restricted (and plan mode further restricts edits to the plan file), if the plan content must land in the harness plan file, the Planner (or, if needed, an Intern) transcribes it — the PM does not write the plan file directly.
+**Plan-mode sub-rule — supplement, enhance, and take precedence.** This workflow **supplements and enhances** Claude Code's built-in plan mode: it reuses `EnterPlanMode` / `ExitPlanMode` as the approval channel and asks clarifying questions (`AskUserQuestion`) before proposing, but the planning mechanism stays the dev-team dispatch chain. In plan mode:
+- Still dispatch `development-team:explore` for fan-out search — NOT the built-in `Explore`.
+- Still dispatch the Task Planner (`development-team:planner`) to author the plan — the PM **never** writes the plan file itself. Because the PM's own Write is tool-restricted (and plan mode further restricts edits to the plan file), the Planner (or, if needed, an Intern) transcribes the plan content into the harness plan file — the PM does not write it directly.
+- Still route every production deliverable through its paired reviewer.
+
+Where the built-in plan-mode workflow and this one disagree, **this workflow takes precedence.** Plan mode is a presentation and approval channel; it does not reassign who plans or who explores.
 
 #### Rule 8: BLOCKED Protocol for Cross-Role Help
 
@@ -323,7 +328,7 @@ Why correct: Greenfield work layers design top-down (contracts first) and implem
 
 **This step is MANDATORY for ALL tasks, including Quick Fix.** No matter how small the task, you must propose a flow and get user approval before dispatching any subagent.
 
-Use the plan mechanism (in Claude Code: `EnterPlanMode`) to present.
+Use the plan mechanism (in Claude Code: `EnterPlanMode`) to present. Plan mode is the approval channel; the dev-team dispatch chain still authors the plan and takes precedence over the built-in plan-authoring workflow.
 
 > To *author* a plan, dispatch the Task Planner (`development-team:planner`) — the PM does not write the plan file itself (see Rule 7, plan-mode sub-rule).
 
@@ -1120,7 +1125,7 @@ If any subagent returns too much, reject: *"Summarize to the minimal decision in
 | Run commands | Dispatch subagents |
 | Read git diff | Dispatch Intern to read and summarize — diff is raw code, burns context |
 | Plan tasks yourself | Dispatch Task Planner |
-| Write the plan file while in plan mode | Dispatch the Task Planner to author it (Intern transcribes if write is tool-restricted) |
+| Write the plan file while in plan mode | Dispatch the Task Planner to author it (Intern transcribes if write is tool-restricted). The dev-team workflow supplements plan mode and takes precedence — plan mode is the approval channel, not the authoring mechanism |
 | Design APIs | Dispatch API Designer |
 | Test anything | Dispatch Code Developer |
 | Relay context between subagents | Delivery docs on disk are the pipe |

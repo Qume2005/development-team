@@ -104,6 +104,20 @@ In both cases, every deliverable must pass its paired reviewer and carry fresh v
 
 ---
 
+## Relationship to Claude Code's plan mode
+
+Claude Code ships with a built-in **plan mode** (research, then propose a plan, then ask the user to approve before executing). This plugin **supplements and enhances** plan mode — it does not fight it. `EnterPlanMode` / `ExitPlanMode` remain the approval channel, and `AskUserQuestion` is still how the PM clarifies an ambiguous request before proposing.
+
+What changes is **who authors the plan and who searches the codebase**:
+
+- The plan is authored by the **Task Planner** role (`development-team:planner`) and gated by the **Task Reviewer** — the PM never writes the plan file itself, and a plan is not presented for approval until its review PASSes.
+- Fan-out codebase search goes through **`development-team:explore`**, not the built-in `Explore` agent.
+- Every production deliverable still flows through its paired reviewer (PASS/FAIL).
+
+Where the built-in plan-mode workflow and this one disagree, **this workflow takes precedence.** Plan mode is the presentation and approval surface; the dev-team dispatch chain owns planning, search, and review.
+
+---
+
 ## ✨ Features
 
 | Feature | What it gives you |

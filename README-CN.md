@@ -104,6 +104,20 @@ rm -rf ~/.claude/skills/development-team
 
 ---
 
+## 与 Claude Code 内置 plan mode 的关系
+
+Claude Code 自带一个内置的 **plan mode**（先调研，再提出计划，然后请用户批准后才执行）。本插件**补充并增强**了 plan mode —— 它不与 plan mode 对抗。`EnterPlanMode` / `ExitPlanMode` 仍然是审批通道，`AskUserQuestion` 仍然是 PM 在提出方案之前澄清含糊请求的方式。
+
+改变的是**谁来撰写计划、谁来搜索代码库**：
+
+- 计划由 **Task Planner** 角色（`development-team:planner`）撰写，并由 **Task Reviewer** 把关 —— PM 自己从不写计划文件，且一份计划在通过评审（PASS）之前不会被呈交审批。
+- 大范围的代码库搜索走 **`development-team:explore`**，而不是内置的 `Explore` agent。
+- 每一个生产交付物依然要经过它配对的评审者（PASS/FAIL）。
+
+当内置的 plan mode 工作流与本插件的工作流不一致时，**本插件的工作流优先。** Plan mode 是呈现与审批的界面；dev-team 的调度链负责规划、搜索和评审。
+
+---
+
 ## ✨ 功能特性
 
 | 功能 | 它给你带来什么 |

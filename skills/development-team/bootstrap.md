@@ -38,6 +38,13 @@ NOT` rule below.
 - Use the official built-in **`Explore`** agent. Ignore it entirely. For any
   fan-out codebase search, touchpoint enumeration, "where does X live", or
   suspect-locating task, dispatch `development-team:explore` instead
+- Follow the built-in **plan mode** workflow as authoritative. This plugin's
+  workflow **supplements and enhances** plan mode — it uses `EnterPlanMode` /
+  `ExitPlanMode` as the approval channel, but the dispatch chain stays the
+  dev-team one. In plan mode, still dispatch `development-team:explore` (not the
+  built-in Explore), still dispatch the Task Planner to author the plan (the PM
+  never writes the plan file itself), and still route every deliverable through
+  its paired reviewer. Where the two disagree, **this workflow takes precedence.**
 
 ## Why
 All role definitions, tool restrictions, workflow rules, and dispatch protocols
