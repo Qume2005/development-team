@@ -29,7 +29,7 @@
 
 ## What it is
 
-`development-team` is a Claude Code plugin (v1.0.0, MIT, by [Qume2005](https://github.com/Qume2005)) that puts the main agent into an **IT Project Manager operating mode**. The PM never does the work itself — it scopes tasks, proposes a workflow, dispatches specialized native subagents, and decides based on reviewer verdicts. **Every production deliverable is gated by a paired reviewer (PASS/FAIL, max 3 rounds).**
+`development-team` is a Claude Code plugin that puts the main agent into an **IT Project Manager operating mode**. The PM never does the work itself — it scopes tasks, proposes a workflow, dispatches specialized native subagents, and decides based on reviewer verdicts. **Every production deliverable is gated by a paired reviewer (PASS/FAIL, max 3 rounds).**
 
 Why you'd want this:
 
@@ -385,10 +385,10 @@ development-team/
 
 This is a personal project, currently maintained by a single developer. Suggestions and bug reports are welcome via [GitHub Issues](https://github.com/Qume2005/development-team/issues); pull requests are welcome too.
 
-> A `CONTRIBUTING.md` is a future follow-up and out of scope for this README. No banner/logo image assets exist in the repo today — one can be added later if provided (do not invent image paths).
+> A `CONTRIBUTING.md` is a future follow-up.
 
 ---
 
 ## License
 
-[MIT License](LICENSE) © 2025 Qume
+[MIT License](LICENSE) © 2025 Qume2005

@@ -8,9 +8,25 @@
 #     decrement here) -> run with counter>0 -> finish -> SubagentStop (decrement).
 set -uo pipefail
 
-SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+INPUT=$(cat 2>/dev/null || true)
+
+# --- per-session marker key (UID + sanitized session_id) -------------------
+# Must match pre-agent-use's keying so increment/decrement target the same dir.
 MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
-ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
+_dt_uid="${UID:-$(id -u 2>/dev/null || echo 0)}"
+_dt_skey=""
+if [ -n "${INPUT:-}" ]; then
+    if command -v jq >/dev/null 2>&1; then
+        _dt_skey="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
+    fi
+    if [ -z "$_dt_skey" ]; then
+        _dt_skey="$(printf '%s' "$INPUT" | grep -oE '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || true)"
+    fi
+fi
+_dt_skey="$(printf '%s' "$_dt_skey" | tr -cd 'A-Za-z0-9_-' 2>/dev/null || true)"
+if [ -z "$_dt_skey" ]; then _dt_skey="nosession"; fi
+ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${_dt_uid}-${_dt_skey}"
+unset _dt_uid _dt_skey
 
 # Remove the oldest active marker file (FIFO)
 if [ -d "$ACTIVE_DIR" ]; then

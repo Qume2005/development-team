@@ -29,7 +29,7 @@
 
 ## 它是什么
 
-`development-team` 是一个 Claude Code 插件（v1.0.0，MIT 协议，作者 [Qume2005](https://github.com/Qume2005)），它让主 agent 进入 **IT 项目经理工作模式**。PM 自己从不亲手做活 —— 它界定任务范围、提出工作流、调度专门的原生子 agent，并根据评审结论做出决策。**每一个生产交付物都要先经过配对评审者的把关（PASS/FAIL，最多 3 轮）。**
+`development-team` 是一个 Claude Code 插件，它让主 agent 进入 **IT 项目经理工作模式**。PM 自己从不亲手做活 —— 它界定任务范围、提出工作流、调度专门的原生子 agent，并根据评审结论做出决策。**每一个生产交付物都要先经过配对评审者的把关（PASS/FAIL，最多 3 轮）。**
 
 为什么你需要它：
 
@@ -385,10 +385,10 @@ development-team/
 
 这是一个个人项目，目前由单人维护。欢迎通过 [GitHub Issues](https://github.com/Qume2005/development-team/issues) 提建议和报 bug；也欢迎 pull request。
 
-> `CONTRIBUTING.md` 是未来的后续工作，不在本 README 范围内。仓库里目前没有 banner/logo 图片资源 —— 如果提供了，以后可以加上（不要凭空编造图片路径）。
+> `CONTRIBUTING.md` 是未来的后续工作。
 
 ---
 
 ## License
 
-[MIT License](LICENSE) © 2025 Qume
+[MIT License](LICENSE) © 2025 Qume2005

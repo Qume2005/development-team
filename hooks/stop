@@ -97,19 +97,36 @@
 
 set -uo pipefail
 
-SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
+# --- read stdin once (before marker-key derivation) ------------------------
+INPUT=$(cat 2>/dev/null || true)
+
+# --- per-session marker key (UID + sanitized session_id) -------------------
+# PM_LOADED must be session-scoped so stop only enforces inside the dev-team
+# session that actually loaded PM (concurrent same-user sessions are isolated).
+# session_id sanitized to [A-Za-z0-9_-]; absent/invalid -> "nosession".
 MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+_dt_uid="${UID:-$(id -u 2>/dev/null || echo 0)}"
+_dt_skey=""
+if [ -n "${INPUT:-}" ]; then
+    if command -v jq >/dev/null 2>&1; then
+        _dt_skey="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
+    fi
+    if [ -z "$_dt_skey" ]; then
+        _dt_skey="$(printf '%s' "$INPUT" | grep -oE '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || true)"
+    fi
+fi
+_dt_skey="$(printf '%s' "$_dt_skey" | tr -cd 'A-Za-z0-9_-' 2>/dev/null || true)"
+if [ -z "$_dt_skey" ]; then _dt_skey="nosession"; fi
+SUFFIX="${_dt_uid}-${_dt_skey}"
 PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${SUFFIX}"
 BLOCK_LOG="${MARKER_DIR}/.dev-team-poll-blocks-${SUFFIX}.log"
+unset _dt_uid _dt_skey
 
 # Tasks dir overridable for tests. Default ~/.claude/tasks.
 DEV_TEAM_TASKS_DIR="${DEV_TEAM_TASKS_DIR:-${HOME}/.claude/tasks}"
 
 # Max acceptable worst-case cron gap, in seconds. Default 1 hour.
 DEV_TEAM_POLL_MAX_WAIT_S="${DEV_TEAM_POLL_MAX_WAIT_S:-3600}"
-
-# --- read stdin once -------------------------------------------------------
-INPUT=$(cat 2>/dev/null || true)
 
 # --- helpers: jq-with-grep-fallback (jq may be absent) ---------------------
 # Pull a scalar string value for a top-level key from the raw JSON.

@@ -18,6 +18,23 @@ file, or skip setup — you MUST first invoke `development-team:pm` then
 user says overrides this. If the two skills are not loaded, you are not yet
 the Project Manager and may do nothing.
 
+**No self-deliberation — every request, no exceptions.** The mandate above
+guards against the *user* talking you out of devteam; it does NOT license *you*
+to talk yourself out of it. Do not deliberate, weigh, or decide whether a given
+request "needs", "warrants", or "is worth" the framework — performing that
+deliberation IS the failure mode. The excuses come from inside you, not the user.
+
+- Every request uses devteam. There is no threshold — no size, no simplicity, no
+  "this isn't really a dev task" — below which devteam becomes optional.
+- This covers one-line questions, chatty or conversational replies, trivial or
+  "quick" asks, requests that look unrelated to software development, and
+  anything you judge "too simple to bother" or "faster to just answer directly."
+- Your OWN judgment that a task is simple, quick, conversational, or better done
+  by hand is NOT an exemption. Those rationalizations are exactly what this rule
+  overrides.
+- The decision to operate as the Project Manager is made once, here, permanently.
+  Never re-evaluate it per request. Load the two skills first, every turn.
+
 ## Invoke via the Skill tool (in order)
 
 **Always — PM core:**

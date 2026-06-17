@@ -8,55 +8,79 @@
 #
 # The identity check is parsed WITHOUT depending on jq (jq is frequently
 # absent, e.g. on minimal Linux images), so the discriminator works in
-# every environment. The active-subagent counter is retained only as a
-# degraded last-resort fallback for the case where stdin is unreadable.
+# every environment. The active-subagent counter is retained ONLY as a
+# degraded last-resort fallback for the case where stdin is UNREADABLE —
+# it must NOT grant allow to a caller whose identity was determined: a
+# confirmed root is never excused by the counter, otherwise a single
+# crash-orphaned counter entry (a dispatch that died without firing
+# SubagentStop) permanently disables the restriction for the root.
 set -uo pipefail
 
-SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
-MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
-PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${SUFFIX}"
-PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${SUFFIX}"
-SESSION="${MARKER_DIR}/.dev-team-session-${SUFFIX}"
-ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${SUFFIX}"
-
-# Read caller identity from stdin.
+# Read caller identity + session_id from stdin.
 INPUT=$(cat 2>/dev/null || true)
+
+# --- per-session marker key (UID + sanitized session_id) -------------------
+# Markers keyed only by UID collide across concurrent same-user sessions and
+# across /tmp lifetime. Keying by session_id isolates each session. session_id
+# is sanitized to [A-Za-z0-9_-] (path-traversal-safe); absent/invalid -> nosession.
+MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+_dt_uid="${UID:-$(id -u 2>/dev/null || echo 0)}"
+_dt_skey=""
+if [ -n "${INPUT:-}" ]; then
+    if command -v jq >/dev/null 2>&1; then
+        _dt_skey="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
+    fi
+    if [ -z "$_dt_skey" ]; then
+        _dt_skey="$(printf '%s' "$INPUT" | grep -oE '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || true)"
+    fi
+fi
+_dt_skey="$(printf '%s' "$_dt_skey" | tr -cd 'A-Za-z0-9_-' 2>/dev/null || true)"
+if [ -z "$_dt_skey" ]; then _dt_skey="nosession"; fi
+PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${_dt_uid}-${_dt_skey}"
+PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${_dt_uid}-${_dt_skey}"
+SESSION="${MARKER_DIR}/.dev-team-session-${_dt_uid}-${_dt_skey}"
+ACTIVE_DIR="${MARKER_DIR}/.dev-team-active-${_dt_uid}-${_dt_skey}"
+unset _dt_uid _dt_skey
 
 # Primary discriminator: detect a non-null agent_id or agent_type.
 # jq is parsed when available; otherwise fall back to a grep/sed scan of
 # the raw JSON so the check still works on images without jq.
+identity_known=0
 is_subagent=0
-if [ -n "$INPUT" ]; then
+if [ -n "${INPUT:-}" ]; then
+    identity_known=1
     aid=""
     atype=""
-    if command -v jq &>/dev/null; then
-        aid=$(echo "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null)
-        atype=$(echo "$INPUT" | jq -r '.agent_type // empty' 2>/dev/null)
+    if command -v jq >/dev/null 2>&1; then
+        aid="$(printf '%s' "$INPUT" | jq -r '.agent_id // empty' 2>/dev/null || true)"
+        atype="$(printf '%s' "$INPUT" | jq -r '.agent_type // empty' 2>/dev/null || true)"
     else
-        # jq-free parse: pull the quoted string value for each key.
-        # Returns empty for null/absent because the regex requires a
-        # non-empty quoted string after the colon.
-        aid=$(echo "$INPUT" | grep -oE '"agent_id"[[:space:]]*:[[:space:]]*"[^"]+"' 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/')
-        atype=$(echo "$INPUT" | grep -oE '"agent_type"[[:space:]]*:[[:space:]]*"[^"]+"' 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/')
+        aid="$(printf '%s' "$INPUT" | grep -oE '"agent_id"[[:space:]]*:[[:space:]]*"[^"]+"' 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' || true)"
+        atype="$(printf '%s' "$INPUT" | grep -oE '"agent_type"[[:space:]]*:[[:space:]]*"[^"]+"' 2>/dev/null | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' || true)"
     fi
     if [ -n "$aid" ] || [ -n "$atype" ]; then
         is_subagent=1
     fi
 fi
 
+# Any subagent (foreground or background) is unrestricted.
 if [ "$is_subagent" -eq 1 ]; then
     exit 0
 fi
 
-# Fallback (stdin unreadable / identity fields absent): active-subagent
-# counter. Foreground-safe only; background subagents are recognized via
-# the agent_id/agent_type check above.
-active_count=$(ls "$ACTIVE_DIR" 2>/dev/null | wc -l | tr -d ' ')
-if [ "$active_count" -gt 0 ]; then
-    exit 0
+# Counter fallback ONLY when caller identity could not be determined from stdin
+# (stdin unreadable). A confirmed root/PM must NEVER be allowed by the counter:
+# crash-orphaned entries (a dispatch that died without firing SubagentStop) would
+# otherwise permanently disable the restriction for the root. This was the
+# 2026-06-17 root cause.
+if [ "$identity_known" -eq 0 ]; then
+    active_count=$(ls "$ACTIVE_DIR" 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$active_count" -gt 0 ]; then
+        exit 0
+    fi
 fi
 
-# Caller is the root/PM. Enforce restriction.
+# Confirmed root/PM. Enforce restriction.
 if [ -f "$PM_RESTRICTED" ]; then
     if [ ! -f "$SESSION" ] || [ "$PM_RESTRICTED" -nt "$SESSION" ]; then
         printf '{"decision":"block","reason":"PM tool restriction active. Read/Bash/Write/Edit are blocked for PM role. Dispatch a subagent (Intern, Coder, etc.) via the Agent tool instead."}\n'

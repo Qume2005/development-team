@@ -15,9 +15,10 @@ STOP_HOOK="${SCRIPT_DIR}/stop"
 # real dev-team session. We export XDG_RUNTIME_DIR for the hook subprocess.
 export XDG_RUNTIME_DIR="$(mktemp -d "${TMPDIR:-/tmp}/stop-hook-test.XXXXXX")"
 MARKER="${XDG_RUNTIME_DIR}"
-# Make the PM-loaded marker so step 2 passes (we ARE a PM session).
+# UID portion of the per-session marker key (the hook derives the full key as
+# .dev-team-<name>-${UID}-${SANITIZED_SESSION_ID}; we mirror that below once the
+# session id is known).
 SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
-touch "${MARKER}/.dev-team-pm-loaded-${SUFFIX}"
 
 # Fixture tasks dir.
 TASKS_FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/stop-tasks.XXXXXX")"
@@ -25,9 +26,17 @@ export DEV_TEAM_TASKS_DIR="$TASKS_FIXTURE"
 export DEV_TEAM_POLL_MAX_WAIT_S="3600"
 
 # A stable session id whose subdir we populate with pending/completed tasks.
+# This is the SAME value we feed to the stop hook's stdin (every case JSON uses
+# session_id:${SESSION_ID}), so the hook derives the same marker key we touch.
 SESSION_ID="test-session-0001"
 SESS_DIR="${TASKS_FIXTURE}/${SESSION_ID}"
 mkdir -p "$SESS_DIR"
+
+# Make the PM-loaded marker under the SESSION-KEYED path the stop hook now reads
+# (.dev-team-pm-loaded-${UID}-${SESSION_ID}). Done AFTER SESSION_ID is assigned
+# so the key matches stop's own derivation. This is what makes step 2 pass for
+# the cases that expect PM mode to be active.
+touch "${MARKER}/.dev-team-pm-loaded-${SUFFIX}-${SESSION_ID}"
 
 # Helper: write a task JSON file. $1=filename, $2=status.
 write_task() {
@@ -362,6 +371,30 @@ PLANTED_FILE="${TRAV_PARENT}/planted-traversal-task.json"
 cat > "$PLANTED_FILE" <<'EOF'
 {"id":"evil","subject":"planted outside tasks dir","status":"in_progress"}
 EOF
+
+# The traversal cases (19a/19b) feed session_ids ("..", "..%2f..") that the hook
+# SANITIZES via `tr -cd 'A-Za-z0-9_-'` to a DIFFERENT key than the harness's
+# default test-session-0001. Without a PM_LOADED under EACH derived key, step 2
+# short-circuits to ALLOW and the traversal guard (step 3) is never reached.
+# Mirror the hook's exact derivation: sanitize the raw session_id the same way,
+# fall back to `nosession` when empty, and touch PM_LOADED under that key.
+# sanitize_session_key <raw> -> sanitized key component (never empty)
+sanitize_session_key() {
+    local raw="$1" s
+    s="$(printf '%s' "$raw" | tr -cd 'A-Za-z0-9_-' 2>/dev/null || true)"
+    [ -z "$s" ] && s="nosession"
+    printf '%s' "$s"
+}
+# touch_pm_loaded_for <raw-session-id>
+touch_pm_loaded_for() {
+    local key
+    key="$(sanitize_session_key "$1")"
+    touch "${MARKER}/.dev-team-pm-loaded-${SUFFIX}-${key}"
+}
+# Pre-create PM_LOADED under every traversal case's derived key so step 2 passes
+# and the flow reaches the traversal guard under test.
+touch_pm_loaded_for ".."
+touch_pm_loaded_for "..%2f.."
 
 # 19a: session_id = ".." -> reject, no traversal count, safe BLOCK.
 out19a=$(printf '{"hook_event_name":"Stop","session_id":"..","background_tasks":[],"session_crons":[]}' | bash "$STOP_HOOK" 2>/tmp/stop-test-err19a.$$)

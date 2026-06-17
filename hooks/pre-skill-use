@@ -2,13 +2,30 @@
 # PreToolUse hook for Skill tool — creates markers when PM skills are loaded
 set -uo pipefail
 
-SUFFIX="${UID:-$(id -u 2>/dev/null || echo 0)}"
-MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
-PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${SUFFIX}"
-PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${SUFFIX}"
-
 # Read tool call details from stdin (JSON with tool input)
 INPUT=$(cat 2>/dev/null || true)
+
+# --- per-session marker key (UID + sanitized session_id) -------------------
+# Markers keyed only by UID collide across concurrent same-user sessions and
+# across /tmp lifetime. Keying by session_id isolates each session. session_id
+# is sanitized to [A-Za-z0-9_-] (path-traversal-safe); absent/invalid -> nosession.
+MARKER_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+_dt_uid="${UID:-$(id -u 2>/dev/null || echo 0)}"
+_dt_skey=""
+if [ -n "${INPUT:-}" ]; then
+    if command -v jq >/dev/null 2>&1; then
+        _dt_skey="$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null || true)"
+    fi
+    if [ -z "$_dt_skey" ]; then
+        _dt_skey="$(printf '%s' "$INPUT" | grep -oE '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || true)"
+    fi
+fi
+_dt_skey="$(printf '%s' "$_dt_skey" | tr -cd 'A-Za-z0-9_-' 2>/dev/null || true)"
+if [ -z "$_dt_skey" ]; then _dt_skey="nosession"; fi
+PM_LOADED="${MARKER_DIR}/.dev-team-pm-loaded-${_dt_uid}-${_dt_skey}"
+PM_RESTRICTED="${MARKER_DIR}/.dev-team-pm-restricted-${_dt_uid}-${_dt_skey}"
+unset _dt_uid _dt_skey
+
 [ -z "$INPUT" ] && exit 0
 
 # Extract skill name — try jq first (exact parsing), fallback to grep
